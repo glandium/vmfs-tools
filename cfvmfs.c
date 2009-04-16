@@ -925,8 +925,6 @@ static int vmfs_resolve_path(vmfs_volume_t *vol,char *name,
       if (sl != NULL)
          *sl = 0;
 
-      printf("vmfs_resolve_path: resolving '%s'\n",ptr);
-
       if (*ptr == 0) {
          ptr = sl + 1;
          continue;
@@ -935,16 +933,12 @@ static int vmfs_resolve_path(vmfs_volume_t *vol,char *name,
       if (vmfs_file_searchdir(cur_dir,ptr,rec) != 1)
          return(-1);
       
-      printf("Entry found ! \n");
-
       /* last token */
       if (sl == NULL)
          return(1);
 
       if (!(sub_dir = vmfs_file_open_rec(vol,rec)))
          return(-1);
-
-      printf("Opened subdirectory!\n");
 
 #if 0 /* TODO */
       if (cur_dir != vol->root_dir)
@@ -1062,6 +1056,25 @@ vmfs_file_open_rec(vmfs_volume_t *vol,vmfs_file_record_t *rec)
       return NULL;
 
    return f;
+}
+
+/* Open a file */
+vmfs_file_t *vmfs_file_open(vmfs_volume_t *vol,char *filename)
+{
+   vmfs_file_record_t rec;
+   char *tmp_name;
+   int res;
+
+   if (!(tmp_name = strdup(filename)))
+      return NULL;
+
+   res = vmfs_resolve_path(vol,tmp_name,&rec);
+   free(tmp_name);
+
+   if (res != 1)
+      return NULL;
+
+   return(vmfs_file_open_rec(vol,&rec));
 }
 
 /* Dump a file */
@@ -1358,15 +1371,11 @@ int main(int argc,char *argv[])
 
 #if 1
    {
-      vmfs_file_record_t rec;
       vmfs_file_t *f;
-      char buffer[] = "Test1/Test1.vmx";
       FILE *fd;
 
-      vmfs_resolve_path(vol,buffer,&rec);
-
       fd = fopen("test.vmx","w");
-      f = vmfs_file_open_rec(vol,&rec);
+      f = vmfs_file_open(vol,"Test1/Test1.vmx");
       vmfs_file_dump(f,0,0,fd);
       fclose(fd);
    }
