@@ -158,9 +158,9 @@ struct vmfs_bitmap_entry {
 #define VMFS_FILEINFO_OFS_ID2        0x0204
 #define VMFS_FILEINFO_OFS_TYPE       0x020c
 #define VMFS_FILEINFO_OFS_SIZE       0x0214
-#define VMFS_FILEINFO_OFS_TS1        0x021c
-#define VMFS_FILEINFO_OFS_TS2        0x0220
-#define VMFS_FILEINFO_OFS_TS3        0x0224
+#define VMFS_FILEINFO_OFS_TS1        0x022c
+#define VMFS_FILEINFO_OFS_TS2        0x0230
+#define VMFS_FILEINFO_OFS_TS3        0x0234
 #define VMFS_FILEINFO_OFS_UID        0x0238
 #define VMFS_FILEINFO_OFS_GID        0x023c
 #define VMFS_FILEINFO_OFS_MODE       0x0240
