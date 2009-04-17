@@ -37,6 +37,7 @@ static inline m_u64_t read_le64(u_char *p,int offset)
 /* VMFS types - forward declarations */
 typedef struct vmfs_volinfo vmfs_volinfo_t;
 typedef struct vmfs_fsinfo vmfs_fsinfo_t;
+typedef struct vmfs_heartbeat vmfs_heartbeat_t;
 typedef struct vmfs_bitmap_header vmfs_bitmap_header_t;
 typedef struct vmfs_bitmap_entry  vmfs_bitmap_entry_t;
 typedef struct vmfs_file_info vmfs_file_info_t;
@@ -125,6 +126,26 @@ struct vmfs_fsinfo {
    uuid_t vol_uuid;
 };
 
+/* === Heartbeats === */
+#define VMFS_HB_BASE  0x1300000
+
+#define VMFS_HB_SIZE  0x200
+
+#define VMFS_HB_MAGIC_OFF   0xabcdef01
+#define VMFS_HB_MAGIC_ON    0xabcdef02
+
+#define VMFS_HB_OFS_MAGIC   0x0000
+#define VMFS_HB_OFS_POS     0x0004
+#define VMFS_HB_OFS_UPTIME  0x0014
+#define VMFS_HB_OFS_UUID    0x001c
+
+struct vmfs_heartbeat {
+   m_u32_t magic;
+   m_u32_t position;
+   m_u64_t uptime;       /* Uptime (in usec) of the locker */
+   uuid_t uuid;          /* UUID of the server */
+};
+
 /* === Bitmap header === */
 struct vmfs_bitmap_header {
    m_u32_t items_per_bitmap_entry;
@@ -156,6 +177,8 @@ struct vmfs_bitmap_entry {
 
 #define VMFS_FILEINFO_OFS_GRP_ID     0x0000
 #define VMFS_FILEINFO_OFS_POS        0x0004
+#define VMFS_FILEINFO_OFS_HB_POS     0x000c
+#define VMFS_FILEINFO_OFS_HB_UUID    0x0018
 #define VMFS_FILEINFO_OFS_ID         0x0200
 #define VMFS_FILEINFO_OFS_ID2        0x0204
 #define VMFS_FILEINFO_OFS_TYPE       0x020c
@@ -173,6 +196,8 @@ struct vmfs_bitmap_entry {
 struct vmfs_file_info {
    m_u32_t group_id;
    m_u32_t position;
+   m_u32_t hb_pos;
+   uuid_t  hb_uuid;
    m_u32_t id,id2;
    m_u32_t type;
    m_u64_t size;
@@ -404,6 +429,31 @@ void vmfs_fsinfo_show(vmfs_fsinfo_t *fsi)
    printf("\n");
 }
 
+/* Read a heartbeart info */
+int vmfs_heartbeat_read(vmfs_heartbeat_t *hb,u_char *buf)
+{
+   hb->magic    = read_le32(buf,VMFS_HB_OFS_MAGIC);
+   hb->position = read_le32(buf,VMFS_HB_OFS_POS);
+   hb->uptime   = read_le64(buf,VMFS_HB_OFS_UPTIME);
+   memcpy(hb->uuid,buf+VMFS_HB_OFS_UUID,sizeof(hb->uuid));
+
+   return(0);
+}
+
+/* Show heartbeat info */
+void vmfs_heartbeat_show(vmfs_heartbeat_t *hb)
+{
+   char uuid_str[M_UUID_BUFLEN];
+   
+   printf("Heartbeat ID 0x%x:\n",hb->position);
+
+   printf("  - Magic  : 0x%8.8x\n",hb->magic);
+   printf("  - Uptime : 0x%8.8llx\n",hb->uptime);
+   printf("  - UUID   : %s\n",m_uuid_to_str(hb->uuid,uuid_str));
+
+   printf("\n");
+}
+
 /* Read a bitmap header */
 int vmfs_bmh_read(vmfs_bitmap_header_t *bmh,u_char *buf)
 {
@@ -455,6 +505,7 @@ int vmfs_fmi_read(vmfs_file_info_t *fmi,u_char *buf)
 {
    fmi->group_id = read_le32(buf,VMFS_FILEINFO_OFS_GRP_ID);
    fmi->position = read_le32(buf,VMFS_FILEINFO_OFS_POS);
+   fmi->hb_pos   = read_le32(buf,VMFS_FILEINFO_OFS_HB_POS);
    fmi->id       = read_le32(buf,VMFS_FILEINFO_OFS_ID);
    fmi->id2      = read_le32(buf,VMFS_FILEINFO_OFS_ID2);
    fmi->type     = read_le32(buf,VMFS_FILEINFO_OFS_TYPE);
@@ -466,6 +517,7 @@ int vmfs_fmi_read(vmfs_file_info_t *fmi,u_char *buf)
    fmi->gid      = read_le32(buf,VMFS_FILEINFO_OFS_GID);
    fmi->mode     = read_le32(buf,VMFS_FILEINFO_OFS_MODE);
 
+   memcpy(fmi->hb_uuid,buf+VMFS_FILEINFO_OFS_HB_UUID,sizeof(fmi->hb_uuid));
    return(0);
 }
 
@@ -634,6 +686,39 @@ int vmfs_bitmap_check(vmfs_file_t *f,vmfs_bitmap_header_t *bmh)
    }
 
    return(errors);
+}
+
+/* ======================================================================== */
+/* Heartbeats                                                               */
+/* ======================================================================== */
+
+int vmfs_heartbeat_show_active(vmfs_volume_t *vol)
+{
+   u_char buf[VMFS_HB_SIZE];
+   vmfs_heartbeat_t hb;
+   ssize_t res;
+   off_t pos = 0;
+   int count = 0;
+
+   while(pos < vmfs_vol_get_blocksize(vol)) {
+      res = vmfs_vol_read(vol,3,pos,buf,sizeof(buf));
+
+      if (res != sizeof(buf)) {
+         fprintf(stderr,"VMFS: unable to read heartbeat info.\n");
+         return(-1);
+      }
+
+      vmfs_heartbeat_read(&hb,buf);
+      
+      if (hb.magic == VMFS_HB_MAGIC_ON) {
+         vmfs_heartbeat_show(&hb);
+         count++;
+      }
+
+      pos += res;
+   }
+   
+   return(count);
 }
 
 /* ======================================================================== */
@@ -1362,7 +1447,7 @@ int main(int argc,char *argv[])
    }
 #endif
 
-#if 1
+#if 0
    {
       vmfs_file_t *f;
       FILE *fd;
@@ -1374,7 +1459,7 @@ int main(int argc,char *argv[])
    }
 #endif
 
-#if 1
+#if 0
    {
       m_u32_t count;
       
@@ -1395,6 +1480,10 @@ int main(int argc,char *argv[])
       vmfs_bitmap_check(vol->sbc,&vol->sbc_bmh);
 
    }
+#endif
+
+#if 1
+   vmfs_heartbeat_show_active(vol);
 #endif
 
    return(0);
