@@ -141,7 +141,7 @@ struct vmfs_fsinfo {
 
 struct vmfs_heartbeat {
    m_u32_t magic;
-   m_u32_t position;
+   m_u64_t position;
    m_u64_t uptime;       /* Uptime (in usec) of the locker */
    uuid_t uuid;          /* UUID of the server */
 };
@@ -164,7 +164,7 @@ struct vmfs_bitmap_header {
 
 struct vmfs_bitmap_entry {
    m_u32_t magic;
-   m_u32_t position;
+   m_u64_t position;
    m_u32_t id;
    m_u32_t total;
    m_u32_t free;
@@ -195,8 +195,8 @@ struct vmfs_bitmap_entry {
 
 struct vmfs_file_info {
    m_u32_t group_id;
-   m_u32_t position;
-   m_u32_t hb_pos;
+   m_u64_t position;
+   m_u64_t hb_pos;
    uuid_t  hb_uuid;
    m_u32_t id,id2;
    m_u32_t type;
@@ -433,7 +433,7 @@ void vmfs_fsinfo_show(vmfs_fsinfo_t *fsi)
 int vmfs_heartbeat_read(vmfs_heartbeat_t *hb,u_char *buf)
 {
    hb->magic    = read_le32(buf,VMFS_HB_OFS_MAGIC);
-   hb->position = read_le32(buf,VMFS_HB_OFS_POS);
+   hb->position = read_le64(buf,VMFS_HB_OFS_POS);
    hb->uptime   = read_le64(buf,VMFS_HB_OFS_UPTIME);
    memcpy(hb->uuid,buf+VMFS_HB_OFS_UUID,sizeof(hb->uuid));
 
@@ -445,7 +445,7 @@ void vmfs_heartbeat_show(vmfs_heartbeat_t *hb)
 {
    char uuid_str[M_UUID_BUFLEN];
    
-   printf("Heartbeat ID 0x%x:\n",hb->position);
+   printf("Heartbeat ID 0x%llx:\n",hb->position);
 
    printf("  - Magic  : 0x%8.8x\n",hb->magic);
    printf("  - Uptime : 0x%8.8llx\n",hb->uptime);
@@ -487,7 +487,7 @@ void vmfs_bmh_show(vmfs_bitmap_header_t *bmh)
 int vmfs_bme_read(vmfs_bitmap_entry_t *bme,u_char *buf,int copy_bitmap)
 {
    bme->magic    = read_le32(buf,0x0);
-   bme->position = read_le32(buf,0x4);
+   bme->position = read_le64(buf,0x4);
    bme->id       = read_le32(buf,0x200);
    bme->total    = read_le32(buf,0x204);
    bme->free     = read_le32(buf,0x208);
@@ -504,8 +504,8 @@ int vmfs_bme_read(vmfs_bitmap_entry_t *bme,u_char *buf,int copy_bitmap)
 int vmfs_fmi_read(vmfs_file_info_t *fmi,u_char *buf)
 {
    fmi->group_id = read_le32(buf,VMFS_FILEINFO_OFS_GRP_ID);
-   fmi->position = read_le32(buf,VMFS_FILEINFO_OFS_POS);
-   fmi->hb_pos   = read_le32(buf,VMFS_FILEINFO_OFS_HB_POS);
+   fmi->position = read_le64(buf,VMFS_FILEINFO_OFS_POS);
+   fmi->hb_pos   = read_le64(buf,VMFS_FILEINFO_OFS_HB_POS);
    fmi->id       = read_le32(buf,VMFS_FILEINFO_OFS_ID);
    fmi->id2      = read_le32(buf,VMFS_FILEINFO_OFS_ID2);
    fmi->type     = read_le32(buf,VMFS_FILEINFO_OFS_TYPE);
