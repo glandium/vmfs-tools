@@ -178,7 +178,8 @@ struct vmfs_bitmap_entry {
 #define VMFS_FILEINFO_OFS_GRP_ID     0x0000
 #define VMFS_FILEINFO_OFS_POS        0x0004
 #define VMFS_FILEINFO_OFS_HB_POS     0x000c
-#define VMFS_FILEINFO_OFS_HB_UUID    0x0018
+#define VMFS_FILEINFO_OFS_HB_LOCK    0x0024
+#define VMFS_FILEINFO_OFS_HB_UUID    0x0028
 #define VMFS_FILEINFO_OFS_ID         0x0200
 #define VMFS_FILEINFO_OFS_ID2        0x0204
 #define VMFS_FILEINFO_OFS_TYPE       0x020c
@@ -197,6 +198,7 @@ struct vmfs_file_info {
    m_u32_t group_id;
    m_u64_t position;
    m_u64_t hb_pos;
+   m_u32_t hb_lock;
    uuid_t  hb_uuid;
    m_u32_t id,id2;
    m_u32_t type;
@@ -506,6 +508,7 @@ int vmfs_fmi_read(vmfs_file_info_t *fmi,u_char *buf)
    fmi->group_id = read_le32(buf,VMFS_FILEINFO_OFS_GRP_ID);
    fmi->position = read_le64(buf,VMFS_FILEINFO_OFS_POS);
    fmi->hb_pos   = read_le64(buf,VMFS_FILEINFO_OFS_HB_POS);
+   fmi->hb_lock  = read_le32(buf,VMFS_FILEINFO_OFS_HB_LOCK);
    fmi->id       = read_le32(buf,VMFS_FILEINFO_OFS_ID);
    fmi->id2      = read_le32(buf,VMFS_FILEINFO_OFS_ID2);
    fmi->type     = read_le32(buf,VMFS_FILEINFO_OFS_TYPE);
