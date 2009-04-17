@@ -3,6 +3,8 @@
  * C.Fillot, 2009/04/15
  */
 
+#define _GNU_SOURCE
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <errno.h>
@@ -94,10 +96,12 @@ enum {
 #define VMFS_VOLINFO_OFS_SIZE  0x0200
 #define VMFS_VOLINFO_OFS_BLKS  0x0208
 
+#define VMFS_VOLINFO_OFS_NAME_SIZE     28
+
 struct vmfs_volinfo {
    m_u32_t magic;
    m_u32_t version;
-   char name[28];
+   char *name;
    uuid_t uuid;
 
    m_u64_t size;
@@ -359,7 +363,7 @@ int vmfs_volinfo_read(vmfs_volinfo_t *vol,FILE *fd)
    vol->size    = read_le64(buf,VMFS_VOLINFO_OFS_SIZE);
    vol->blocks  = read_le64(buf,VMFS_VOLINFO_OFS_BLKS);
 
-   memcpy(vol->name,buf+VMFS_VOLINFO_OFS_NAME,sizeof(vol->name));
+   vol->name = strndup((char *)buf+VMFS_VOLINFO_OFS_NAME, VMFS_VOLINFO_OFS_NAME_SIZE);
    memcpy(vol->uuid,buf+VMFS_VOLINFO_OFS_UUID,sizeof(vol->uuid));
 
    if (vol->magic != VMFS_VOLINFO_MAGIC) {
