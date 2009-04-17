@@ -8,6 +8,7 @@
 #include <errno.h>
 #include <string.h>
 #include <sys/types.h>
+#include <uuid/uuid.h>
 
 /* Max and min macro */
 #define m_max(a,b) (((a) > (b)) ? (a) : (b))
@@ -18,7 +19,6 @@
 typedef unsigned char m_u8_t;
 typedef unsigned int  m_u32_t;
 typedef unsigned long long m_u64_t;
-typedef unsigned char m_uuid_t[16];
 
 static inline m_u32_t read_le32(u_char *p,int offset)
 {
@@ -97,7 +97,7 @@ struct vmfs_volinfo {
    m_u32_t magic;
    m_u32_t version;
    char name[28];
-   m_uuid_t uuid;
+   uuid_t uuid;
 
    m_u64_t size;
    m_u64_t blocks;
@@ -118,11 +118,11 @@ struct vmfs_fsinfo {
    m_u32_t magic;
    m_u32_t vol_version;
    m_u32_t version;
-   m_uuid_t uuid;
+   uuid_t uuid;
    char label[128];
 
    m_u64_t block_size;
-   m_uuid_t vol_uuid;
+   uuid_t vol_uuid;
 };
 
 /* === Bitmap header === */
@@ -259,7 +259,7 @@ vmfs_file_open_rec(vmfs_volume_t *vol,vmfs_file_record_t *rec);
 /* Utility functions                                                        */
 /* ======================================================================== */
 
-char *m_uuid_to_str(m_uuid_t uuid,char *str)
+char *m_uuid_to_str(uuid_t uuid,char *str)
 {
    snprintf(str,M_UUID_BUFLEN,
             "%2.2x%2.2x%2.2x%2.2x-%2.2x%2.2x%2.2x%2.2x-"
