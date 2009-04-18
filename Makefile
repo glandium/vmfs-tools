@@ -15,4 +15,8 @@ $(foreach program, $(PROGRAMS), $(eval $(call program_template, $(program))))
 $(PROGRAMS):
 	$(CC) -o $@ $^ $(LDFLAGS)
 
-.PHONY: all
+clean: CLEAN=$(filter $(PROGRAMS) $(OBJS),$(wildcard *))
+clean:
+	$(if $(CLEAN),rm $(CLEAN))
+
+.PHONY: all clean
