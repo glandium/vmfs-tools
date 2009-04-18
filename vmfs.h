@@ -15,6 +15,7 @@ typedef struct vmfs_file vmfs_file_t;
 typedef struct vmfs_volume vmfs_volume_t;
 
 #include "utils.h"
+#include "vmfs_block.h"
 #include "vmfs_bitmap.h"
 
 #endif

@@ -16,33 +16,6 @@
 #include "utils.h"
 #include "vmfs.h"
 
-/* Block IDs */
-#define VMFS_BLK_TYPE(blk_id)  ((blk_id) & 0x07)
-
-enum {
-   VMFS_BLK_TYPE_INVALID = 0,
-   VMFS_BLK_TYPE_FB,     /* Full Block */
-   VMFS_BLK_TYPE_SB,     /* Sub-Block */
-   VMFS_BLK_TYPE_PB,     /* Pointer Block */
-   VMFS_BLK_TYPE_FD,     /* File Descriptor */
-   VMFS_BLK_TYPE_MAX,
-};
-
-/* Full-Block */
-#define VMFS_BLK_FB_NUMBER(blk_id)   ((blk_id) >> 6)
-
-/* Sub-Block */
-#define VMFS_BLK_SB_SUBGROUP(blk_id) (((blk_id) >> 28) & 0x0f)
-#define VMFS_BLK_SB_NUMBER(blk_id)   (((blk_id) & 0xfffffff) >> 6)
-
-/* Pointer-Block */
-#define VMFS_BLK_PB_SUBGROUP(blk_id) (((blk_id) >> 28) & 0x0f)
-#define VMFS_BLK_PB_NUMBER(blk_id)   (((blk_id) & 0xfffffff) >> 6)
-
-/* File Descriptor */
-#define VMFS_BLK_FD_SUBGROUP(blk_id) (((blk_id) >> 6)  & 0x7fff)
-#define VMFS_BLK_FD_NUMBER(blk_id)   (((blk_id) >> 22) & 0x3ff)
-
 /* VMFS meta-files */
 #define VMFS_FBB_FILENAME  ".fbb.sf"
 #define VMFS_FDC_FILENAME  ".fdc.sf"
@@ -166,20 +139,6 @@ struct vmfs_file_record {
    m_u32_t block_id;
    m_u32_t record_id;
    char name[128];
-};
-
-/* === VMFS block list === */
-#define VMFS_BLK_ARRAY_COUNT  64
-
-struct vmfs_blk_array {
-   m_u32_t blk[VMFS_BLK_ARRAY_COUNT];
-   struct vmfs_blk_array *next;
-};
-
-struct vmfs_blk_list {
-   m_u32_t total;
-   m_u32_t avail;
-   vmfs_blk_array_t *head,*tail;
 };
 
 /* === VMFS file abstraction === */
@@ -407,64 +366,6 @@ int vmfs_heartbeat_show_active(vmfs_volume_t *vol)
    }
    
    return(count);
-}
-
-/* ======================================================================== */
-/* Block lists                                                              */
-/* ======================================================================== */
-
-void vmfs_blk_list_init(vmfs_blk_list_t *list)
-{
-   list->avail = list->total = 0;
-   list->head = list->tail = NULL;
-}
-
-int vmfs_blk_list_add_block(vmfs_blk_list_t *list,m_u32_t blk_id)
-{
-   vmfs_blk_array_t *array;
-   int pos;
-
-   if (list->avail == 0) {
-      /* no room available, create a new array */
-      if (!(array = malloc(sizeof(*array))))
-         return(-1);
-
-      if (list->tail != NULL)
-         list->tail->next = array;
-      else
-         list->head = array;
-      
-      list->tail = array;
-      
-      list->avail = VMFS_BLK_ARRAY_COUNT;
-   }
-
-   pos = VMFS_BLK_ARRAY_COUNT - list->avail;
-
-   list->tail->blk[pos] = blk_id;
-   list->total++;
-   list->avail--;
-   return(0);
-}
-
-int vmfs_blk_list_get_block(vmfs_blk_list_t *list,u_int pos,m_u32_t *blk_id)
-{
-   vmfs_blk_array_t *array;
-   u_int cpos = 0;
-
-   if (pos >= list->total)
-      return(-1);
-
-   for(array=list->head;array;array=array->next) {
-      if ((pos >= cpos) && (pos < (cpos + VMFS_BLK_ARRAY_COUNT))) {
-         *blk_id = array->blk[pos - cpos];
-         return(0);
-      }
-      
-      cpos += VMFS_BLK_ARRAY_COUNT;
-   }
-
-   return(-1);
 }
 
 /* ======================================================================== */
