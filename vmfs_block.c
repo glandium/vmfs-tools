@@ -19,6 +19,19 @@ void vmfs_blk_list_init(vmfs_blk_list_t *list)
    list->head = list->tail = NULL;
 }
 
+/* Free a block list */
+void vmfs_blk_list_free(vmfs_blk_list_t *list)
+{
+   vmfs_blk_array_t *p,*next;
+
+   for(p=list->head;p;p=next) {
+      next = p->next;
+      free(p);
+   }
+
+   vmfs_blk_list_init(list);
+}
+
 /* Add a new block at tail of a block list */
 int vmfs_blk_list_add_block(vmfs_blk_list_t *list,m_u32_t blk_id)
 {

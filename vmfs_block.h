@@ -46,6 +46,9 @@ struct vmfs_blk_list {
 /* Initialize an empty block list */
 void vmfs_blk_list_init(vmfs_blk_list_t *list);
 
+/* Free a block list */
+void vmfs_blk_list_free(vmfs_blk_list_t *list);
+
 /* Add a new block at tail of a block list */
 int vmfs_blk_list_add_block(vmfs_blk_list_t *list,m_u32_t blk_id);
 
