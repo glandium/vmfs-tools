@@ -1,7 +1,15 @@
 #ifndef UTILS_H
 #define UTILS_H
 
+#define _FILE_OFFSET_BITS 64
+#define _GNU_SOURCE
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <errno.h>
+#include <string.h>
 #include <sys/types.h>
+#include <uuid/uuid.h>
 
 /* Max and min macro */
 #define m_max(a,b) (((a) > (b)) ? (a) : (b))

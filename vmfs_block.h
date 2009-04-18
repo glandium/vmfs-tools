@@ -1,5 +1,5 @@
-#ifndef VMFS_BLOCK
-#define VMFS_BLOCK
+#ifndef VMFS_BLOCK_H
+#define VMFS_BLOCK_H
 
 /* Block types */
 enum {
