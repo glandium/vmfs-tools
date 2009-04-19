@@ -12,6 +12,8 @@ $(1): $(filter-out $(foreach program,$(filter-out $(1), $(PROGRAMS)),$(program).
 endef
 $(foreach program, $(PROGRAMS), $(eval $(call program_template, $(program))))
 
+$(OBJS): %.o: %.c $(wildcard *.h)
+
 $(PROGRAMS):
 	$(CC) -o $@ $^ $(LDFLAGS)
 
