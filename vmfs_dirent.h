@@ -18,6 +18,9 @@ struct vmfs_dirent {
 /* Read a file descriptor */
 int vmfs_dirent_read(vmfs_dirent_t *entry,u_char *buf);
 
+/* Show a directory entry */
+int vmfs_dirent_show(vmfs_dirent_t *entry);
+
 /* Search for an entry into a directory */
 int vmfs_dirent_search(vmfs_file_t *dir_entry,char *name,vmfs_dirent_t *rec);
 

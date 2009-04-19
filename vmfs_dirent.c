@@ -4,13 +4,23 @@
 
 #include "vmfs.h"
 
-/* Read a file descriptor */
+/* Read a directory entry */
 int vmfs_dirent_read(vmfs_dirent_t *entry,u_char *buf)
 {
    entry->type      = read_le32(buf,VMFS_DIRENT_OFS_TYPE);
    entry->block_id  = read_le32(buf,VMFS_DIRENT_OFS_BLK_ID);
    entry->record_id = read_le32(buf,VMFS_DIRENT_OFS_REC_ID);
    memcpy(entry->name,buf+VMFS_DIRENT_OFS_NAME,sizeof(entry->name));
+   return(0);
+}
+
+/* Show a directory entry */
+int vmfs_dirent_show(vmfs_dirent_t *entry)
+{
+   printf("  - Type      : 0x%x\n",entry->type);
+   printf("  - Block ID  : 0x%8.8x\n",entry->block_id);
+   printf("  - Record ID : 0x%8.8x\n",entry->record_id);
+   printf("  - Name      : %s\n",entry->name);
    return(0);
 }
 
