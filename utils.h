@@ -30,7 +30,7 @@ typedef unsigned long long m_u64_t;
 static inline m_u16_t read_le16(u_char *p,int offset)
 {
 #ifdef LE_AND_NO_ALIGN
-   return((m_u16_t) *((m_u16_t *)&p[offset]));
+   return(*((m_u16_t *)&p[offset]));
 #else
    return((m_u16_t)p[offset] | ((m_u16_t)p[offset+1] << 8));
 #endif
@@ -40,7 +40,7 @@ static inline m_u16_t read_le16(u_char *p,int offset)
 static inline m_u32_t read_le32(u_char *p,int offset)
 {
 #ifdef LE_AND_NO_ALIGN
-   return((m_u32_t) *((m_u32_t *)&p[offset]));
+   return(*((m_u32_t *)&p[offset]));
 #else
    return((m_u32_t)p[offset] |
           ((m_u32_t)p[offset+1] << 8) |
@@ -53,7 +53,7 @@ static inline m_u32_t read_le32(u_char *p,int offset)
 static inline m_u64_t read_le64(u_char *p,int offset)
 {
 #ifdef LE_AND_NO_ALIGN
-   return((m_u64_t) *((m_u64_t *)&p[offset]));
+   return(*((m_u64_t *)&p[offset]));
 #else
    return((m_u64_t)read_le32(p,offset) + 
           ((m_u64_t)read_le32(p,offset+4) << 32));
