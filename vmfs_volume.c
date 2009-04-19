@@ -265,10 +265,12 @@ static int vmfs_read_fdc_base(vmfs_volume_t *vol)
    if (fseeko(vol->fd,inode_pos,SEEK_SET) == -1)
       return(-1);
    
-   printf("Inodes at @0x%llx\n",(m_u64_t)inode_pos);
-
    len = vol->fs_info.block_size - (inode_pos - vol->fdc_base);
-   printf("Length: 0x%8.8llx\n",len);
+
+   if (vol->debug_level > 0) {
+      printf("Inodes at @0x%llx\n",(m_u64_t)inode_pos);
+      printf("Length: 0x%8.8llx\n",len);
+   }
 
    /* Read the root directory */
    if (fread(buf,vol->fdc_bmh.data_size,1,vol->fd) != 1)
@@ -322,6 +324,7 @@ int vmfs_vol_open(vmfs_volume_t *vol)
       return(-1);
    }
 
-   printf("VMFS: volume opened successfully\n");
+   if (vol->debug_level > 0)
+      printf("VMFS: volume opened successfully\n");
    return(0);
 }

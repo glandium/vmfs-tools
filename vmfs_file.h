@@ -34,4 +34,7 @@ int vmfs_file_seek(vmfs_file_t *f,off_t pos,int whence);
 /* Read data from a file */
 ssize_t vmfs_file_read(vmfs_file_t *f,u_char *buf,size_t len);
 
+/* Dump a file */
+int vmfs_file_dump(vmfs_file_t *f,off_t pos,size_t len,FILE *fd_out);
+
 #endif
