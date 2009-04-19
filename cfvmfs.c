@@ -34,6 +34,27 @@ static int cmd_show_vol_bitmaps(vmfs_volume_t *vol,int argc,char *argv[])
    return(vmfs_vol_dump_bitmaps(vol));
 }
 
+/* Check volume bitmaps */
+static int cmd_check_vol_bitmaps(vmfs_volume_t *vol,int argc,char *argv[])
+{
+   int errors = 0;
+
+   printf("Checking FBB bitmaps...\n");
+   errors += vmfs_bitmap_check(vol->fbb,&vol->fbb_bmh);
+
+   printf("Checking FDC bitmaps...\n");
+   errors += vmfs_bitmap_check(vol->fdc,&vol->fdc_bmh);
+
+   printf("Checking PBC bitmaps...\n");
+   errors += vmfs_bitmap_check(vol->pbc,&vol->pbc_bmh);
+
+   printf("Checking SBC bitmaps...\n");   
+   errors += vmfs_bitmap_check(vol->sbc,&vol->sbc_bmh);
+
+   printf("Total errors: %d\n",errors);
+   return(errors);
+}
+
 /* Show active heartbeats */
 static int cmd_show_heartbeats(vmfs_volume_t *vol,int argc,char *argv[])
 {
@@ -49,6 +70,7 @@ struct cmd {
 struct cmd cmd_array[] = {
    { "cat", "Concatenate files and print on standard output", cmd_cat },
    { "show_vol_bitmaps", "Show volume bitmaps", cmd_show_vol_bitmaps },
+   { "check_vol_bitmaps", "Check volume bitmaps", cmd_check_vol_bitmaps },
    { "show_heartbeats", "Show active heartbeats", cmd_show_heartbeats },
    { NULL, NULL },
 };
