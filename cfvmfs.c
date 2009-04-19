@@ -66,6 +66,14 @@ static int cmd_show_inode(vmfs_volume_t *vol,int argc,char *argv[])
    return(0);
 }
 
+/* Show volume information */
+static int cmd_show_volume(vmfs_volume_t *vol,int argc,char *argv[])
+{
+   vmfs_volinfo_show(&vol->vol_info);
+   vmfs_fsinfo_show(&vol->fs_info);
+   return(0);
+}
+
 /* Show volume bitmaps */
 static int cmd_show_vol_bitmaps(vmfs_volume_t *vol,int argc,char *argv[])
 {
@@ -109,6 +117,7 @@ struct cmd cmd_array[] = {
    { "cat", "Concatenate files and print on standard output", cmd_cat },
    { "show_dirent", "Show directory entry", cmd_show_dirent },
    { "show_inode", "Show inode", cmd_show_inode },
+   { "show_volume", "Show volume general info", cmd_show_volume },
    { "show_vol_bitmaps", "Show volume bitmaps", cmd_show_vol_bitmaps },
    { "check_vol_bitmaps", "Check volume bitmaps", cmd_check_vol_bitmaps },
    { "show_heartbeats", "Show active heartbeats", cmd_show_heartbeats },

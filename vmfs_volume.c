@@ -51,7 +51,9 @@ int vmfs_volinfo_read(vmfs_volinfo_t *vol,FILE *fd)
    vol->size    = read_le64(buf,VMFS_VOLINFO_OFS_SIZE);
    vol->blocks  = read_le64(buf,VMFS_VOLINFO_OFS_BLKS);
 
-   vol->name = strndup((char *)buf+VMFS_VOLINFO_OFS_NAME, VMFS_VOLINFO_OFS_NAME_SIZE);
+   vol->name = strndup((char *)buf+VMFS_VOLINFO_OFS_NAME,
+                       VMFS_VOLINFO_OFS_NAME_SIZE);
+
    memcpy(vol->uuid,buf+VMFS_VOLINFO_OFS_UUID,sizeof(vol->uuid));
 
    if (vol->magic != VMFS_VOLINFO_MAGIC) {
