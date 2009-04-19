@@ -39,6 +39,9 @@ struct vmfs_inode {
 /* Read an inode */
 int vmfs_inode_read(vmfs_inode_t *inode,u_char *buf);
 
+/* Show an inode */
+void vmfs_inode_show(vmfs_inode_t *inode);
+
 /* Get the offset corresponding to an inode in the FDC file */
 off_t vmfs_inode_get_offset(vmfs_volume_t *vol,m_u32_t blk_id);
 

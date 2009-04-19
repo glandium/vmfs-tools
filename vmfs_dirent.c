@@ -15,13 +15,12 @@ int vmfs_dirent_read(vmfs_dirent_t *entry,u_char *buf)
 }
 
 /* Show a directory entry */
-int vmfs_dirent_show(vmfs_dirent_t *entry)
+void vmfs_dirent_show(vmfs_dirent_t *entry)
 {
    printf("  - Type      : 0x%x\n",entry->type);
    printf("  - Block ID  : 0x%8.8x\n",entry->block_id);
    printf("  - Record ID : 0x%8.8x\n",entry->record_id);
    printf("  - Name      : %s\n",entry->name);
-   return(0);
 }
 
 /* Search for an entry into a directory */

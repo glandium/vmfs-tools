@@ -47,6 +47,25 @@ static int cmd_show_dirent(vmfs_volume_t *vol,int argc,char *argv[])
    return(0);
 }
 
+/* Show an inode */
+static int cmd_show_inode(vmfs_volume_t *vol,int argc,char *argv[])
+{
+   vmfs_file_t *f;
+
+   if (argc == 0) {
+      printf("Usage: show_dirent <filename>\n");
+      return(-1);
+   }
+
+   if (!(f = vmfs_file_open(vol,argv[0]))) {
+      fprintf(stderr,"Unable to open file '%s'\n",argv[0]);
+      return(-1);
+   }
+
+   vmfs_inode_show(&f->inode);
+   return(0);
+}
+
 /* Show volume bitmaps */
 static int cmd_show_vol_bitmaps(vmfs_volume_t *vol,int argc,char *argv[])
 {
@@ -89,6 +108,7 @@ struct cmd {
 struct cmd cmd_array[] = {
    { "cat", "Concatenate files and print on standard output", cmd_cat },
    { "show_dirent", "Show directory entry", cmd_show_dirent },
+   { "show_inode", "Show inode", cmd_show_inode },
    { "show_vol_bitmaps", "Show volume bitmaps", cmd_show_vol_bitmaps },
    { "check_vol_bitmaps", "Check volume bitmaps", cmd_check_vol_bitmaps },
    { "show_heartbeats", "Show active heartbeats", cmd_show_heartbeats },

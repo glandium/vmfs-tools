@@ -26,6 +26,22 @@ int vmfs_inode_read(vmfs_inode_t *inode,u_char *buf)
    return(0);
 }
 
+/* Show an inode */
+void vmfs_inode_show(vmfs_inode_t *inode)
+{
+   printf("  - Group ID    : 0x%8.8x\n",inode->group_id);
+   printf("  - Position    : 0x%llx\n",inode->position);
+   printf("  - HB Position : 0x%llx\n",inode->hb_pos);
+   printf("  - HB Lock     : %d (%s)\n",
+          inode->hb_lock,(inode->hb_lock > 0) ? "LOCKED":"UNLOCKED");
+   printf("  - ID          : 0x%8.8x\n",inode->id);
+   printf("  - ID2         : 0x%8.8x\n",inode->id2);
+   printf("  - Type        : 0x%8.8x\n",inode->type);
+   printf("  - Size        : 0x%8.8llx\n",inode->size);
+   printf("  - UID/GID     : %d/%d\n",inode->uid,inode->gid);
+   printf("  - Mode        : 0%o\n",inode->mode);
+}
+
 /* Get the offset corresponding to an inode in the FDC file */
 off_t vmfs_inode_get_offset(vmfs_volume_t *vol,m_u32_t blk_id)
 {
