@@ -1,6 +1,11 @@
 #ifndef VMFS_FILE_H
 #define VMFS_FILE_H
 
+/* File types (in inode and directory entries) */
+#define VMFS_FILE_TYPE_DIR      0x02
+#define VMFS_FILE_TYPE_FILE     0x03
+#define VMFS_FILE_TYPE_SYMLINK  0x04
+
 /* === VMFS file abstraction === */
 struct vmfs_file {
    vmfs_volume_t *vol;
