@@ -43,6 +43,8 @@ int vmfs_blk_list_add_block(vmfs_blk_list_t *list,m_u32_t blk_id)
       if (!(array = malloc(sizeof(*array))))
          return(-1);
 
+      array->next = NULL;
+
       if (list->tail != NULL)
          list->tail->next = array;
       else
