@@ -83,3 +83,26 @@ int vmfs_blk_list_get_block(vmfs_blk_list_t *list,u_int pos,m_u32_t *blk_id)
 
    return(-1);
 }
+
+/* Show a block list */
+void vmfs_blk_list_show(vmfs_blk_list_t *list)
+{
+   vmfs_blk_array_t *array;
+   m_u32_t total,count;
+   int i;
+
+   total = list->total;
+
+   for(array=list->head;array;array=array->next) {
+      count = m_min(total,VMFS_BLK_ARRAY_COUNT);
+
+      for(i=0;i<count;i++) {
+         printf("0x%8.8x ",array->blk[i]);
+         if (((i+1) % 4) == 0) printf("\n");
+      }
+
+      total -= count;
+   }
+
+   printf("\n");
+}

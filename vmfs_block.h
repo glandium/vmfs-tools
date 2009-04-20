@@ -55,4 +55,7 @@ int vmfs_blk_list_add_block(vmfs_blk_list_t *list,m_u32_t blk_id);
 /* Get a block ID from a block list, given its position */
 int vmfs_blk_list_get_block(vmfs_blk_list_t *list,u_int pos,m_u32_t *blk_id);
 
+/* Show a block list */
+void vmfs_blk_list_show(vmfs_blk_list_t *list);
+
 #endif
