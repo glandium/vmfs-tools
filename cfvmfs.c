@@ -23,6 +23,7 @@ static int cmd_cat(vmfs_volume_t *vol,int argc,char *argv[])
       }
 
       vmfs_file_dump(f,0,0,stdout);
+      vmfs_file_close(f);
    }
 
    return(0);
@@ -63,6 +64,7 @@ static int cmd_show_inode(vmfs_volume_t *vol,int argc,char *argv[])
    }
 
    vmfs_inode_show(&f->inode);
+   vmfs_file_close(f);
    return(0);
 }
 
