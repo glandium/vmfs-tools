@@ -59,6 +59,19 @@ vmfs_file_t *vmfs_file_open(vmfs_volume_t *vol,char *filename)
    return(vmfs_file_open_rec(vol,&rec));
 }
 
+/* Close a file */
+int vmfs_file_close(vmfs_file_t *f)
+{
+   if (f == NULL)
+      return(-1);
+
+   /* Free the block list */
+   vmfs_blk_list_free(&f->blk_list);
+
+   free(f);
+   return(0);
+}
+
 /* Set position */
 int vmfs_file_seek(vmfs_file_t *f,off_t pos,int whence)
 {

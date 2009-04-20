@@ -33,6 +33,9 @@ vmfs_file_t *vmfs_file_open_rec(vmfs_volume_t *vol,vmfs_dirent_t *rec);
 /* Open a file */
 vmfs_file_t *vmfs_file_open(vmfs_volume_t *vol,char *filename);
 
+/* Close a file */
+int vmfs_file_close(vmfs_file_t *f);
+
 /* Set position */
 int vmfs_file_seek(vmfs_file_t *f,off_t pos,int whence);
 
