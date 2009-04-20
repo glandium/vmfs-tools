@@ -30,13 +30,6 @@ enum {
 #define VMFS_BLK_FD_NUMBER(blk_id)   (((blk_id) >> 22) & 0x3ff)
 
 /* === VMFS block list === */
-#define VMFS_BLK_ARRAY_COUNT  64
-
-struct vmfs_blk_array {
-   m_u32_t blk[VMFS_BLK_ARRAY_COUNT];
-   struct vmfs_blk_array *next;
-};
-
 struct vmfs_blk_list {
    m_u32_t total,last_pos;
    m_u32_t *blk_id;
