@@ -53,7 +53,7 @@ static char *vmfs_dirent_read_symlink(vmfs_volume_t *vol,vmfs_dirent_t *entry)
 {
    vmfs_file_t *f;
    size_t str_len;
-   char *str;
+   char *str = NULL;
 
    if (entry->type != VMFS_FILE_TYPE_SYMLINK)
       return NULL;
@@ -64,14 +64,15 @@ static char *vmfs_dirent_read_symlink(vmfs_volume_t *vol,vmfs_dirent_t *entry)
    str_len = f->inode.size;
 
    if (!(str = malloc(str_len+1)))
-      return NULL;
+      goto done;
 
    if (vmfs_file_read(f,(u_char *)str,str_len) != str_len)
-      return NULL;
+      goto done;
 
    str[str_len] = 0;
 
-   //vmfs_close_file(f);
+ done:
+   vmfs_file_close(f);
    return str;
 }
 
@@ -81,6 +82,9 @@ int vmfs_dirent_resolve_path(vmfs_volume_t *vol,vmfs_file_t *base_dir,
 {
    vmfs_file_t *cur_dir,*sub_dir;
    char *ptr,*sl,*symlink;
+   int close_dir = 0;
+   int res = 1;
+   int res2;
 
    cur_dir = base_dir;
 
@@ -100,38 +104,49 @@ int vmfs_dirent_resolve_path(vmfs_volume_t *vol,vmfs_file_t *base_dir,
          continue;
       }
              
-      if (vmfs_dirent_search(cur_dir,ptr,rec) != 1)
-         return(-1);
+      if (vmfs_dirent_search(cur_dir,ptr,rec) != 1) {
+         res = -1;
+         break;
+      }
       
       /* follow the symlink if we have an entry of this type */
       if (rec->type == VMFS_FILE_TYPE_SYMLINK) {
-         if (!(symlink = vmfs_dirent_read_symlink(vol,rec)))
-            return(-1);
+         if (!(symlink = vmfs_dirent_read_symlink(vol,rec))) {
+            res = -1;
+            break;
+         }
 
-         if (vmfs_dirent_resolve_path(vol,cur_dir,symlink,rec) != 1)
-            return(-1);
-         
+         res2 = vmfs_dirent_resolve_path(vol,cur_dir,symlink,rec);
          free(symlink);
+
+         if (res2 != 1)
+            break;
       }
 
       /* last token */
-      if (sl == NULL)
-         return(1);
+      if (sl == NULL) {
+         res = 1;
+         break;
+      }
 
       /* we must have a directory here */
-      if (rec->type != VMFS_FILE_TYPE_DIR)
-         return(-1);
+      if ((rec->type != VMFS_FILE_TYPE_DIR) ||
+          !(sub_dir = vmfs_file_open_rec(vol,rec)))
+      {
+         res = -1;
+         break;
+      }
 
-      if (!(sub_dir = vmfs_file_open_rec(vol,rec)))
-         return(-1);
-
-#if 0 /* TODO */
-      if (cur_dir != vol->root_dir)
+      if (close_dir)
          vmfs_file_close(cur_dir);
-#endif
+
       cur_dir = sub_dir;
+      close_dir = 1;
       ptr = sl + 1;
    }
 
-   return(1);
+   if (close_dir)
+      vmfs_file_close(cur_dir);
+
+   return(res);
 }
