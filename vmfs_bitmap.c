@@ -92,7 +92,7 @@ m_u32_t vmfs_bitmap_area_allocated_items(vmfs_file_t *f,
          break;
 
       vmfs_bme_read(&entry,buf,0);
-      count += entry.alloc;
+      count += entry.total - entry.free;
    }
 
    return count;

@@ -29,6 +29,31 @@ static int cmd_cat(vmfs_volume_t *vol,int argc,char *argv[])
    return(0);
 }
 
+/* "df" (disk free) command */
+static int cmd_df(vmfs_volume_t *vol,int argc,char *argv[])
+{
+   m_u32_t alloc,total;
+
+   total = vol->fbb_bmh.total_items;
+   alloc = vmfs_bitmap_allocated_items(vol->fbb,&vol->fbb_bmh);
+
+   printf("Block size       : %llu bytes\n",vmfs_vol_get_blocksize(vol));
+
+   printf("Total blocks     : %u\n",total);
+   printf("Total size       : %llu Mb\n",
+          (vmfs_vol_get_blocksize(vol)*total)/1048576);
+
+   printf("Allocated blocks : %u\n",alloc);
+   printf("Allocated space  : %llu Mb\n",
+          (vmfs_vol_get_blocksize(vol)*alloc)/1048576);
+
+   printf("Free blocks      : %u\n",total-alloc);
+   printf("Free size        : %llu Mb\n",
+          (vmfs_vol_get_blocksize(vol)*(total-alloc))/1048576);
+
+   return(0);
+}
+
 /* Show a directory entry */
 static int cmd_show_dirent(vmfs_volume_t *vol,int argc,char *argv[])
 {
@@ -182,6 +207,7 @@ struct cmd {
 
 struct cmd cmd_array[] = {
    { "cat", "Concatenate files and print on standard output", cmd_cat },
+   { "df", "Show available free space", cmd_df },
    { "show_dirent", "Show directory entry", cmd_show_dirent },
    { "show_inode", "Show inode", cmd_show_inode },
    { "show_file_blocks", "Show file blocks", cmd_show_file_blocks },
