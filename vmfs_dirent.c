@@ -48,16 +48,48 @@ int vmfs_dirent_search(vmfs_file_t *dir_entry,char *name,vmfs_dirent_t *rec)
    return(0);
 }
 
+/* Read a symlink */
+static char *vmfs_dirent_read_symlink(vmfs_volume_t *vol,vmfs_dirent_t *entry)
+{
+   vmfs_file_t *f;
+   size_t str_len;
+   char *str;
+
+   if (entry->type != VMFS_FILE_TYPE_SYMLINK)
+      return NULL;
+
+   if (!(f = vmfs_file_open_rec(vol,entry)))
+      return NULL;
+
+   str_len = f->inode.size;
+
+   if (!(str = malloc(str_len+1)))
+      return NULL;
+
+   if (vmfs_file_read(f,(u_char *)str,str_len) != str_len)
+      return NULL;
+
+   str[str_len] = 0;
+
+   //vmfs_close_file(f);
+   return str;
+}
+
 /* Resolve a path name to a directory entry */
-int vmfs_dirent_resolve_path(vmfs_volume_t *vol,char *name,vmfs_dirent_t *rec)
+int vmfs_dirent_resolve_path(vmfs_volume_t *vol,vmfs_file_t *base_dir,
+                             char *name,vmfs_dirent_t *rec)
 {
    vmfs_file_t *cur_dir,*sub_dir;
-   char *ptr,*sl;
+   char *ptr,*sl,*symlink;
 
-   cur_dir = vol->root_dir;
+   cur_dir = base_dir;
+
+   if (vmfs_dirent_search(cur_dir,".",rec) != 1)
+      return(-1);
+
    ptr = name;
    
-   for(;;) {
+   while(*ptr != 0) {
       sl = strchr(ptr,'/');
 
       if (sl != NULL)
@@ -71,9 +103,24 @@ int vmfs_dirent_resolve_path(vmfs_volume_t *vol,char *name,vmfs_dirent_t *rec)
       if (vmfs_dirent_search(cur_dir,ptr,rec) != 1)
          return(-1);
       
+      /* follow the symlink if we have an entry of this type */
+      if (rec->type == VMFS_FILE_TYPE_SYMLINK) {
+         if (!(symlink = vmfs_dirent_read_symlink(vol,rec)))
+            return(-1);
+
+         if (vmfs_dirent_resolve_path(vol,cur_dir,symlink,rec) != 1)
+            return(-1);
+         
+         free(symlink);
+      }
+
       /* last token */
       if (sl == NULL)
          return(1);
+
+      /* we must have a directory here */
+      if (rec->type != VMFS_FILE_TYPE_DIR)
+         return(-1);
 
       if (!(sub_dir = vmfs_file_open_rec(vol,rec)))
          return(-1);
@@ -85,4 +132,6 @@ int vmfs_dirent_resolve_path(vmfs_volume_t *vol,char *name,vmfs_dirent_t *rec)
       cur_dir = sub_dir;
       ptr = sl + 1;
    }
+
+   return(1);
 }

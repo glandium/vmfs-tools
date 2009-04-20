@@ -38,7 +38,7 @@ static int cmd_show_dirent(vmfs_volume_t *vol,int argc,char *argv[])
       return(-1);
    }
 
-   if (vmfs_dirent_resolve_path(vol,argv[0],&entry) != 1) {
+   if (vmfs_dirent_resolve_path(vol,vol->root_dir,argv[0],&entry) != 1) {
       fprintf(stderr,"Unable to resolve path '%s'\n",argv[0]);
       return(-1);
    }

@@ -28,7 +28,8 @@ vmfs_file_t *vmfs_file_open_rec(vmfs_volume_t *vol,vmfs_dirent_t *rec)
    
    /* Read the inode */
    if (vmfs_inode_get(vol,rec,buf) == -1) {
-      fprintf(stderr,"VMFS: Unable to get meta-info\n");
+      fprintf(stderr,"VMFS: Unable to get inode info for dir entry '%s'\n",
+              rec->name);
       return NULL;
    }
 
@@ -49,7 +50,7 @@ vmfs_file_t *vmfs_file_open(vmfs_volume_t *vol,char *filename)
    if (!(tmp_name = strdup(filename)))
       return NULL;
 
-   res = vmfs_dirent_resolve_path(vol,tmp_name,&rec);
+   res = vmfs_dirent_resolve_path(vol,vol->root_dir,tmp_name,&rec);
    free(tmp_name);
 
    if (res != 1)
