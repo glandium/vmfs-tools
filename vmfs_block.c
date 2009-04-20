@@ -12,96 +12,67 @@
 #include "utils.h"
 #include "vmfs.h"
 
-/* Initialize an empty block list */
-void vmfs_blk_list_init(vmfs_blk_list_t *list)
+/* Initialize a block list */
+int vmfs_blk_list_init(vmfs_blk_list_t *list,m_u32_t blk_count)
 {
-   list->avail = list->total = 0;
-   list->head = list->tail = NULL;
+   if (!(list->blk_id = calloc(blk_count,sizeof(m_u32_t))))
+      return(-1);
+
+   list->total = list->last_pos = blk_count;   
+   return(0);
 }
 
 /* Free a block list */
 void vmfs_blk_list_free(vmfs_blk_list_t *list)
 {
-   vmfs_blk_array_t *p,*next;
-
-   for(p=list->head;p;p=next) {
-      next = p->next;
-      free(p);
-   }
-
-   vmfs_blk_list_init(list);
+   free(list->blk_id);
+   list->blk_id   = NULL;
+   list->total    = 0;
+   list->last_pos = 0;
 }
 
-/* Add a new block at tail of a block list */
-int vmfs_blk_list_add_block(vmfs_blk_list_t *list,m_u32_t blk_id)
+/* Set a block at the specified position */
+int vmfs_blk_list_add_block(vmfs_blk_list_t *list,u_int pos,m_u32_t blk_id)
 {
-   vmfs_blk_array_t *array;
-   int pos;
-
-   if (list->avail == 0) {
-      /* no room available, create a new array */
-      if (!(array = malloc(sizeof(*array))))
-         return(-1);
-
-      array->next = NULL;
-
-      if (list->tail != NULL)
-         list->tail->next = array;
-      else
-         list->head = array;
-      
-      list->tail = array;
-      
-      list->avail = VMFS_BLK_ARRAY_COUNT;
+   size_t new_size;
+   m_u32_t new_total;
+   void *ptr;
+   
+   if (pos < list->total) {
+      list->blk_id[pos] = blk_id;
+      return(0);
    }
 
-   pos = VMFS_BLK_ARRAY_COUNT - list->avail;
+   new_total = pos + 128;
+   new_size  = new_total * sizeof(m_u32_t);
 
-   list->tail->blk[pos] = blk_id;
-   list->total++;
-   list->avail--;
+   if (!(ptr = realloc(list->blk_id,new_size)))
+      return(-1);
+
+   list->blk_id   = ptr;
+   list->total    = new_total;
+   list->last_pos = pos + 1;
    return(0);
 }
 
 /* Get a block ID from a block list, given its position */
 int vmfs_blk_list_get_block(vmfs_blk_list_t *list,u_int pos,m_u32_t *blk_id)
 {
-   vmfs_blk_array_t *array;
-   u_int cpos = 0;
-
-   if (pos >= list->total)
+   if (pos > list->total)
       return(-1);
 
-   for(array=list->head;array;array=array->next) {
-      if ((pos >= cpos) && (pos < (cpos + VMFS_BLK_ARRAY_COUNT))) {
-         *blk_id = array->blk[pos - cpos];
-         return(0);
-      }
-      
-      cpos += VMFS_BLK_ARRAY_COUNT;
-   }
-
-   return(-1);
+   *blk_id = list->blk_id[pos];
+   return(0);
 }
 
 /* Show a block list */
 void vmfs_blk_list_show(vmfs_blk_list_t *list)
 {
-   vmfs_blk_array_t *array;
-   m_u32_t total,count;
    int i;
 
-   total = list->total;
-
-   for(array=list->head;array;array=array->next) {
-      count = m_min(total,VMFS_BLK_ARRAY_COUNT);
-
-      for(i=0;i<count;i++) {
-         printf("0x%8.8x ",array->blk[i]);
-         if (((i+1) % 4) == 0) printf("\n");
-      }
-
-      total -= count;
+   for(i=0;i<list->last_pos;i++) {
+      printf("0x%8.8x ",list->blk_id[i]);
+      if (((i+1) % 4) == 0) printf("\n");
    }
 
    printf("\n");

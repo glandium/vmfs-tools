@@ -3,7 +3,7 @@
 
 /* Block types */
 enum {
-   VMFS_BLK_TYPE_INVALID = 0,
+   VMFS_BLK_TYPE_COW = 0,/* Copy-on-write for sparse files */
    VMFS_BLK_TYPE_FB,     /* Full Block */
    VMFS_BLK_TYPE_SB,     /* Sub-Block */
    VMFS_BLK_TYPE_PB,     /* Pointer Block */
@@ -38,19 +38,18 @@ struct vmfs_blk_array {
 };
 
 struct vmfs_blk_list {
-   m_u32_t total;
-   m_u32_t avail;
-   vmfs_blk_array_t *head,*tail;
+   m_u32_t total,last_pos;
+   m_u32_t *blk_id;
 };
 
-/* Initialize an empty block list */
-void vmfs_blk_list_init(vmfs_blk_list_t *list);
+/* Initialize a block list */
+int vmfs_blk_list_init(vmfs_blk_list_t *list,m_u32_t blk_count);
 
 /* Free a block list */
 void vmfs_blk_list_free(vmfs_blk_list_t *list);
 
-/* Add a new block at tail of a block list */
-int vmfs_blk_list_add_block(vmfs_blk_list_t *list,m_u32_t blk_id);
+/* Set a block at the specified position */
+int vmfs_blk_list_add_block(vmfs_blk_list_t *list,u_int pos,m_u32_t blk_id);
 
 /* Get a block ID from a block list, given its position */
 int vmfs_blk_list_get_block(vmfs_blk_list_t *list,u_int pos,m_u32_t *blk_id);

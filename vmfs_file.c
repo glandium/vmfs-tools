@@ -13,7 +13,6 @@ vmfs_file_t *vmfs_file_create_struct(vmfs_volume_t *vol)
       return NULL;
 
    f->vol = vol;
-   vmfs_blk_list_init(&f->blk_list);
    return f;
 }
 
@@ -130,6 +129,15 @@ ssize_t vmfs_file_read(vmfs_file_t *f,u_char *buf,size_t len)
       blk_type = VMFS_BLK_TYPE(blk_id);
 
       switch(blk_type) {
+         /* Copy-On-Write block */
+         case VMFS_BLK_TYPE_COW:
+            offset = f->pos % blk_size;
+            blk_len = blk_size - offset;
+            exp_len = m_min(blk_len,len);
+            res = m_min(exp_len,file_size - f->pos);
+            memset(buf,0,res);
+            break;
+
          /* Full-Block */
          case VMFS_BLK_TYPE_FB:
             offset = f->pos % blk_size;

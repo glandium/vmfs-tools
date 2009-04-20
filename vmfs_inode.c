@@ -80,7 +80,7 @@ int vmfs_inode_get(vmfs_volume_t *vol,vmfs_dirent_t *rec,u_char *buf)
 }
 
 /* Resolve pointer blocks */
-static int vmfs_inode_resolve_pb(vmfs_file_t *f,m_u32_t blk_id)
+static int vmfs_inode_resolve_pb(vmfs_file_t *f,u_int base_pos,m_u32_t blk_id)
 {
    u_char buf[4096];
    vmfs_bitmap_header_t *pbc_bmh;
@@ -113,44 +113,48 @@ static int vmfs_inode_resolve_pb(vmfs_file_t *f,m_u32_t blk_id)
 
       for(i=0;i<res/4;i++) {
          dblk = read_le32(buf,i*4);
-         vmfs_blk_list_add_block(&f->blk_list,dblk);
+         vmfs_blk_list_add_block(&f->blk_list,base_pos++,dblk);
       }
 
       len -= res;
    }
-   
+
    return(0);
 }
 
 /* Bind inode info to a file */
 int vmfs_inode_bind(vmfs_file_t *f,u_char *inode_buf)
 {
+   m_u32_t exp_blks,cur_pos = 0;
    m_u32_t blk_id,blk_type;
+   m_u64_t blk_size;
    int i;
 
    vmfs_inode_read(&f->inode,inode_buf);
-   vmfs_blk_list_init(&f->blk_list);
+
+   blk_size = vmfs_vol_get_blocksize(f->vol);
+   exp_blks = (f->inode.size + blk_size - 1) / blk_size;
+   vmfs_blk_list_init(&f->blk_list,exp_blks);
 
    for(i=0;i<VMFS_INODE_BLK_COUNT;i++) {
       blk_id   = read_le32(inode_buf,VMFS_INODE_OFS_BLK_ARRAY+(i*4));
       blk_type = VMFS_BLK_TYPE(blk_id);
 
-      if (!blk_id)
-         break;
-
       switch(blk_type) {
-         /* Full-Block/Sub-Block: simply add it to the list */
+         /* COW/Full-Block/Sub-Block: simply add it to the list */
+         case VMFS_BLK_TYPE_COW:
          case VMFS_BLK_TYPE_FB:
          case VMFS_BLK_TYPE_SB:
-            vmfs_blk_list_add_block(&f->blk_list,blk_id);
+            vmfs_blk_list_add_block(&f->blk_list,cur_pos++,blk_id);
             break;
 
          /* Pointer-block: resolve links */
          case VMFS_BLK_TYPE_PB:
-            if (vmfs_inode_resolve_pb(f,blk_id) == -1) {
+            if (vmfs_inode_resolve_pb(f,cur_pos,blk_id) == -1) {
                fprintf(stderr,"VMFS: unable to resolve blocks\n");
                return(-1);
             }
+            cur_pos += f->vol->pbc_bmh.data_size / sizeof(m_u32_t);
             break;
 
          default:
@@ -160,6 +164,9 @@ int vmfs_inode_bind(vmfs_file_t *f,u_char *inode_buf)
                     blk_type);
             return(-1);
       }
+
+      if (cur_pos >= exp_blks)
+         break;
    }
 
    return(0);
