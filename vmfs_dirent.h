@@ -28,4 +28,10 @@ int vmfs_dirent_search(vmfs_file_t *dir_entry,char *name,vmfs_dirent_t *rec);
 int vmfs_dirent_resolve_path(vmfs_volume_t *vol,vmfs_file_t *base_dir,
                              char *name,vmfs_dirent_t *rec);
 
+/* Free a directory list (returned by readdir) */
+void vmfs_dirent_free_dlist(int count,vmfs_dirent_t ***dlist);
+
+/* Read a directory */
+int vmfs_dirent_readdir(vmfs_volume_t *vol,char *dir,vmfs_dirent_t ***dlist);
+
 #endif
