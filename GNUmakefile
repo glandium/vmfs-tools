@@ -1,5 +1,5 @@
 CC=gcc
-CFLAGS=-Wall -O2 -g
+CFLAGS=-Wall -O2 -g -D_FILE_OFFSET_BITS=64
 LDFLAGS=$(shell pkg-config --libs uuid)
 SRC=$(wildcard *.c)
 OBJS=$(SRC:%.c=%.o)
