@@ -31,6 +31,33 @@ static int cmd_cat(vmfs_volume_t *vol,int argc,char *argv[])
    return(0);
 }
 
+/* "dir" command */
+static int cmd_dir(vmfs_volume_t *vol,int argc,char *argv[])
+{
+   vmfs_dirent_t **dlist,*entry;
+   int i,res;
+
+   if (argc == 0) {
+      printf("Usage: dir <path>\n");
+      return(-1);
+   }
+
+   res = vmfs_dirent_readdir(vol,argv[0],&dlist);
+
+   if (res == -1) {
+      fprintf(stderr,"Unable to read directory %s\n",argv[0]);
+      return(-1);
+   }
+
+   for(i=0;i<res;i++) {
+      entry = dlist[i]; 
+      printf("%s\n",entry->name);
+   }
+
+   vmfs_dirent_free_dlist(res,&dlist);
+   return(0);
+}
+
 /* "df" (disk free) command */
 static int cmd_df(vmfs_volume_t *vol,int argc,char *argv[])
 {
@@ -209,6 +236,7 @@ struct cmd {
 
 struct cmd cmd_array[] = {
    { "cat", "Concatenate files and print on standard output", cmd_cat },
+   { "dir", "List files in specified directory", cmd_dir },
    { "df", "Show available free space", cmd_df },
    { "show_dirent", "Show directory entry", cmd_show_dirent },
    { "show_inode", "Show inode", cmd_show_inode },
