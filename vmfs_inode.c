@@ -128,6 +128,7 @@ int vmfs_inode_bind(vmfs_file_t *f,u_char *inode_buf)
    m_u32_t exp_blks,cur_pos = 0;
    m_u32_t blk_id,blk_type;
    m_u64_t blk_size;
+   u_int factor;
    int i;
 
    vmfs_inode_read(&f->inode,inode_buf);
@@ -135,6 +136,8 @@ int vmfs_inode_bind(vmfs_file_t *f,u_char *inode_buf)
    blk_size = vmfs_vol_get_blocksize(f->vol);
    exp_blks = (f->inode.size + blk_size - 1) / blk_size;
    vmfs_blk_list_init(&f->blk_list,exp_blks);
+
+   factor = 1;
 
    for(i=0;i<VMFS_INODE_BLK_COUNT;i++) {
       blk_id   = read_le32(inode_buf,VMFS_INODE_OFS_BLK_ARRAY+(i*4));
@@ -145,16 +148,20 @@ int vmfs_inode_bind(vmfs_file_t *f,u_char *inode_buf)
          case VMFS_BLK_TYPE_COW:
          case VMFS_BLK_TYPE_FB:
          case VMFS_BLK_TYPE_SB:
-            vmfs_blk_list_add_block(&f->blk_list,cur_pos++,blk_id);
+            vmfs_blk_list_add_block(&f->blk_list,i*factor,blk_id);
+            cur_pos = (i + 1) * factor;
             break;
 
          /* Pointer-block: resolve links */
          case VMFS_BLK_TYPE_PB:
-            if (vmfs_inode_resolve_pb(f,cur_pos,blk_id) == -1) {
+            factor = f->vol->pbc_bmh.data_size / sizeof(m_u32_t);
+            
+            if (vmfs_inode_resolve_pb(f,i*factor,blk_id) == -1) {
                fprintf(stderr,"VMFS: unable to resolve blocks\n");
                return(-1);
             }
-            cur_pos += f->vol->pbc_bmh.data_size / sizeof(m_u32_t);
+
+            cur_pos = (i + 1) * factor;
             break;
 
          default:
