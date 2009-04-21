@@ -2,6 +2,7 @@
  * VMFS inodes.
  */
 
+#include <string.h>
 #include "vmfs.h"
 
 /* Read an inode */

@@ -1,13 +1,7 @@
 #ifndef UTILS_H
 #define UTILS_H
 
-#define _GNU_SOURCE
-
 #include <stdio.h>
-#include <stdlib.h>
-#include <errno.h>
-#include <string.h>
-#include <sys/types.h>
 #include <uuid/uuid.h>
 
 /* Max and min macro */

@@ -2,6 +2,8 @@
  * VMFS directory entries.
  */
 
+#include <stdlib.h>
+#include <string.h>
 #include "vmfs.h"
 
 /* Read a directory entry */

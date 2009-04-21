@@ -2,6 +2,8 @@
  * VMFS file abstraction.
  */
 
+#include <stdlib.h>
+#include <string.h>
 #include "vmfs.h"
 
 /* Create a file structure */

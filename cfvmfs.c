@@ -3,6 +3,8 @@
  * C.Fillot, 2009/04/15
  */
 
+#include <stdlib.h>
+#include <string.h>
 #include "vmfs.h"
 
 /* "cat" command */

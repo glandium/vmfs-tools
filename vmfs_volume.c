@@ -2,6 +2,9 @@
  * VMFS volumes.
  */
 
+#define _GNU_SOURCE
+#include <string.h>
+#include <stdlib.h>
 #include "vmfs.h"
 
 /* VMFS meta-files */
