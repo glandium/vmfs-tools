@@ -56,6 +56,9 @@ static inline m_u64_t read_le64(u_char *p,int offset)
 /* Convert an UUID into a string */
 char *m_uuid_to_str(uuid_t uuid,char *str);
 
+/* Convert a timestamp to a string */
+char *m_ctime(time_t *ct,char *buf,size_t buf_len);
+
 /* Dump a structure in hexa and ascii */
 void mem_dump(FILE *f_output,u_char *pkt,u_int len);
 

@@ -6,6 +6,7 @@
 #include <stdlib.h>
 #include <errno.h>
 #include <string.h>
+#include <time.h>
 #include <sys/types.h>
 #include <uuid/uuid.h>
 
@@ -16,6 +17,19 @@ char *m_uuid_to_str(uuid_t uuid,char *str)
 {
    uuid_unparse(uuid, str);
    return str;
+}
+
+/* Convert a timestamp to a string */
+char *m_ctime(time_t *ct,char *buf,size_t buf_len)
+{
+   struct tm ctm;
+
+   localtime_r(ct,&ctm);
+
+   snprintf(buf,buf_len,"%4.4d-%2.2d-%2.2d %2.2d:%2.2d:%2.2d",
+            ctm.tm_year + 1900, ctm.tm_mon + 1, ctm.tm_mday,
+            ctm.tm_hour, ctm.tm_min, ctm.tm_sec);
+   return buf;
 }
 
 /* Dump a structure in hexa and ascii */
