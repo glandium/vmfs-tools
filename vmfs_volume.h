@@ -9,10 +9,20 @@
 #define VMFS_VOLINFO_OFS_VER   0x0004
 #define VMFS_VOLINFO_OFS_NAME  0x0012
 #define VMFS_VOLINFO_OFS_UUID  0x0082 
-#define VMFS_VOLINFO_OFS_SIZE  0x0200
-#define VMFS_VOLINFO_OFS_BLKS  0x0208
 
 #define VMFS_VOLINFO_OFS_NAME_SIZE     28
+
+/* === LVM Info === */
+#define VMFS_LVMINFO_OFS_SIZE          0x0200
+#define VMFS_LVMINFO_OFS_BLKS          0x0208 /* Seems to be systematically sum(VMFS_LVMINFO_OFS_NUM_SEGMENTS for all extents) + VMFS_LVMINFO_OFS_NUM_EXTENTS */
+#define VMFS_LVMINFO_OFS_UUID_STR      0x0214
+#define VMFS_LVMINFO_OFS_UUID          0x0254
+/* 0x0268 64-bits timestamp in usec (lvm ctime?) */
+#define VMFS_LVMINFO_OFS_NUM_SEGMENTS  0x0274
+#define VMFS_LVMINFO_OFS_FIRST_SEGMENT 0x0278
+#define VMFS_LVMINFO_OFS_LAST_SEGMENT  0x0280
+/* 0x0288 64-bits timestamp in usec (lvm mtime?) */
+#define VMFS_LVMINFO_OFS_NUM_EXTENTS   0x0290
 
 struct vmfs_volinfo {
    m_u32_t magic;
@@ -22,6 +32,11 @@ struct vmfs_volinfo {
 
    m_u64_t size;
    m_u64_t blocks;
+   uuid_t lvm_uuid;
+   m_u32_t num_segments,
+           first_segment,
+           last_segment,
+           num_extents;
 };
 
 /* === FS Info === */

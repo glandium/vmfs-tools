@@ -204,7 +204,10 @@ static int cmd_show_file_blocks(vmfs_volume_t *vol,int argc,char *argv[])
 static int cmd_show_volume(vmfs_volume_t *vol,int argc,char *argv[])
 {
    vmfs_volinfo_show(&vol->vol_info);
-   vmfs_fsinfo_show(&vol->fs_info);
+   /* Only display fs info for the first extent */
+   if (vol->vol_info.first_segment == 0)
+      vmfs_fsinfo_show(&vol->fs_info);
+
    return(0);
 }
 
