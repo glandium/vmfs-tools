@@ -43,7 +43,8 @@ void vmfs_inode_show(vmfs_inode_t *inode)
    printf("  - Type        : 0x%8.8x\n",inode->type);
    printf("  - Size        : 0x%8.8llx\n",inode->size);
    printf("  - UID/GID     : %d/%d\n",inode->uid,inode->gid);
-   printf("  - Mode        : 0%o\n",inode->mode);
+   printf("  - Mode        : 0%o (%s)\n",
+          inode->mode,m_fmode_to_str(inode->mode,tbuf));
 
    printf("  - Access Time : %s\n",m_ctime(&inode->atime,tbuf,sizeof(tbuf)));
    printf("  - Modify Time : %s\n",m_ctime(&inode->mtime,tbuf,sizeof(tbuf)));
