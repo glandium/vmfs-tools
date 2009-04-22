@@ -80,7 +80,8 @@ static char *vmfs_dirent_read_symlink(vmfs_volume_t *vol,vmfs_dirent_t *entry)
 
 /* Resolve a path name to a directory entry */
 int vmfs_dirent_resolve_path(vmfs_volume_t *vol,vmfs_file_t *base_dir,
-                             char *name,vmfs_dirent_t *rec)
+                             char *name,int follow_symlink,
+                             vmfs_dirent_t *rec)
 {
    vmfs_file_t *cur_dir,*sub_dir;
    char *ptr,*sl,*symlink;
@@ -111,6 +112,11 @@ int vmfs_dirent_resolve_path(vmfs_volume_t *vol,vmfs_file_t *base_dir,
          break;
       }
       
+      if ((sl == NULL) && !follow_symlink) {
+         res = 1;
+         break;
+      }
+
       /* follow the symlink if we have an entry of this type */
       if (rec->type == VMFS_FILE_TYPE_SYMLINK) {
          if (!(symlink = vmfs_dirent_read_symlink(vol,rec))) {
@@ -118,7 +124,7 @@ int vmfs_dirent_resolve_path(vmfs_volume_t *vol,vmfs_file_t *base_dir,
             break;
          }
 
-         res2 = vmfs_dirent_resolve_path(vol,cur_dir,symlink,rec);
+         res2 = vmfs_dirent_resolve_path(vol,cur_dir,symlink,1,rec);
          free(symlink);
 
          if (res2 != 1)

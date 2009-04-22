@@ -88,7 +88,7 @@ static int cmd_dirl(vmfs_volume_t *vol,int argc,char *argv[])
       entry = dlist[i];
 
       snprintf(buffer,sizeof(buffer),"%s/%s",argv[0],entry->name);
-      if (vmfs_file_stat(vol,buffer,&st_info) == -1)
+      if (vmfs_file_lstat(vol,buffer,&st_info) == -1)
          continue;
 
       printf("%-10s ",m_fmode_to_str(st_info.st_mode,buffer));
@@ -151,7 +151,7 @@ static int cmd_show_dirent(vmfs_volume_t *vol,int argc,char *argv[])
       return(-1);
    }
 
-   if (vmfs_dirent_resolve_path(vol,vol->root_dir,argv[0],&entry) != 1) {
+   if (vmfs_dirent_resolve_path(vol,vol->root_dir,argv[0],0,&entry) != 1) {
       fprintf(stderr,"Unable to resolve path '%s'\n",argv[0]);
       return(-1);
    }

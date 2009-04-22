@@ -35,7 +35,7 @@ struct vmfs_inode {
    m_u64_t size;
    time_t  mtime,ctime,atime;
    m_u32_t uid,gid;
-   m_u32_t mode;
+   m_u32_t mode,cmode;
 };
 
 /* Read an inode */

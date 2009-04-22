@@ -24,6 +24,18 @@ int vmfs_inode_read(vmfs_inode_t *inode,u_char *buf)
    inode->gid      = read_le32(buf,VMFS_INODE_OFS_GID);
    inode->mode     = read_le32(buf,VMFS_INODE_OFS_MODE);
 
+   /* "corrected" mode */
+   inode->cmode    = inode->mode;
+
+   switch(inode->type) {
+      case VMFS_FILE_TYPE_DIR:
+         inode->cmode |= S_IFDIR;
+         break;
+      case VMFS_FILE_TYPE_SYMLINK:
+         inode->cmode |= S_IFLNK;
+         break;
+   }
+
    memcpy(inode->hb_uuid,buf+VMFS_INODE_OFS_HB_UUID,sizeof(inode->hb_uuid));
    return(0);
 }
@@ -45,6 +57,8 @@ void vmfs_inode_show(vmfs_inode_t *inode)
    printf("  - UID/GID     : %d/%d\n",inode->uid,inode->gid);
    printf("  - Mode        : 0%o (%s)\n",
           inode->mode,m_fmode_to_str(inode->mode,tbuf));
+   printf("  - CMode       : 0%o (%s)\n",
+          inode->cmode,m_fmode_to_str(inode->cmode,tbuf));
 
    printf("  - Access Time : %s\n",m_ctime(&inode->atime,tbuf,sizeof(tbuf)));
    printf("  - Modify Time : %s\n",m_ctime(&inode->mtime,tbuf,sizeof(tbuf)));
@@ -197,7 +211,7 @@ int vmfs_inode_bind(vmfs_file_t *f,u_char *inode_buf)
 int vmfs_inode_stat(vmfs_inode_t *inode,struct stat *buf)
 {
    memset(buf,0,sizeof(*buf));
-   buf->st_mode  = inode->mode;
+   buf->st_mode  = inode->cmode;
    buf->st_nlink = 1;
    buf->st_uid   = inode->uid;
    buf->st_gid   = inode->gid;
