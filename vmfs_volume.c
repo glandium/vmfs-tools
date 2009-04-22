@@ -50,6 +50,12 @@ int vmfs_volinfo_read(vmfs_volinfo_t *vol,FILE *fd)
       return(-1);
 
    vol->magic   = read_le32(buf,VMFS_VOLINFO_OFS_MAGIC);
+
+   if (vol->magic != VMFS_VOLINFO_MAGIC) {
+      fprintf(stderr,"VMFS VolInfo: invalid magic number 0x%8.8x\n",vol->magic);
+      return(-1);
+   }
+
    vol->version = read_le32(buf,VMFS_VOLINFO_OFS_VER);
    vol->size    = read_le64(buf,VMFS_VOLINFO_OFS_SIZE);
    vol->blocks  = read_le64(buf,VMFS_VOLINFO_OFS_BLKS);
@@ -58,11 +64,6 @@ int vmfs_volinfo_read(vmfs_volinfo_t *vol,FILE *fd)
                        VMFS_VOLINFO_OFS_NAME_SIZE);
 
    memcpy(vol->uuid,buf+VMFS_VOLINFO_OFS_UUID,sizeof(vol->uuid));
-
-   if (vol->magic != VMFS_VOLINFO_MAGIC) {
-      fprintf(stderr,"VMFS VolInfo: invalid magic number 0x%8.8x\n",vol->magic);
-      return(-1);
-   }
 
    return(0);
 }
@@ -95,6 +96,12 @@ int vmfs_fsinfo_read(vmfs_fsinfo_t *fsi,FILE *fd,off_t base)
       return(-1);
 
    fsi->magic       = read_le32(buf,VMFS_FSINFO_OFS_MAGIC);
+
+   if (fsi->magic != VMFS_FSINFO_MAGIC) {
+      fprintf(stderr,"VMFS FSInfo: invalid magic number 0x%8.8x\n",fsi->magic);
+      return(-1);
+   }
+
    fsi->vol_version = read_le32(buf,VMFS_FSINFO_OFS_VOLVER);
    fsi->version     = buf[VMFS_FSINFO_OFS_VER];
 
@@ -102,11 +109,6 @@ int vmfs_fsinfo_read(vmfs_fsinfo_t *fsi,FILE *fd,off_t base)
 
    memcpy(fsi->uuid,buf+VMFS_FSINFO_OFS_UUID,sizeof(fsi->uuid));
    memcpy(fsi->label,buf+VMFS_FSINFO_OFS_LABEL,sizeof(fsi->label));
-
-   if (fsi->magic != VMFS_FSINFO_MAGIC) {
-      fprintf(stderr,"VMFS FSInfo: invalid magic number 0x%8.8x\n",fsi->magic);
-      return(-1);
-   }
 
    return(0);
 }
