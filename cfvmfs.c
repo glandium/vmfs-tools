@@ -5,6 +5,7 @@
 
 #include <stdlib.h>
 #include <string.h>
+#include <sys/stat.h>
 #include "vmfs.h"
 
 /* "cat" command */
@@ -52,6 +53,48 @@ static int cmd_dir(vmfs_volume_t *vol,int argc,char *argv[])
    for(i=0;i<res;i++) {
       entry = dlist[i]; 
       printf("%s\n",entry->name);
+   }
+
+   vmfs_dirent_free_dlist(res,&dlist);
+   return(0);
+}
+
+/* "dir" with long format command */
+static int cmd_dirl(vmfs_volume_t *vol,int argc,char *argv[])
+{
+   vmfs_dirent_t **dlist,*entry;
+   struct stat st_info;
+   char buffer[1024];
+   int i,res;
+
+   if (argc == 0) {
+      printf("Usage: dir <path>\n");
+      return(-1);
+   }
+
+   res = vmfs_dirent_readdir(vol,argv[0],&dlist);
+
+   if (res == -1) {
+      fprintf(stderr,"Unable to read directory %s\n",argv[0]);
+      return(-1);
+   }
+
+   for(i=0;i<res;i++) {
+      entry = dlist[i];
+
+      snprintf(buffer,sizeof(buffer),"%s/%s",argv[0],entry->name);
+      if (vmfs_file_stat(vol,buffer,&st_info) == -1)
+         continue;
+
+      printf("%-10s ",m_fmode_to_str(st_info.st_mode,buffer));
+
+      printf("%u %4u %4u %10llu %s %s\n",
+             (unsigned int)st_info.st_nlink,
+             st_info.st_uid,
+             st_info.st_gid,
+             (unsigned long long)st_info.st_size,
+             m_ctime(&st_info.st_ctime,buffer,sizeof(buffer)),
+             entry->name);
    }
 
    vmfs_dirent_free_dlist(res,&dlist);
@@ -237,6 +280,7 @@ struct cmd {
 struct cmd cmd_array[] = {
    { "cat", "Concatenate files and print on standard output", cmd_cat },
    { "dir", "List files in specified directory", cmd_dir },
+   { "dirl", "List files in specified directory (long format)", cmd_dirl },
    { "df", "Show available free space", cmd_df },
    { "show_dirent", "Show directory entry", cmd_show_dirent },
    { "show_inode", "Show inode", cmd_show_inode },
