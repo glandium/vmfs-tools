@@ -59,6 +59,9 @@ char *m_uuid_to_str(uuid_t uuid,char *str);
 /* Convert a timestamp to a string */
 char *m_ctime(time_t *ct,char *buf,size_t buf_len);
 
+/* Convert a file mode to a string */
+char *m_fmode_to_str(u_int mode,char *buf);
+
 /* Dump a structure in hexa and ascii */
 void mem_dump(FILE *f_output,u_char *pkt,u_int len);
 

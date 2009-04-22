@@ -8,6 +8,7 @@
 #include <string.h>
 #include <time.h>
 #include <sys/types.h>
+#include <sys/stat.h>
 #include <uuid/uuid.h>
 
 #include "utils.h"
@@ -29,6 +30,48 @@ char *m_ctime(time_t *ct,char *buf,size_t buf_len)
    snprintf(buf,buf_len,"%4.4d-%2.2d-%2.2d %2.2d:%2.2d:%2.2d",
             ctm.tm_year + 1900, ctm.tm_mon + 1, ctm.tm_mday,
             ctm.tm_hour, ctm.tm_min, ctm.tm_sec);
+   return buf;
+}
+
+struct fmode_info {
+   u_int flag;
+   char c;
+   int pos;
+};
+
+static struct fmode_info fmode_flags[] = {
+   { S_IFDIR, 'd', 0 },
+   { S_IRUSR, 'r', 1 },
+   { S_IWUSR, 'w', 2 },
+   { S_IXUSR, 'x', 3 },
+   { S_IRGRP, 'r', 4 },
+   { S_IWGRP, 'w', 5 },
+   { S_IXGRP, 'x', 6 },
+   { S_IROTH, 'r', 7 },
+   { S_IWOTH, 'w', 8 },
+   { S_IXOTH, 'x', 9 },
+   { S_ISUID, 's', 3 },
+   { S_ISVTX, 't', 9 },
+   { 0, 0, -1, },
+};
+
+/* Convert a file mode to a string */
+char *m_fmode_to_str(u_int mode,char *buf)
+{
+   struct fmode_info *fi;
+   int i;
+
+   for(i=0;i<10;i++) 
+      buf[i] = '-';
+   buf[10] = 0;
+
+   for(i=0;fmode_flags[i].flag;i++) {
+      fi = &fmode_flags[i];
+
+      if (mode & fi->flag)
+         buf[fi->pos] = fi->c;
+   }
+
    return buf;
 }
 
