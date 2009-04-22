@@ -41,6 +41,7 @@ struct fmode_info {
 
 static struct fmode_info fmode_flags[] = {
    { S_IFDIR, 'd', 0 },
+   { S_IFLNK, 'l', 0 },
    { S_IRUSR, 'r', 1 },
    { S_IWUSR, 'w', 2 },
    { S_IXUSR, 'x', 3 },
@@ -68,7 +69,7 @@ char *m_fmode_to_str(u_int mode,char *buf)
    for(i=0;fmode_flags[i].flag;i++) {
       fi = &fmode_flags[i];
 
-      if (mode & fi->flag)
+      if ((mode & fi->flag) == fi->flag)
          buf[fi->pos] = fi->c;
    }
 
