@@ -202,5 +202,8 @@ int vmfs_inode_stat(vmfs_inode_t *inode,struct stat *buf)
    buf->st_uid   = inode->uid;
    buf->st_gid   = inode->gid;
    buf->st_size  = inode->size;
+   buf->st_atime = inode->atime;
+   buf->st_mtime = inode->mtime;
+   buf->st_ctime = inode->ctime;
    return(0);
 }
