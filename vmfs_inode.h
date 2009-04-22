@@ -1,6 +1,8 @@
 #ifndef VMFS_INODE_H
 #define VMFS_INODE_H
 
+#include <sys/stat.h>
+
 #define VMFS_INODE_SIZE  0x800
 
 #define VMFS_INODE_OFS_GRP_ID     0x0000
@@ -50,5 +52,8 @@ int vmfs_inode_get(vmfs_volume_t *vol,vmfs_dirent_t *rec,u_char *buf);
 
 /* Bind inode info to a file */
 int vmfs_inode_bind(vmfs_file_t *f,u_char *inode_buf);
+
+/* Get inode status */
+int vmfs_inode_stat(vmfs_inode_t *inode,struct stat *buf);
 
 #endif

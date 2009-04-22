@@ -4,6 +4,7 @@
 
 #include <stdlib.h>
 #include <string.h>
+#include <sys/stat.h>
 #include "vmfs.h"
 
 /* Create a file structure */
@@ -241,4 +242,10 @@ int vmfs_file_dump(vmfs_file_t *f,off_t pos,size_t len,FILE *fd_out)
 
    free(buf);
    return(0);
+}
+
+/* Get file status */
+int vmfs_file_stat(vmfs_file_t *f,struct stat *buf)
+{
+   return(vmfs_inode_stat(&f->inode,buf));
 }

@@ -3,6 +3,7 @@
  */
 
 #include <string.h>
+#include <sys/stat.h>
 #include "vmfs.h"
 
 /* Read an inode */
@@ -182,5 +183,17 @@ int vmfs_inode_bind(vmfs_file_t *f,u_char *inode_buf)
          break;
    }
 
+   return(0);
+}
+
+/* Get inode status */
+int vmfs_inode_stat(vmfs_inode_t *inode,struct stat *buf)
+{
+   memset(buf,0,sizeof(*buf));
+   buf->st_mode  = inode->mode;
+   buf->st_nlink = 1;
+   buf->st_uid   = inode->uid;
+   buf->st_gid   = inode->gid;
+   buf->st_size  = inode->size;
    return(0);
 }

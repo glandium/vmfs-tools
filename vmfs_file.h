@@ -1,6 +1,8 @@
 #ifndef VMFS_FILE_H
 #define VMFS_FILE_H
 
+#include <sys/stat.h>
+
 /* File types (in inode and directory entries) */
 #define VMFS_FILE_TYPE_DIR      0x02
 #define VMFS_FILE_TYPE_FILE     0x03
@@ -44,5 +46,8 @@ ssize_t vmfs_file_read(vmfs_file_t *f,u_char *buf,size_t len);
 
 /* Dump a file */
 int vmfs_file_dump(vmfs_file_t *f,off_t pos,size_t len,FILE *fd_out);
+
+/* Get file status */
+int vmfs_file_stat(vmfs_file_t *f,struct stat *buf);
 
 #endif
