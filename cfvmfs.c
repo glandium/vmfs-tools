@@ -6,6 +6,9 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/stat.h>
+#include <sys/types.h>
+#include <pwd.h>
+#include <grp.h>
 #include "vmfs.h"
 
 /* "cat" command */
@@ -64,6 +67,8 @@ static int cmd_dirl(vmfs_volume_t *vol,int argc,char *argv[])
 {
    vmfs_dirent_t **dlist,*entry;
    struct stat st_info;
+   struct passwd *usr;
+   struct group *grp;
    char buffer[1024];
    int i,res;
 
@@ -88,10 +93,20 @@ static int cmd_dirl(vmfs_volume_t *vol,int argc,char *argv[])
 
       printf("%-10s ",m_fmode_to_str(st_info.st_mode,buffer));
 
-      printf("%u %4u %4u %10llu %s %s\n",
-             (unsigned int)st_info.st_nlink,
-             st_info.st_uid,
-             st_info.st_gid,
+      usr = getpwuid(st_info.st_uid);
+      grp = getgrgid(st_info.st_gid);
+
+      printf("%u ", (unsigned int)st_info.st_nlink);
+      if (usr)
+         printf("%8s ", usr->pw_name);
+      else
+         printf("%8u ", st_info.st_uid);
+      if (grp)
+         printf("%8s ", grp->gr_name);
+      else
+         printf("%8u ", st_info.st_gid);
+
+      printf("%10llu %s %s\n",
              (unsigned long long)st_info.st_size,
              m_ctime(&st_info.st_ctime,buffer,sizeof(buffer)),
              entry->name);
