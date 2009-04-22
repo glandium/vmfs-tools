@@ -14,9 +14,9 @@
 #define VMFS_INODE_OFS_ID2        0x0204
 #define VMFS_INODE_OFS_TYPE       0x020c
 #define VMFS_INODE_OFS_SIZE       0x0214
-#define VMFS_INODE_OFS_TS1        0x022c
-#define VMFS_INODE_OFS_TS2        0x0230
-#define VMFS_INODE_OFS_TS3        0x0234
+#define VMFS_INODE_OFS_MTIME      0x022c
+#define VMFS_INODE_OFS_CTIME      0x0230
+#define VMFS_INODE_OFS_ATIME      0x0234
 #define VMFS_INODE_OFS_UID        0x0238
 #define VMFS_INODE_OFS_GID        0x023c
 #define VMFS_INODE_OFS_MODE       0x0240
@@ -33,7 +33,7 @@ struct vmfs_inode {
    m_u32_t id,id2;
    m_u32_t type;
    m_u64_t size;
-   m_u32_t ts1,ts2,ts3;
+   time_t  mtime,ctime,atime;
    m_u32_t uid,gid;
    m_u32_t mode;
 };

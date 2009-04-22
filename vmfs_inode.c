@@ -17,9 +17,9 @@ int vmfs_inode_read(vmfs_inode_t *inode,u_char *buf)
    inode->id2      = read_le32(buf,VMFS_INODE_OFS_ID2);
    inode->type     = read_le32(buf,VMFS_INODE_OFS_TYPE);
    inode->size     = read_le64(buf,VMFS_INODE_OFS_SIZE);
-   inode->ts1      = read_le32(buf,VMFS_INODE_OFS_TS1);
-   inode->ts2      = read_le32(buf,VMFS_INODE_OFS_TS2);
-   inode->ts3      = read_le32(buf,VMFS_INODE_OFS_TS3);
+   inode->mtime    = read_le32(buf,VMFS_INODE_OFS_MTIME);
+   inode->ctime    = read_le32(buf,VMFS_INODE_OFS_CTIME);
+   inode->atime    = read_le32(buf,VMFS_INODE_OFS_ATIME);
    inode->uid      = read_le32(buf,VMFS_INODE_OFS_UID);
    inode->gid      = read_le32(buf,VMFS_INODE_OFS_GID);
    inode->mode     = read_le32(buf,VMFS_INODE_OFS_MODE);
@@ -31,6 +31,8 @@ int vmfs_inode_read(vmfs_inode_t *inode,u_char *buf)
 /* Show an inode */
 void vmfs_inode_show(vmfs_inode_t *inode)
 {
+   char tbuf[64];
+
    printf("  - Group ID    : 0x%8.8x\n",inode->group_id);
    printf("  - Position    : 0x%llx\n",inode->position);
    printf("  - HB Position : 0x%llx\n",inode->hb_pos);
@@ -42,6 +44,10 @@ void vmfs_inode_show(vmfs_inode_t *inode)
    printf("  - Size        : 0x%8.8llx\n",inode->size);
    printf("  - UID/GID     : %d/%d\n",inode->uid,inode->gid);
    printf("  - Mode        : 0%o\n",inode->mode);
+
+   printf("  - Access Time : %s\n",m_ctime(&inode->atime,tbuf,sizeof(tbuf)));
+   printf("  - Modify Time : %s\n",m_ctime(&inode->mtime,tbuf,sizeof(tbuf)));
+   printf("  - Change Time : %s\n",m_ctime(&inode->ctime,tbuf,sizeof(tbuf)));
 }
 
 /* Get the offset corresponding to an inode in the FDC file */
