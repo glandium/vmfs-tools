@@ -48,6 +48,9 @@ ssize_t vmfs_file_read(vmfs_file_t *f,u_char *buf,size_t len);
 int vmfs_file_dump(vmfs_file_t *f,off_t pos,size_t len,FILE *fd_out);
 
 /* Get file status */
-int vmfs_file_stat(vmfs_file_t *f,struct stat *buf);
+int vmfs_file_fstat(vmfs_file_t *f,struct stat *buf);
+
+/* Get file status (similar to fstat(), but with a path) */
+int vmfs_file_stat(vmfs_volume_t *vol,char *path,struct stat *buf);
 
 #endif

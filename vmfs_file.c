@@ -245,7 +245,25 @@ int vmfs_file_dump(vmfs_file_t *f,off_t pos,size_t len,FILE *fd_out)
 }
 
 /* Get file status */
-int vmfs_file_stat(vmfs_file_t *f,struct stat *buf)
+int vmfs_file_fstat(vmfs_file_t *f,struct stat *buf)
 {
    return(vmfs_inode_stat(&f->inode,buf));
+}
+
+/* Get file status (similar to fstat(), but with a path) */
+int vmfs_file_stat(vmfs_volume_t *vol,char *path,struct stat *buf)
+{
+   u_char inode_buf[VMFS_INODE_SIZE];
+   vmfs_dirent_t entry;
+   vmfs_inode_t inode;
+
+   if (vmfs_dirent_resolve_path(vol,vol->root_dir,path,&entry) != 1)
+      return(-1);
+
+   if (vmfs_inode_get(vol,&entry,inode_buf) == -1)
+      return(-1);
+   
+   vmfs_inode_read(&inode,inode_buf);
+   vmfs_inode_stat(&inode,buf);
+   return(0);
 }
