@@ -55,6 +55,8 @@ struct vmfs_volinfo {
 #define VMFS_FSINFO_OFS_UUID     0x0009
 #define VMFS_FSINFO_OFS_LABEL    0x001d
 #define VMFS_FSINFO_OFS_BLKSIZE  0x00a1
+/* 0x00a9 32-bits timestamp (ctime?) */
+/* 0x00b1 LVM uuid */
 
 struct vmfs_fsinfo {
    m_u32_t magic;
