@@ -56,9 +56,6 @@ struct vmfs_volume {
    /* VMFS volume base */
    off_t vmfs_base;
 
-   /* FDC base */
-   off_t fdc_base;
-
    /* Volume and FS information */
    vmfs_volinfo_t vol_info;
    vmfs_fsinfo_t fs_info;

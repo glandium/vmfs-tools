@@ -241,7 +241,6 @@ int vmfs_fs_open(vmfs_fs_t *fs)
    /* Compute position of FDC base */
    fs->fdc_base = fs->vol->vmfs_base + VMFS_FDC_BASE;
    /* Temporary */
-   fs->vol->fdc_base = fs->fdc_base;
    memcpy(&fs->vol->fs_info, &fs->fs_info, sizeof(fs->fs_info));
 
    if (fs->debug_level > 0)
