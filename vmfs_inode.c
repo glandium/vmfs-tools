@@ -115,8 +115,8 @@ static int vmfs_inode_resolve_pb(vmfs_file_t *f,u_int base_pos,m_u32_t blk_id)
    off_t addr;
    int i;
 
-   pbc = f->vol->pbc;
-   pbc_bmh = &f->vol->pbc_bmh;
+   pbc = f->fs->pbc;
+   pbc_bmh = &f->fs->pbc_bmh;
 
    subgroup = VMFS_BLK_PB_SUBGROUP(blk_id);
    number   = VMFS_BLK_PB_NUMBER(blk_id);
@@ -157,12 +157,12 @@ int vmfs_inode_bind(vmfs_file_t *f,u_char *inode_buf)
 
    vmfs_inode_read(&f->inode,inode_buf);
 
-   blk_size = vmfs_vol_get_blocksize(f->vol);
+   blk_size = vmfs_fs_get_blocksize(f->fs);
    exp_blks = (f->inode.size + blk_size - 1) / blk_size;
    vmfs_blk_list_init(&f->blk_list,exp_blks);
 
    /* Indirect block count (in pointer blocks) */
-   icount = f->vol->pbc_bmh.data_size / sizeof(m_u32_t);
+   icount = f->fs->pbc_bmh.data_size / sizeof(m_u32_t);
    factor = 1;
 
    for(i=0;i<VMFS_INODE_BLK_COUNT;i++) {

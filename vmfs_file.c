@@ -15,7 +15,6 @@ vmfs_file_t *vmfs_file_create_struct(vmfs_fs_t *fs)
    if (!(f = calloc(1,sizeof(*f))))
       return NULL;
 
-   f->vol = fs->vol;
    f->fs = fs;
    return f;
 }
@@ -113,11 +112,11 @@ ssize_t vmfs_file_read(vmfs_file_t *f,u_char *buf,size_t len)
    ssize_t res,rlen = 0;
    size_t clen,exp_len;
 
-   blk_size = vmfs_vol_get_blocksize(f->vol);
+   blk_size = vmfs_fs_get_blocksize(f->fs);
    file_size = vmfs_file_get_size(f);
 
-   sbc = f->vol->sbc;
-   sbc_bmh = &f->vol->sbc_bmh;
+   sbc = f->fs->sbc;
+   sbc_bmh = &f->fs->sbc_bmh;
 
    while(len > 0) {
       blk_pos = f->pos / blk_size;
@@ -154,7 +153,7 @@ ssize_t vmfs_file_read(vmfs_file_t *f,u_char *buf,size_t len)
                    (m_u64_t)f->pos,offset);
 #endif
 
-            res = vmfs_vol_read(f->vol,VMFS_BLK_FB_NUMBER(blk_id),offset,
+            res = vmfs_vol_read(f->fs->vol,VMFS_BLK_FB_NUMBER(blk_id),offset,
                                 buf,clen);
             break;
 

@@ -10,7 +10,6 @@
 
 /* === VMFS file abstraction === */
 struct vmfs_file {
-   vmfs_volume_t *vol;
    vmfs_fs_t *fs;
    vmfs_blk_list_t blk_list;
    vmfs_inode_t inode;
