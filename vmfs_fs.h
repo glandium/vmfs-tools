@@ -25,6 +25,32 @@ struct vmfs_fsinfo {
    uuid_t vol_uuid;
 };
 
+/* === VMFS filesystem === */
+struct vmfs_fs {
+   int debug_level;
+
+   /* FDC base */
+   off_t fdc_base;
+
+   /* FS information */
+   vmfs_fsinfo_t fs_info;
+
+   /* Associated VMFS Volume */
+   vmfs_volume_t *vol;
+
+   /* Meta-files containing file system structures */
+   vmfs_file_t *fbb,*fdc,*pbc,*sbc,*vh,*root_dir;
+
+   /* Bitmap headers of meta-files */
+   vmfs_bitmap_header_t fbb_bmh,fdc_bmh,pbc_bmh,sbc_bmh;
+};
+
+/* Get block size of a volume */
+static inline m_u64_t vmfs_fs_get_blocksize(vmfs_fs_t *fs)
+{
+   return(fs->fs_info.block_size);
+}
+
 /* Read filesystem information */
 int vmfs_fsinfo_read(vmfs_fsinfo_t *fsi,FILE *fd,off_t base);
 
@@ -36,5 +62,11 @@ int vmfs_vol_dump_bitmaps(vmfs_volume_t *vol);
 
 /* Read FDC base information ; temporarily exported */
 int vmfs_read_fdc_base(vmfs_volume_t *vol);
+
+/* Create a FS structure */
+vmfs_fs_t *vmfs_fs_create(char *filename,int debug_level);
+
+/* Open a VMFS volume */
+int vmfs_fs_open(vmfs_fs_t *fs);
 
 #endif

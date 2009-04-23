@@ -13,6 +13,7 @@ typedef struct vmfs_blk_array vmfs_blk_array_t;
 typedef struct vmfs_blk_list vmfs_blk_list_t;
 typedef struct vmfs_file vmfs_file_t;
 typedef struct vmfs_volume vmfs_volume_t;
+typedef struct vmfs_fs vmfs_fs_t;
 
 #include "utils.h"
 #include "vmfs_heartbeat.h"

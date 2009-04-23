@@ -3,6 +3,7 @@
  */
 
 #include <string.h>
+#include <stdlib.h>
 #include "vmfs.h"
 
 /* VMFS meta-files */
@@ -11,6 +12,8 @@
 #define VMFS_PBC_FILENAME  ".pbc.sf"
 #define VMFS_SBC_FILENAME  ".sbc.sf"
 #define VMFS_VH_FILENAME   ".vh.sf"
+
+#define VMFS_FDC_BASE       0x1400000
 
 /* Read filesystem information */
 int vmfs_fsinfo_read(vmfs_fsinfo_t *fsi,FILE *fd,off_t base)
@@ -195,5 +198,56 @@ int vmfs_read_fdc_base(vmfs_volume_t *vol)
    if (vol->debug_level > 0)
       vmfs_vol_dump_bitmaps(vol);
 
+   return(0);
+}
+
+/* Create a FS structure */
+vmfs_fs_t *vmfs_fs_create(char *filename,int debug_level)
+{
+   vmfs_fs_t *fs;
+
+   if (!(fs = calloc(1,sizeof(*fs))))
+      return NULL;
+
+   if (!(fs->vol = vmfs_vol_create(filename, debug_level)))
+      goto err_vol;
+
+   fs->debug_level = debug_level;
+   return fs;
+
+ err_vol:
+   free(fs);
+   return NULL;
+}
+
+/* Open a VMFS volume */
+int vmfs_fs_open(vmfs_fs_t *fs)
+{
+   if (vmfs_vol_open(fs->vol))
+      return(-1);
+
+   /* Read FS info */
+   if (vmfs_fsinfo_read(&fs->fs_info,fs->vol->fd,fs->vol->vmfs_base) == -1) {
+      fprintf(stderr,"VMFS: Unable to read FS information\n");
+      return(-1);
+   }
+
+   if (fs->debug_level > 0)
+      vmfs_fsinfo_show(&fs->fs_info);
+
+   /* Compute position of FDC base */
+   fs->fdc_base = fs->vol->vmfs_base + VMFS_FDC_BASE;
+
+   if (fs->debug_level > 0)
+      printf("FDC base = @0x%llx\n",(m_u64_t)fs->fdc_base);
+
+   /* Read FDC base information */
+   if (vmfs_read_fdc_base(fs->vol) == -1) {
+      fprintf(stderr,"VMFS: Unable to read FDC information\n");
+      return(-1);
+   }
+
+   if (fs->debug_level > 0)
+      printf("VMFS: filesystem opened successfully\n");
    return(0);
 }
