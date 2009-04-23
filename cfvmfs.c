@@ -214,7 +214,7 @@ static int cmd_show_volume(vmfs_fs_t *fs,int argc,char *argv[])
 /* Show volume bitmaps */
 static int cmd_show_vol_bitmaps(vmfs_fs_t *fs,int argc,char *argv[])
 {
-   return(vmfs_vol_dump_bitmaps(fs->vol));
+   return(vmfs_fs_dump_bitmaps(fs));
 }
 
 /* Check volume bitmaps */

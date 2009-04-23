@@ -58,7 +58,7 @@ int vmfs_fsinfo_read(vmfs_fsinfo_t *fsi,FILE *fd,off_t base);
 void vmfs_fsinfo_show(vmfs_fsinfo_t *fsi);
 
 /* Dump volume bitmaps */
-int vmfs_vol_dump_bitmaps(vmfs_volume_t *vol);
+int vmfs_fs_dump_bitmaps(vmfs_fs_t *vol);
 
 /* Create a FS structure */
 vmfs_fs_t *vmfs_fs_create(char *filename,int debug_level);

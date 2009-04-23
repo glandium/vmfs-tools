@@ -138,19 +138,19 @@ static int vmfs_open_all_meta_files(vmfs_fs_t *fs)
 }
 
 /* Dump volume bitmaps */
-int vmfs_vol_dump_bitmaps(vmfs_volume_t *vol)
+int vmfs_fs_dump_bitmaps(vmfs_fs_t *fs)
 {
    printf("FBB bitmap:\n");
-   vmfs_bmh_show(&vol->fbb_bmh);
+   vmfs_bmh_show(&fs->fbb_bmh);
 
    printf("\nFDC bitmap:\n");
-   vmfs_bmh_show(&vol->fdc_bmh);
+   vmfs_bmh_show(&fs->fdc_bmh);
 
    printf("\nPBC bitmap:\n");
-   vmfs_bmh_show(&vol->pbc_bmh);
+   vmfs_bmh_show(&fs->pbc_bmh);
 
    printf("\nSBC bitmap:\n");
-   vmfs_bmh_show(&vol->sbc_bmh);
+   vmfs_bmh_show(&fs->sbc_bmh);
 
    return(0);
 }
@@ -199,7 +199,7 @@ static int vmfs_read_fdc_base(vmfs_fs_t *fs)
 
    /* Dump bitmap info */
    if (fs->debug_level > 0)
-      vmfs_vol_dump_bitmaps(fs->vol);
+      vmfs_fs_dump_bitmaps(fs);
 
    return(0);
 }
