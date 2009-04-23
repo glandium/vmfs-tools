@@ -251,7 +251,7 @@ int vmfs_file_fstat(vmfs_file_t *f,struct stat *buf)
 }
 
 /* Get file status (similar to fstat(), but with a path) */
-static int vmfs_file_stat_internal(vmfs_volume_t *vol,char *path,
+static int vmfs_file_stat_internal(vmfs_fs_t *fs,char *path,
                                    int follow_symlink,
                                    struct stat *buf)
 {
@@ -259,11 +259,11 @@ static int vmfs_file_stat_internal(vmfs_volume_t *vol,char *path,
    vmfs_dirent_t entry;
    vmfs_inode_t inode;
 
-   if (vmfs_dirent_resolve_path(vol,vol->root_dir,path,follow_symlink,
+   if (vmfs_dirent_resolve_path(fs->vol,fs->root_dir,path,follow_symlink,
                                 &entry) != 1)
       return(-1);
 
-   if (vmfs_inode_get(vol,&entry,inode_buf) == -1)
+   if (vmfs_inode_get(fs->vol,&entry,inode_buf) == -1)
       return(-1);
    
    vmfs_inode_read(&inode,inode_buf);
@@ -272,13 +272,13 @@ static int vmfs_file_stat_internal(vmfs_volume_t *vol,char *path,
 }
 
 /* Get file file status (follow symlink) */
-int vmfs_file_stat(vmfs_volume_t *vol,char *path,struct stat *buf)
+int vmfs_file_stat(vmfs_fs_t *fs,char *path,struct stat *buf)
 {
-   return(vmfs_file_stat_internal(vol,path,1,buf));
+   return(vmfs_file_stat_internal(fs,path,1,buf));
 }
 
 /* Get file file status (do not follow symlink) */
-int vmfs_file_lstat(vmfs_volume_t *vol,char *path,struct stat *buf)
+int vmfs_file_lstat(vmfs_fs_t *fs,char *path,struct stat *buf)
 {   
-   return(vmfs_file_stat_internal(vol,path,0,buf));
+   return(vmfs_file_stat_internal(fs,path,0,buf));
 }

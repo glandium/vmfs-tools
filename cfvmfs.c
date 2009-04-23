@@ -88,7 +88,7 @@ static int cmd_dirl(vmfs_fs_t *fs,int argc,char *argv[])
       entry = dlist[i];
 
       snprintf(buffer,sizeof(buffer),"%s/%s",argv[0],entry->name);
-      if (vmfs_file_lstat(fs->vol,buffer,&st_info) == -1)
+      if (vmfs_file_lstat(fs,buffer,&st_info) == -1)
          continue;
 
       printf("%-10s ",m_fmode_to_str(st_info.st_mode,buffer));
