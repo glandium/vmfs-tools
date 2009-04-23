@@ -13,7 +13,7 @@
 #define VMFS_SBC_FILENAME  ".sbc.sf"
 #define VMFS_VH_FILENAME   ".vh.sf"
 
-#define VMFS_FDC_BASE       0x1400000
+#define VMFS_FDC_BASE       0x0400000
 
 /* Read a block from the filesystem */
 ssize_t vmfs_fs_read(vmfs_fs_t *fs,m_u32_t blk,off_t offset,
@@ -117,7 +117,7 @@ static vmfs_file_t *vmfs_open_meta_file(vmfs_fs_t *fs,char *name,
    inode_addr = vmfs_inode_get_offset(fs,rec.block_id);
    inode_addr += fs->fdc_base;
 
-   if (vmfs_vol_read_data(fs->vol,inode_addr,buf,sizeof(buf)) != sizeof(buf))
+   if (vmfs_vol_read(fs->vol,inode_addr,buf,sizeof(buf)) != sizeof(buf))
       return NULL;
 
    /* Bind the associated inode */
@@ -170,7 +170,7 @@ static int vmfs_read_fdc_base(vmfs_fs_t *fs)
    m_u64_t len;
 
    /* Read the header */
-   if (vmfs_vol_read_data(fs->vol,fs->fdc_base,buf,sizeof(buf)) < sizeof(buf))
+   if (vmfs_vol_read(fs->vol,fs->fdc_base,buf,sizeof(buf)) < sizeof(buf))
       return(-1);
 
    vmfs_bmh_read(&fs->fdc_bmh,buf);
@@ -191,7 +191,7 @@ static int vmfs_read_fdc_base(vmfs_fs_t *fs)
    }
 
    /* Read the root directory */
-   if (vmfs_vol_read_data(fs->vol,inode_pos,buf,fs->fdc_bmh.data_size) != fs->fdc_bmh.data_size)
+   if (vmfs_vol_read(fs->vol,inode_pos,buf,fs->fdc_bmh.data_size) != fs->fdc_bmh.data_size)
       return(-1);
 
    vmfs_inode_read(&inode,buf);
@@ -242,7 +242,7 @@ int vmfs_fs_open(vmfs_fs_t *fs)
       vmfs_fsinfo_show(&fs->fs_info);
 
    /* Compute position of FDC base */
-   fs->fdc_base = fs->vol->vmfs_base + VMFS_FDC_BASE;
+   fs->fdc_base = VMFS_FDC_BASE;
 
    if (fs->debug_level > 0)
       printf("FDC base = @0x%llx\n",(m_u64_t)fs->fdc_base);
