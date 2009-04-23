@@ -92,7 +92,7 @@ static int vmfs_read_bitmap_header(vmfs_file_t *f,vmfs_bitmap_header_t *bmh)
 }
 
 /* Open a meta-file */
-static vmfs_file_t *vmfs_open_meta_file(vmfs_volume_t *vol,char *name,
+static vmfs_file_t *vmfs_open_meta_file(vmfs_fs_t *fs,char *name,
                                         vmfs_bitmap_header_t *bmh)
 {
    u_char buf[VMFS_INODE_SIZE];
@@ -100,18 +100,18 @@ static vmfs_file_t *vmfs_open_meta_file(vmfs_volume_t *vol,char *name,
    vmfs_file_t *f;
    off_t inode_addr;
 
-   if (!(f = vmfs_file_create_struct(vol)))
+   if (!(f = vmfs_file_create_struct(fs->vol)))
       return NULL;
 
    /* Search the file name in root directory */
-   if (vmfs_dirent_search(vol->root_dir,name,&rec) != 1)
+   if (vmfs_dirent_search(fs->root_dir,name,&rec) != 1)
       return NULL;
    
    /* Read the inode info */
-   inode_addr = vmfs_inode_get_offset(vol,rec.block_id);
-   inode_addr += vol->fdc_base;
+   inode_addr = vmfs_inode_get_offset(fs->vol,rec.block_id);
+   inode_addr += fs->fdc_base;
 
-   if (vmfs_vol_read_data(vol,inode_addr,buf,sizeof(buf)) != sizeof(buf))
+   if (vmfs_vol_read_data(fs->vol,inode_addr,buf,sizeof(buf)) != sizeof(buf))
       return NULL;
 
    /* Bind the associated inode */
@@ -128,11 +128,11 @@ static vmfs_file_t *vmfs_open_meta_file(vmfs_volume_t *vol,char *name,
 /* Open all the VMFS meta files */
 static int vmfs_open_all_meta_files(vmfs_fs_t *fs)
 {
-   fs->fbb = vmfs_open_meta_file(fs->vol,VMFS_FBB_FILENAME,&fs->fbb_bmh);
-   fs->fdc = vmfs_open_meta_file(fs->vol,VMFS_FDC_FILENAME,&fs->fdc_bmh);
-   fs->pbc = vmfs_open_meta_file(fs->vol,VMFS_PBC_FILENAME,&fs->pbc_bmh);
-   fs->sbc = vmfs_open_meta_file(fs->vol,VMFS_SBC_FILENAME,&fs->sbc_bmh);
-   fs->vh  = vmfs_open_meta_file(fs->vol,VMFS_VH_FILENAME,NULL);
+   fs->fbb = vmfs_open_meta_file(fs,VMFS_FBB_FILENAME,&fs->fbb_bmh);
+   fs->fdc = vmfs_open_meta_file(fs,VMFS_FDC_FILENAME,&fs->fdc_bmh);
+   fs->pbc = vmfs_open_meta_file(fs,VMFS_PBC_FILENAME,&fs->pbc_bmh);
+   fs->sbc = vmfs_open_meta_file(fs,VMFS_SBC_FILENAME,&fs->sbc_bmh);
+   fs->vh  = vmfs_open_meta_file(fs,VMFS_VH_FILENAME,NULL);
 
    return(0);
 }
@@ -253,15 +253,15 @@ int vmfs_fs_open(vmfs_fs_t *fs)
       return(-1);
    }
    /* Temporary */
-   fs->fbb = fs->vol->fbb;
-   fs->fdc = fs->vol->fdc;
-   fs->pbc = fs->vol->pbc;
-   fs->sbc = fs->vol->sbc;
-   fs->vh = fs->vol->vh;
-   memcpy(&fs->fbb_bmh, &fs->vol->fbb_bmh, sizeof(fs->fbb_bmh));
-   memcpy(&fs->fdc_bmh, &fs->vol->fdc_bmh, sizeof(fs->fdc_bmh));
-   memcpy(&fs->pbc_bmh, &fs->vol->pbc_bmh, sizeof(fs->pbc_bmh));
-   memcpy(&fs->sbc_bmh, &fs->vol->sbc_bmh, sizeof(fs->sbc_bmh));
+   fs->vol->fbb = fs->fbb;
+   fs->vol->fdc = fs->fdc;
+   fs->vol->pbc = fs->pbc;
+   fs->vol->sbc = fs->sbc;
+   fs->vol->vh = fs->vh;
+   memcpy(&fs->vol->fbb_bmh, &fs->fbb_bmh, sizeof(fs->fbb_bmh));
+   memcpy(&fs->vol->fdc_bmh, &fs->fdc_bmh, sizeof(fs->fdc_bmh));
+   memcpy(&fs->vol->pbc_bmh, &fs->pbc_bmh, sizeof(fs->pbc_bmh));
+   memcpy(&fs->vol->sbc_bmh, &fs->sbc_bmh, sizeof(fs->sbc_bmh));
 
    if (fs->debug_level > 0)
       printf("VMFS: filesystem opened successfully\n");
