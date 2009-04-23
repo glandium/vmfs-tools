@@ -2,7 +2,7 @@
 #define VMFS_FS_H
 
 /* === FS Info === */
-#define VMFS_FSINFO_BASE   0x1200000
+#define VMFS_FSINFO_BASE   0x0200000
 #define VMFS_FSINFO_MAGIC  0x2fabf15e
 
 #define VMFS_FSINFO_OFS_MAGIC    0x0000
@@ -56,7 +56,7 @@ ssize_t vmfs_fs_read(vmfs_fs_t *fs,m_u32_t blk,off_t offset,
                       u_char *buf,size_t len);
 
 /* Read filesystem information */
-int vmfs_fsinfo_read(vmfs_fsinfo_t *fsi,FILE *fd,off_t base);
+int vmfs_fsinfo_read(vmfs_fs_t *fs);
 
 /* Show FS information */
 void vmfs_fsinfo_show(vmfs_fsinfo_t *fsi);

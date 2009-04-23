@@ -28,30 +28,27 @@ ssize_t vmfs_fs_read(vmfs_fs_t *fs,m_u32_t blk,off_t offset,
 }
 
 /* Read filesystem information */
-int vmfs_fsinfo_read(vmfs_fsinfo_t *fsi,FILE *fd,off_t base)
+int vmfs_fsinfo_read(vmfs_fs_t *fs)
 {
    u_char buf[512];
 
-   if (fseek(fd,base+VMFS_FSINFO_BASE,SEEK_SET) != 0)
+   if (vmfs_vol_read(fs->vol,VMFS_FSINFO_BASE,buf,sizeof(buf)) != sizeof(buf))
       return(-1);
 
-   if (fread(buf,sizeof(buf),1,fd) != 1)
-      return(-1);
+   fs->fs_info.magic       = read_le32(buf,VMFS_FSINFO_OFS_MAGIC);
 
-   fsi->magic       = read_le32(buf,VMFS_FSINFO_OFS_MAGIC);
-
-   if (fsi->magic != VMFS_FSINFO_MAGIC) {
-      fprintf(stderr,"VMFS FSInfo: invalid magic number 0x%8.8x\n",fsi->magic);
+   if (fs->fs_info.magic != VMFS_FSINFO_MAGIC) {
+      fprintf(stderr,"VMFS FSInfo: invalid magic number 0x%8.8x\n",fs->fs_info.magic);
       return(-1);
    }
 
-   fsi->vol_version = read_le32(buf,VMFS_FSINFO_OFS_VOLVER);
-   fsi->version     = buf[VMFS_FSINFO_OFS_VER];
+   fs->fs_info.vol_version = read_le32(buf,VMFS_FSINFO_OFS_VOLVER);
+   fs->fs_info.version     = buf[VMFS_FSINFO_OFS_VER];
 
-   fsi->block_size  = read_le32(buf,VMFS_FSINFO_OFS_BLKSIZE);
+   fs->fs_info.block_size  = read_le32(buf,VMFS_FSINFO_OFS_BLKSIZE);
 
-   memcpy(fsi->uuid,buf+VMFS_FSINFO_OFS_UUID,sizeof(fsi->uuid));
-   memcpy(fsi->label,buf+VMFS_FSINFO_OFS_LABEL,sizeof(fsi->label));
+   memcpy(fs->fs_info.uuid,buf+VMFS_FSINFO_OFS_UUID,sizeof(fs->fs_info.uuid));
+   memcpy(fs->fs_info.label,buf+VMFS_FSINFO_OFS_LABEL,sizeof(fs->fs_info.label));
 
    return(0);
 }
@@ -239,7 +236,7 @@ int vmfs_fs_open(vmfs_fs_t *fs)
       return(-1);
 
    /* Read FS info */
-   if (vmfs_fsinfo_read(&fs->fs_info,fs->vol->fd,fs->vol->vmfs_base) == -1) {
+   if (vmfs_fsinfo_read(fs) == -1) {
       fprintf(stderr,"VMFS: Unable to read FS information\n");
       return(-1);
    }
