@@ -20,16 +20,16 @@ vmfs_file_t *vmfs_file_create_struct(vmfs_volume_t *vol)
 }
 
 /* Open a file based on a directory entry */
-vmfs_file_t *vmfs_file_open_rec(vmfs_volume_t *vol,vmfs_dirent_t *rec)
+vmfs_file_t *vmfs_file_open_rec(vmfs_fs_t *fs,vmfs_dirent_t *rec)
 {
    u_char buf[VMFS_INODE_SIZE];
    vmfs_file_t *f;
 
-   if (!(f = vmfs_file_create_struct(vol)))
+   if (!(f = vmfs_file_create_struct(fs->vol)))
       return NULL;
    
    /* Read the inode */
-   if (vmfs_inode_get(vol,rec,buf) == -1) {
+   if (vmfs_inode_get(fs->vol,rec,buf) == -1) {
       fprintf(stderr,"VMFS: Unable to get inode info for dir entry '%s'\n",
               rec->name);
       return NULL;
@@ -58,7 +58,7 @@ vmfs_file_t *vmfs_file_open(vmfs_fs_t *fs,char *filename)
    if (res != 1)
       return NULL;
 
-   return(vmfs_file_open_rec(fs->vol,&rec));
+   return(vmfs_file_open_rec(fs,&rec));
 }
 
 /* Close a file */
