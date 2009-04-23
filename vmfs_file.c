@@ -16,6 +16,7 @@ vmfs_file_t *vmfs_file_create_struct(vmfs_fs_t *fs)
       return NULL;
 
    f->vol = fs->vol;
+   f->fs = fs;
    return f;
 }
 
