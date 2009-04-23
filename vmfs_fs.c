@@ -183,9 +183,6 @@ static int vmfs_read_fdc_base(vmfs_fs_t *fs)
    /* Read the first inode part */
    inode_pos = fs->fdc_base + vmfs_bitmap_get_area_data_addr(&fs->fdc_bmh,0);
 
-   if (fseeko(fs->vol->fd,inode_pos,SEEK_SET) == -1)
-      return(-1);
-   
    len = fs->fs_info.block_size - (inode_pos - fs->fdc_base);
 
    if (fs->debug_level > 0) {
@@ -194,7 +191,7 @@ static int vmfs_read_fdc_base(vmfs_fs_t *fs)
    }
 
    /* Read the root directory */
-   if (fread(buf,fs->fdc_bmh.data_size,1,fs->vol->fd) != 1)
+   if (vmfs_vol_read_data(fs->vol,inode_pos,buf,fs->fdc_bmh.data_size) != fs->fdc_bmh.data_size)
       return(-1);
 
    vmfs_inode_read(&inode,buf);
