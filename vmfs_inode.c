@@ -84,7 +84,7 @@ off_t vmfs_inode_get_offset(vmfs_volume_t *vol,m_u32_t blk_id)
 }
 
 /* Get inode associated to a directory entry */
-int vmfs_inode_get(vmfs_volume_t *vol,vmfs_dirent_t *rec,u_char *buf)
+int vmfs_inode_get(vmfs_fs_t *fs,vmfs_dirent_t *rec,u_char *buf)
 {
    m_u32_t blk_id = rec->block_id;
    off_t inode_addr;
@@ -93,13 +93,13 @@ int vmfs_inode_get(vmfs_volume_t *vol,vmfs_dirent_t *rec,u_char *buf)
    if (VMFS_BLK_TYPE(blk_id) != VMFS_BLK_TYPE_FD)
       return(-1);
 
-   inode_addr = vmfs_inode_get_offset(vol,blk_id);
+   inode_addr = vmfs_inode_get_offset(fs->vol,blk_id);
 
-   if (vmfs_file_seek(vol->fdc,inode_addr,SEEK_SET) == -1)
+   if (vmfs_file_seek(fs->fdc,inode_addr,SEEK_SET) == -1)
       return(-1);
    
-   len = vmfs_file_read(vol->fdc,buf,vol->fdc_bmh.data_size);
-   return((len == vol->fdc_bmh.data_size) ? 0 : -1);
+   len = vmfs_file_read(fs->fdc,buf,fs->fdc_bmh.data_size);
+   return((len == fs->fdc_bmh.data_size) ? 0 : -1);
 }
 
 /* Resolve pointer blocks */
