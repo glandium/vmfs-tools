@@ -46,7 +46,7 @@ static int cmd_dir(vmfs_fs_t *fs,int argc,char *argv[])
       return(-1);
    }
 
-   res = vmfs_dirent_readdir(fs->vol,argv[0],&dlist);
+   res = vmfs_dirent_readdir(fs,argv[0],&dlist);
 
    if (res == -1) {
       fprintf(stderr,"Unable to read directory %s\n",argv[0]);
@@ -77,7 +77,7 @@ static int cmd_dirl(vmfs_fs_t *fs,int argc,char *argv[])
       return(-1);
    }
 
-   res = vmfs_dirent_readdir(fs->vol,argv[0],&dlist);
+   res = vmfs_dirent_readdir(fs,argv[0],&dlist);
 
    if (res == -1) {
       fprintf(stderr,"Unable to read directory %s\n",argv[0]);

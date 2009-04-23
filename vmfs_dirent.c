@@ -174,7 +174,7 @@ void vmfs_dirent_free_dlist(int count,vmfs_dirent_t ***dlist)
 }
 
 /* Read a directory */
-int vmfs_dirent_readdir(vmfs_volume_t *vol,char *dir,vmfs_dirent_t ***dlist)
+int vmfs_dirent_readdir(vmfs_fs_t *fs,char *dir,vmfs_dirent_t ***dlist)
 {
    u_char buf[VMFS_DIRENT_SIZE];
    vmfs_dirent_t *entry;
@@ -184,7 +184,7 @@ int vmfs_dirent_readdir(vmfs_volume_t *vol,char *dir,vmfs_dirent_t ***dlist)
    *dlist = NULL;
    dcount = 0;
 
-   if (!(f = vmfs_file_open(vol,dir)))
+   if (!(f = vmfs_file_open(fs->vol,dir)))
       return(-1);
    
    dcount = f->inode.size / VMFS_DIRENT_SIZE;
