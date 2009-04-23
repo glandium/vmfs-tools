@@ -164,15 +164,17 @@ static int vmfs_read_fdc_base(vmfs_fs_t *fs)
    if (vmfs_vol_read_data(fs->vol,fs->fdc_base,buf,sizeof(buf)) < sizeof(buf))
       return(-1);
 
-   vmfs_bmh_read(&fs->vol->fdc_bmh,buf);
+   vmfs_bmh_read(&fs->fdc_bmh,buf);
+   /* Temporary */
+   memcpy(&fs->vol->fdc_bmh, &fs->fdc_bmh, sizeof(fs->fdc_bmh));
 
    if (fs->debug_level > 0) {
       printf("FDC bitmap:\n");
-      vmfs_bmh_show(&fs->vol->fdc_bmh);
+      vmfs_bmh_show(&fs->fdc_bmh);
    }
 
    /* Read the first inode part */
-   inode_pos = fs->fdc_base + vmfs_bitmap_get_area_data_addr(&fs->vol->fdc_bmh,0);
+   inode_pos = fs->fdc_base + vmfs_bitmap_get_area_data_addr(&fs->fdc_bmh,0);
 
    if (fseeko(fs->vol->fd,inode_pos,SEEK_SET) == -1)
       return(-1);
@@ -185,7 +187,7 @@ static int vmfs_read_fdc_base(vmfs_fs_t *fs)
    }
 
    /* Read the root directory */
-   if (fread(buf,fs->vol->fdc_bmh.data_size,1,fs->vol->fd) != 1)
+   if (fread(buf,fs->fdc_bmh.data_size,1,fs->vol->fd) != 1)
       return(-1);
 
    vmfs_inode_read(&inode,buf);
