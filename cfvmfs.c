@@ -12,7 +12,7 @@
 #include "vmfs.h"
 
 /* "cat" command */
-static int cmd_cat(vmfs_volume_t *vol,int argc,char *argv[])
+static int cmd_cat(vmfs_fs_t *fs,int argc,char *argv[])
 {
    vmfs_file_t *f;
    int i;
@@ -23,7 +23,7 @@ static int cmd_cat(vmfs_volume_t *vol,int argc,char *argv[])
    }
 
    for(i=0;i<argc;i++) {
-      if (!(f = vmfs_file_open(vol,argv[i]))) {
+      if (!(f = vmfs_file_open(fs->vol,argv[i]))) {
          fprintf(stderr,"Unable to open file %s\n",argv[i]);
          return(-1);
       }
@@ -36,7 +36,7 @@ static int cmd_cat(vmfs_volume_t *vol,int argc,char *argv[])
 }
 
 /* "dir" command */
-static int cmd_dir(vmfs_volume_t *vol,int argc,char *argv[])
+static int cmd_dir(vmfs_fs_t *fs,int argc,char *argv[])
 {
    vmfs_dirent_t **dlist,*entry;
    int i,res;
@@ -46,7 +46,7 @@ static int cmd_dir(vmfs_volume_t *vol,int argc,char *argv[])
       return(-1);
    }
 
-   res = vmfs_dirent_readdir(vol,argv[0],&dlist);
+   res = vmfs_dirent_readdir(fs->vol,argv[0],&dlist);
 
    if (res == -1) {
       fprintf(stderr,"Unable to read directory %s\n",argv[0]);
@@ -63,7 +63,7 @@ static int cmd_dir(vmfs_volume_t *vol,int argc,char *argv[])
 }
 
 /* "dir" with long format command */
-static int cmd_dirl(vmfs_volume_t *vol,int argc,char *argv[])
+static int cmd_dirl(vmfs_fs_t *fs,int argc,char *argv[])
 {
    vmfs_dirent_t **dlist,*entry;
    struct stat st_info;
@@ -77,7 +77,7 @@ static int cmd_dirl(vmfs_volume_t *vol,int argc,char *argv[])
       return(-1);
    }
 
-   res = vmfs_dirent_readdir(vol,argv[0],&dlist);
+   res = vmfs_dirent_readdir(fs->vol,argv[0],&dlist);
 
    if (res == -1) {
       fprintf(stderr,"Unable to read directory %s\n",argv[0]);
@@ -88,7 +88,7 @@ static int cmd_dirl(vmfs_volume_t *vol,int argc,char *argv[])
       entry = dlist[i];
 
       snprintf(buffer,sizeof(buffer),"%s/%s",argv[0],entry->name);
-      if (vmfs_file_lstat(vol,buffer,&st_info) == -1)
+      if (vmfs_file_lstat(fs->vol,buffer,&st_info) == -1)
          continue;
 
       printf("%-10s ",m_fmode_to_str(st_info.st_mode,buffer));
@@ -117,32 +117,32 @@ static int cmd_dirl(vmfs_volume_t *vol,int argc,char *argv[])
 }
 
 /* "df" (disk free) command */
-static int cmd_df(vmfs_volume_t *vol,int argc,char *argv[])
+static int cmd_df(vmfs_fs_t *fs,int argc,char *argv[])
 {
    m_u32_t alloc,total;
 
-   total = vol->fbb_bmh.total_items;
-   alloc = vmfs_bitmap_allocated_items(vol->fbb,&vol->fbb_bmh);
+   total = fs->vol->fbb_bmh.total_items;
+   alloc = vmfs_bitmap_allocated_items(fs->vol->fbb,&fs->vol->fbb_bmh);
 
-   printf("Block size       : %llu bytes\n",vmfs_vol_get_blocksize(vol));
+   printf("Block size       : %llu bytes\n",vmfs_fs_get_blocksize(fs));
 
    printf("Total blocks     : %u\n",total);
    printf("Total size       : %llu Mb\n",
-          (vmfs_vol_get_blocksize(vol)*total)/1048576);
+          (vmfs_fs_get_blocksize(fs)*total)/1048576);
 
    printf("Allocated blocks : %u\n",alloc);
    printf("Allocated space  : %llu Mb\n",
-          (vmfs_vol_get_blocksize(vol)*alloc)/1048576);
+          (vmfs_fs_get_blocksize(fs)*alloc)/1048576);
 
    printf("Free blocks      : %u\n",total-alloc);
    printf("Free size        : %llu Mb\n",
-          (vmfs_vol_get_blocksize(vol)*(total-alloc))/1048576);
+          (vmfs_fs_get_blocksize(fs)*(total-alloc))/1048576);
 
    return(0);
 }
 
 /* Show a directory entry */
-static int cmd_show_dirent(vmfs_volume_t *vol,int argc,char *argv[])
+static int cmd_show_dirent(vmfs_fs_t *fs,int argc,char *argv[])
 {
    vmfs_dirent_t entry;
 
@@ -151,7 +151,7 @@ static int cmd_show_dirent(vmfs_volume_t *vol,int argc,char *argv[])
       return(-1);
    }
 
-   if (vmfs_dirent_resolve_path(vol,vol->root_dir,argv[0],0,&entry) != 1) {
+   if (vmfs_dirent_resolve_path(fs->vol,fs->vol->root_dir,argv[0],0,&entry) != 1) {
       fprintf(stderr,"Unable to resolve path '%s'\n",argv[0]);
       return(-1);
    }
@@ -161,7 +161,7 @@ static int cmd_show_dirent(vmfs_volume_t *vol,int argc,char *argv[])
 }
 
 /* Show an inode */
-static int cmd_show_inode(vmfs_volume_t *vol,int argc,char *argv[])
+static int cmd_show_inode(vmfs_fs_t *fs,int argc,char *argv[])
 {
    vmfs_file_t *f;
 
@@ -170,7 +170,7 @@ static int cmd_show_inode(vmfs_volume_t *vol,int argc,char *argv[])
       return(-1);
    }
 
-   if (!(f = vmfs_file_open(vol,argv[0]))) {
+   if (!(f = vmfs_file_open(fs->vol,argv[0]))) {
       fprintf(stderr,"Unable to open file '%s'\n",argv[0]);
       return(-1);
    }
@@ -181,7 +181,7 @@ static int cmd_show_inode(vmfs_volume_t *vol,int argc,char *argv[])
 }
 
 /* Show file blocks */
-static int cmd_show_file_blocks(vmfs_volume_t *vol,int argc,char *argv[])
+static int cmd_show_file_blocks(vmfs_fs_t *fs,int argc,char *argv[])
 {
    vmfs_file_t *f;
 
@@ -190,7 +190,7 @@ static int cmd_show_file_blocks(vmfs_volume_t *vol,int argc,char *argv[])
       return(-1);
    }
 
-   if (!(f = vmfs_file_open(vol,argv[0]))) {
+   if (!(f = vmfs_file_open(fs->vol,argv[0]))) {
       fprintf(stderr,"Unable to open file '%s'\n",argv[0]);
       return(-1);
    }
@@ -201,51 +201,51 @@ static int cmd_show_file_blocks(vmfs_volume_t *vol,int argc,char *argv[])
 }
 
 /* Show volume information */
-static int cmd_show_volume(vmfs_volume_t *vol,int argc,char *argv[])
+static int cmd_show_volume(vmfs_fs_t *fs,int argc,char *argv[])
 {
-   vmfs_volinfo_show(&vol->vol_info);
+   vmfs_volinfo_show(&fs->vol->vol_info);
    /* Only display fs info for the first extent */
-   if (vol->vol_info.first_segment == 0)
-      vmfs_fsinfo_show(&vol->fs_info);
+   if (fs->vol->vol_info.first_segment == 0)
+      vmfs_fsinfo_show(&fs->vol->fs_info);
 
    return(0);
 }
 
 /* Show volume bitmaps */
-static int cmd_show_vol_bitmaps(vmfs_volume_t *vol,int argc,char *argv[])
+static int cmd_show_vol_bitmaps(vmfs_fs_t *fs,int argc,char *argv[])
 {
-   return(vmfs_vol_dump_bitmaps(vol));
+   return(vmfs_vol_dump_bitmaps(fs->vol));
 }
 
 /* Check volume bitmaps */
-static int cmd_check_vol_bitmaps(vmfs_volume_t *vol,int argc,char *argv[])
+static int cmd_check_vol_bitmaps(vmfs_fs_t *fs,int argc,char *argv[])
 {
    int errors = 0;
 
    printf("Checking FBB bitmaps...\n");
-   errors += vmfs_bitmap_check(vol->fbb,&vol->fbb_bmh);
+   errors += vmfs_bitmap_check(fs->fbb,&fs->fbb_bmh);
 
    printf("Checking FDC bitmaps...\n");
-   errors += vmfs_bitmap_check(vol->fdc,&vol->fdc_bmh);
+   errors += vmfs_bitmap_check(fs->fdc,&fs->fdc_bmh);
 
    printf("Checking PBC bitmaps...\n");
-   errors += vmfs_bitmap_check(vol->pbc,&vol->pbc_bmh);
+   errors += vmfs_bitmap_check(fs->pbc,&fs->pbc_bmh);
 
    printf("Checking SBC bitmaps...\n");   
-   errors += vmfs_bitmap_check(vol->sbc,&vol->sbc_bmh);
+   errors += vmfs_bitmap_check(fs->sbc,&fs->sbc_bmh);
 
    printf("Total errors: %d\n",errors);
    return(errors);
 }
 
 /* Show active heartbeats */
-static int cmd_show_heartbeats(vmfs_volume_t *vol,int argc,char *argv[])
+static int cmd_show_heartbeats(vmfs_fs_t *fs,int argc,char *argv[])
 {
-   return(vmfs_heartbeat_show_active(vol));
+   return(vmfs_heartbeat_show_active(fs->vol));
 }
 
 /* Convert a raw block ID in human readable form */
-static int cmd_convert_block_id(vmfs_volume_t *vol,int argc,char *argv[])
+static int cmd_convert_block_id(vmfs_fs_t *fs,int argc,char *argv[])
 {
    m_u32_t blk_id,blk_type;
    int i;
@@ -292,7 +292,7 @@ static int cmd_convert_block_id(vmfs_volume_t *vol,int argc,char *argv[])
 struct cmd {
    char *name;
    char *description;
-   int (*fn)(vmfs_volume_t *vol,int argc,char *argv[]);
+   int (*fn)(vmfs_fs_t *fs,int argc,char *argv[]);
 };
 
 struct cmd cmd_array[] = {
@@ -365,5 +365,5 @@ int main(int argc,char *argv[])
       exit(EXIT_FAILURE);
    }
 
-   return(cmd->fn(fs->vol,argc-3,&argv[3]));
+   return(cmd->fn(fs,argc-3,&argv[3]));
 }
