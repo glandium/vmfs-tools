@@ -51,7 +51,7 @@ int vmfs_dirent_search(vmfs_file_t *dir_entry,char *name,vmfs_dirent_t *rec)
 }
 
 /* Read a symlink */
-static char *vmfs_dirent_read_symlink(vmfs_volume_t *vol,vmfs_dirent_t *entry)
+static char *vmfs_dirent_read_symlink(vmfs_fs_t *fs,vmfs_dirent_t *entry)
 {
    vmfs_file_t *f;
    size_t str_len;
@@ -60,7 +60,7 @@ static char *vmfs_dirent_read_symlink(vmfs_volume_t *vol,vmfs_dirent_t *entry)
    if (entry->type != VMFS_FILE_TYPE_SYMLINK)
       return NULL;
 
-   if (!(f = vmfs_file_open_rec(vol,entry)))
+   if (!(f = vmfs_file_open_rec(fs->vol,entry)))
       return NULL;
 
    str_len = f->inode.size;
@@ -119,7 +119,7 @@ int vmfs_dirent_resolve_path(vmfs_fs_t *fs,vmfs_file_t *base_dir,
 
       /* follow the symlink if we have an entry of this type */
       if (rec->type == VMFS_FILE_TYPE_SYMLINK) {
-         if (!(symlink = vmfs_dirent_read_symlink(fs->vol,rec))) {
+         if (!(symlink = vmfs_dirent_read_symlink(fs,rec))) {
             res = -1;
             break;
          }
