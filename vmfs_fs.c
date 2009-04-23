@@ -15,6 +15,18 @@
 
 #define VMFS_FDC_BASE       0x1400000
 
+/* Read a block from the filesystem */
+ssize_t vmfs_fs_read(vmfs_fs_t *fs,m_u32_t blk,off_t offset,
+                      u_char *buf,size_t len)
+{
+   off_t pos;
+
+   pos  = (m_u64_t)blk * vmfs_fs_get_blocksize(fs);
+   pos += offset;
+
+   return(vmfs_vol_read_(fs->vol,pos,buf,len));
+}
+
 /* Read filesystem information */
 int vmfs_fsinfo_read(vmfs_fsinfo_t *fsi,FILE *fd,off_t base)
 {

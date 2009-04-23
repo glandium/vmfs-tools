@@ -51,6 +51,10 @@ static inline m_u64_t vmfs_fs_get_blocksize(vmfs_fs_t *fs)
    return(fs->fs_info.block_size);
 }
 
+/* Read a block from the filesystem */
+ssize_t vmfs_fs_read(vmfs_fs_t *fs,m_u32_t blk,off_t offset,
+                      u_char *buf,size_t len);
+
 /* Read filesystem information */
 int vmfs_fsinfo_read(vmfs_fsinfo_t *fsi,FILE *fd,off_t base);
 

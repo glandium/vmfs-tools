@@ -29,6 +29,14 @@ ssize_t vmfs_vol_read(vmfs_volume_t *vol,m_u32_t blk,off_t offset,
    return(vmfs_vol_read_data(vol,pos,buf,len));
 }
 
+/* Read a raw block of data on logical volume */
+ssize_t vmfs_vol_read_(vmfs_volume_t *vol,off_t pos,u_char *buf,size_t len)
+{
+   pos += vol->vmfs_base + 0x1000000;
+
+   return(vmfs_vol_read_data(vol,pos,buf,len));
+}
+
 /* Read volume information */
 int vmfs_volinfo_read(vmfs_volinfo_t *vol,FILE *fd)
 {
