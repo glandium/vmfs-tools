@@ -337,7 +337,7 @@ static struct cmd *cmd_find(char *name)
 
 int main(int argc,char *argv[])
 {
-   vmfs_volume_t *vol;
+   vmfs_fs_t *fs;
    char *vol_name,*cmd_name;
    struct cmd *cmd;
 
@@ -355,15 +355,15 @@ int main(int argc,char *argv[])
       return(0);
    }
 
-   if (!(vol = vmfs_vol_create(vol_name,0))) {
+   if (!(fs = vmfs_fs_create(vol_name,0))) {
       fprintf(stderr,"Unable to open device/file \"%s\".\n",vol_name);
       exit(EXIT_FAILURE);
    }
    
-   if (vmfs_vol_open(vol) == -1) {
+   if (vmfs_fs_open(fs) == -1) {
       fprintf(stderr,"Unable to open volume.\n");
       exit(EXIT_FAILURE);
    }
 
-   return(cmd->fn(vol,argc-3,&argv[3]));
+   return(cmd->fn(fs->vol,argc-3,&argv[3]));
 }
