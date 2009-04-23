@@ -121,8 +121,8 @@ static int cmd_df(vmfs_fs_t *fs,int argc,char *argv[])
 {
    m_u32_t alloc,total;
 
-   total = fs->vol->fbb_bmh.total_items;
-   alloc = vmfs_bitmap_allocated_items(fs->vol->fbb,&fs->vol->fbb_bmh);
+   total = fs->fbb_bmh.total_items;
+   alloc = vmfs_bitmap_allocated_items(fs->fbb,&fs->fbb_bmh);
 
    printf("Block size       : %llu bytes\n",vmfs_fs_get_blocksize(fs));
 

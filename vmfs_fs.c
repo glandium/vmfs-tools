@@ -177,8 +177,6 @@ static int vmfs_read_fdc_base(vmfs_fs_t *fs)
       return(-1);
 
    vmfs_bmh_read(&fs->fdc_bmh,buf);
-   /* Temporary */
-   memcpy(&fs->vol->fdc_bmh, &fs->fdc_bmh, sizeof(fs->fdc_bmh));
 
    if (fs->debug_level > 0) {
       printf("FDC bitmap:\n");
@@ -262,16 +260,6 @@ int vmfs_fs_open(vmfs_fs_t *fs)
       fprintf(stderr,"VMFS: Unable to read FDC information\n");
       return(-1);
    }
-   /* Temporary */
-   fs->vol->fbb = fs->fbb;
-   fs->vol->fdc = fs->fdc;
-   fs->vol->pbc = fs->pbc;
-   fs->vol->sbc = fs->sbc;
-   fs->vol->vh = fs->vh;
-   memcpy(&fs->vol->fbb_bmh, &fs->fbb_bmh, sizeof(fs->fbb_bmh));
-   memcpy(&fs->vol->fdc_bmh, &fs->fdc_bmh, sizeof(fs->fdc_bmh));
-   memcpy(&fs->vol->pbc_bmh, &fs->pbc_bmh, sizeof(fs->pbc_bmh));
-   memcpy(&fs->vol->sbc_bmh, &fs->sbc_bmh, sizeof(fs->sbc_bmh));
 
    if (fs->debug_level > 0)
       printf("VMFS: filesystem opened successfully\n");

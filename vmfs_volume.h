@@ -59,12 +59,6 @@ struct vmfs_volume {
    /* Volume and FS information */
    vmfs_volinfo_t vol_info;
    vmfs_fsinfo_t fs_info;
-
-   /* Meta-files containing file system structures */
-   vmfs_file_t *fbb,*fdc,*pbc,*sbc,*vh;
-
-   /* Bitmap headers of meta-files */
-   vmfs_bitmap_header_t fbb_bmh,fdc_bmh,pbc_bmh,sbc_bmh;
 };
 
 /* Get block size of a volume */
