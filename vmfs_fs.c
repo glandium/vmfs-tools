@@ -237,6 +237,9 @@ int vmfs_fs_open(vmfs_fs_t *fs)
 
    /* Compute position of FDC base */
    fs->fdc_base = fs->vol->vmfs_base + VMFS_FDC_BASE;
+   /* Temporary */
+   fs->vol->fdc_base = fs->fdc_base;
+   memcpy(&fs->vol->fs_info, &fs->fs_info, sizeof(fs->fs_info));
 
    if (fs->debug_level > 0)
       printf("FDC base = @0x%llx\n",(m_u64_t)fs->fdc_base);
@@ -246,6 +249,16 @@ int vmfs_fs_open(vmfs_fs_t *fs)
       fprintf(stderr,"VMFS: Unable to read FDC information\n");
       return(-1);
    }
+   /* Temporary */
+   fs->fbb = fs->vol->fbb;
+   fs->fdc = fs->vol->fdc;
+   fs->pbc = fs->vol->pbc;
+   fs->sbc = fs->vol->sbc;
+   fs->vh = fs->vol->vh;
+   memcpy(&fs->fbb_bmh, &fs->vol->fbb_bmh, sizeof(fs->fbb_bmh));
+   memcpy(&fs->fdc_bmh, &fs->vol->fdc_bmh, sizeof(fs->fdc_bmh));
+   memcpy(&fs->pbc_bmh, &fs->vol->pbc_bmh, sizeof(fs->pbc_bmh));
+   memcpy(&fs->sbc_bmh, &fs->vol->sbc_bmh, sizeof(fs->sbc_bmh));
 
    if (fs->debug_level > 0)
       printf("VMFS: filesystem opened successfully\n");

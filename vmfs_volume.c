@@ -7,8 +7,6 @@
 #include <stdlib.h>
 #include "vmfs.h"
 
-#define VMFS_FDC_BASE       0x1400000
-
 /* Read a data block from the physical volume */
 ssize_t vmfs_vol_read_data(vmfs_volume_t *vol,off_t pos,u_char *buf,size_t len)
 {
@@ -127,35 +125,9 @@ int vmfs_vol_open(vmfs_volume_t *vol)
       return(-1);
    }
 
-   if (vol->debug_level > 0)
+   if (vol->debug_level > 0) {
       vmfs_volinfo_show(&vol->vol_info);
-
-   /* Stop here for extents that are not the first */
-   if (vol->vol_info.first_segment != 0)
-      return(0);
-
-   /* Read FS info */
-   if (vmfs_fsinfo_read(&vol->fs_info,vol->fd,vol->vmfs_base) == -1) {
-      fprintf(stderr,"VMFS: Unable to read FS information\n");
-      return(-1);
-   }
-
-   if (vol->debug_level > 0)
-      vmfs_fsinfo_show(&vol->fs_info);
-
-   /* Compute position of FDC base */
-   vol->fdc_base = vol->vmfs_base + VMFS_FDC_BASE;
-
-   if (vol->debug_level > 0)
-      printf("FDC base = @0x%llx\n",(m_u64_t)vol->fdc_base);
-
-   /* Read FDC base information */
-   if (vmfs_read_fdc_base(vol) == -1) {
-      fprintf(stderr,"VMFS: Unable to read FDC information\n");
-      return(-1);
-   }
-
-   if (vol->debug_level > 0)
       printf("VMFS: volume opened successfully\n");
+   }
    return(0);
 }
