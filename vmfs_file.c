@@ -153,7 +153,7 @@ ssize_t vmfs_file_read(vmfs_file_t *f,u_char *buf,size_t len)
                    (m_u64_t)f->pos,offset);
 #endif
 
-            res = vmfs_vol_read(f->fs->vol,VMFS_BLK_FB_NUMBER(blk_id),offset,
+            res = vmfs_fs_read(f->fs,VMFS_BLK_FB_NUMBER(blk_id),offset,
                                 buf,clen);
             break;
 
