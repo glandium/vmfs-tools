@@ -153,7 +153,7 @@ int vmfs_vol_dump_bitmaps(vmfs_volume_t *vol)
 }
 
 /* Read FDC base information */
-int vmfs_read_fdc_base(vmfs_volume_t *vol)
+static int vmfs_read_fdc_base(vmfs_volume_t *vol)
 {
    u_char buf[VMFS_INODE_SIZE];
    vmfs_inode_t inode;
