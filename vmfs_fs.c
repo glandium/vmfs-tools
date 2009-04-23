@@ -126,13 +126,13 @@ static vmfs_file_t *vmfs_open_meta_file(vmfs_volume_t *vol,char *name,
 }
 
 /* Open all the VMFS meta files */
-static int vmfs_open_all_meta_files(vmfs_volume_t *vol)
+static int vmfs_open_all_meta_files(vmfs_fs_t *fs)
 {
-   vol->fbb = vmfs_open_meta_file(vol,VMFS_FBB_FILENAME,&vol->fbb_bmh);
-   vol->fdc = vmfs_open_meta_file(vol,VMFS_FDC_FILENAME,&vol->fdc_bmh);
-   vol->pbc = vmfs_open_meta_file(vol,VMFS_PBC_FILENAME,&vol->pbc_bmh);
-   vol->sbc = vmfs_open_meta_file(vol,VMFS_SBC_FILENAME,&vol->sbc_bmh);
-   vol->vh  = vmfs_open_meta_file(vol,VMFS_VH_FILENAME,NULL);
+   fs->fbb = vmfs_open_meta_file(fs->vol,VMFS_FBB_FILENAME,&fs->fbb_bmh);
+   fs->fdc = vmfs_open_meta_file(fs->vol,VMFS_FDC_FILENAME,&fs->fdc_bmh);
+   fs->pbc = vmfs_open_meta_file(fs->vol,VMFS_PBC_FILENAME,&fs->pbc_bmh);
+   fs->sbc = vmfs_open_meta_file(fs->vol,VMFS_SBC_FILENAME,&fs->sbc_bmh);
+   fs->vh  = vmfs_open_meta_file(fs->vol,VMFS_VH_FILENAME,NULL);
 
    return(0);
 }
@@ -195,7 +195,7 @@ static int vmfs_read_fdc_base(vmfs_fs_t *fs)
    vmfs_read_rootdir(fs,buf);
 
    /* Read the meta files */
-   vmfs_open_all_meta_files(fs->vol);
+   vmfs_open_all_meta_files(fs);
 
    /* Dump bitmap info */
    if (fs->debug_level > 0)
