@@ -67,9 +67,6 @@ static int vmfs_read_rootdir(vmfs_fs_t *fs,u_char *inode_buf)
    if (!(fs->root_dir = vmfs_file_create_struct(fs->vol)))
       return(-1);
 
-   /* Temporary */
-   fs->vol->root_dir = fs->root_dir;
-
    if (vmfs_inode_bind(fs->root_dir,inode_buf) == -1) {
       fprintf(stderr,"VMFS: unable to bind inode to root directory\n");
       return(-1);
