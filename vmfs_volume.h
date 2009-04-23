@@ -9,6 +9,8 @@
 #define VMFS_VOLINFO_OFS_VER   0x0004
 #define VMFS_VOLINFO_OFS_NAME  0x0012
 #define VMFS_VOLINFO_OFS_UUID  0x0082 
+/* 0x0092 64-bits timestamp in usec (volume ctime?) */
+/* 0x009a 64-bits timestamp in usec (volume mtime?) */
 
 #define VMFS_VOLINFO_OFS_NAME_SIZE     28
 
@@ -23,6 +25,10 @@
 #define VMFS_LVMINFO_OFS_LAST_SEGMENT  0x0280
 /* 0x0288 64-bits timestamp in usec (lvm mtime?) */
 #define VMFS_LVMINFO_OFS_NUM_EXTENTS   0x0290
+
+/* Segment information are at 0x80600 + i * 0x80 for i between 0 and VMFS_LVMINFO_OFS_NUM_SEGMENTS */
+/* At 0x10 (64-bits) or 0x14 (32-bits) within a segment info, it seems like something related to the absolute segment number in the logical volume (looks like absolute segment number << 4 on 32-bits) */
+/* Other segment information seem relative to the extent (always the same pattern on all extents) */
 
 struct vmfs_volinfo {
    m_u32_t magic;
