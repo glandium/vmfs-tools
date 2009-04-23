@@ -52,7 +52,7 @@ vmfs_file_t *vmfs_file_open(vmfs_fs_t *fs,char *filename)
    if (!(tmp_name = strdup(filename)))
       return NULL;
 
-   res = vmfs_dirent_resolve_path(fs->vol,fs->root_dir,tmp_name,1,&rec);
+   res = vmfs_dirent_resolve_path(fs,fs->root_dir,tmp_name,1,&rec);
    free(tmp_name);
 
    if (res != 1)
@@ -259,7 +259,7 @@ static int vmfs_file_stat_internal(vmfs_fs_t *fs,char *path,
    vmfs_dirent_t entry;
    vmfs_inode_t inode;
 
-   if (vmfs_dirent_resolve_path(fs->vol,fs->root_dir,path,follow_symlink,
+   if (vmfs_dirent_resolve_path(fs,fs->root_dir,path,follow_symlink,
                                 &entry) != 1)
       return(-1);
 

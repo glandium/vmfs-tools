@@ -25,7 +25,7 @@ void vmfs_dirent_show(vmfs_dirent_t *entry);
 int vmfs_dirent_search(vmfs_file_t *dir_entry,char *name,vmfs_dirent_t *rec);
 
 /* Resolve a path name to a directory entry */
-int vmfs_dirent_resolve_path(vmfs_volume_t *vol,vmfs_file_t *base_dir,
+int vmfs_dirent_resolve_path(vmfs_fs_t *fs,vmfs_file_t *base_dir,
                              char *name,int follow_symlink,
                              vmfs_dirent_t *rec);
 
