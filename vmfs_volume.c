@@ -16,21 +16,8 @@ ssize_t vmfs_vol_read_data(vmfs_volume_t *vol,off_t pos,u_char *buf,size_t len)
    return(fread(buf,1,len,vol->fd));
 }
 
-/* Read a block */
-ssize_t vmfs_vol_read(vmfs_volume_t *vol,m_u32_t blk,off_t offset,
-                      u_char *buf,size_t len)
-{
-   off_t pos;
-
-   pos  = (m_u64_t)blk * vmfs_vol_get_blocksize(vol);
-   pos += vol->vmfs_base + 0x1000000;
-   pos += offset;
-
-   return(vmfs_vol_read_data(vol,pos,buf,len));
-}
-
 /* Read a raw block of data on logical volume */
-ssize_t vmfs_vol_read_(vmfs_volume_t *vol,off_t pos,u_char *buf,size_t len)
+ssize_t vmfs_vol_read(vmfs_volume_t *vol,off_t pos,u_char *buf,size_t len)
 {
    pos += vol->vmfs_base + 0x1000000;
 

@@ -77,11 +77,7 @@ static inline m_u64_t vmfs_vol_get_blocksize(vmfs_volume_t *vol)
 ssize_t vmfs_vol_read_data(vmfs_volume_t *vol,off_t pos,u_char *buf,size_t len);
 
 /* Read a raw block of data on logical volume */
-ssize_t vmfs_vol_read_(vmfs_volume_t *vol,off_t pos,u_char *buf,size_t len);
-
-/* Read data given a block position */
-ssize_t vmfs_vol_read(vmfs_volume_t *vol,m_u32_t blk,off_t offset,
-                      u_char *buf,size_t len);
+ssize_t vmfs_vol_read(vmfs_volume_t *vol,off_t pos,u_char *buf,size_t len);
 
 /* Read volume information */
 int vmfs_volinfo_read(vmfs_volinfo_t *vol,FILE *fd);

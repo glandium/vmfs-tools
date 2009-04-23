@@ -24,7 +24,7 @@ ssize_t vmfs_fs_read(vmfs_fs_t *fs,m_u32_t blk,off_t offset,
    pos  = (m_u64_t)blk * vmfs_fs_get_blocksize(fs);
    pos += offset;
 
-   return(vmfs_vol_read_(fs->vol,pos,buf,len));
+   return(vmfs_vol_read(fs->vol,pos,buf,len));
 }
 
 /* Read filesystem information */
