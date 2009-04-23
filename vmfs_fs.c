@@ -62,12 +62,15 @@ void vmfs_fsinfo_show(vmfs_fsinfo_t *fsi)
 }
 
 /* Read the root directory given its inode */
-static int vmfs_read_rootdir(vmfs_volume_t *vol,u_char *inode_buf)
+static int vmfs_read_rootdir(vmfs_fs_t *fs,u_char *inode_buf)
 {
-   if (!(vol->root_dir = vmfs_file_create_struct(vol)))
+   if (!(fs->root_dir = vmfs_file_create_struct(fs->vol)))
       return(-1);
 
-   if (vmfs_inode_bind(vol->root_dir,inode_buf) == -1) {
+   /* Temporary */
+   fs->vol->root_dir = fs->root_dir;
+
+   if (vmfs_inode_bind(fs->root_dir,inode_buf) == -1) {
       fprintf(stderr,"VMFS: unable to bind inode to root directory\n");
       return(-1);
    }
@@ -189,7 +192,7 @@ static int vmfs_read_fdc_base(vmfs_fs_t *fs)
       return(-1);
 
    vmfs_inode_read(&inode,buf);
-   vmfs_read_rootdir(fs->vol,buf);
+   vmfs_read_rootdir(fs,buf);
 
    /* Read the meta files */
    vmfs_open_all_meta_files(fs->vol);
