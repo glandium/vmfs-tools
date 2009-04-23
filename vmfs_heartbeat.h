@@ -27,6 +27,6 @@ int vmfs_heartbeat_read(vmfs_heartbeat_t *hb,u_char *buf);
 void vmfs_heartbeat_show(vmfs_heartbeat_t *hb);
 
 /* Show the active locks */
-int vmfs_heartbeat_show_active(vmfs_volume_t *vol);
+int vmfs_heartbeat_show_active(vmfs_fs_t *fs);
 
 #endif

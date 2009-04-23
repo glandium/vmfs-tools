@@ -38,7 +38,7 @@ void vmfs_heartbeat_show(vmfs_heartbeat_t *hb)
 }
 
 /* Show the active locks */
-int vmfs_heartbeat_show_active(vmfs_volume_t *vol)
+int vmfs_heartbeat_show_active(vmfs_fs_t *fs)
 {
    u_char buf[VMFS_HB_SIZE];
    vmfs_heartbeat_t hb;
@@ -46,8 +46,8 @@ int vmfs_heartbeat_show_active(vmfs_volume_t *vol)
    off_t pos = 0;
    int count = 0;
 
-   while(pos < vmfs_vol_get_blocksize(vol)) {
-      res = vmfs_vol_read(vol,3,pos,buf,sizeof(buf));
+   while(pos < vmfs_fs_get_blocksize(fs)) {
+      res = vmfs_vol_read(fs->vol,3,pos,buf,sizeof(buf));
 
       if (res != sizeof(buf)) {
          fprintf(stderr,"VMFS: unable to read heartbeat info.\n");

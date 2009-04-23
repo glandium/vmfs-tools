@@ -241,7 +241,7 @@ static int cmd_check_vol_bitmaps(vmfs_fs_t *fs,int argc,char *argv[])
 /* Show active heartbeats */
 static int cmd_show_heartbeats(vmfs_fs_t *fs,int argc,char *argv[])
 {
-   return(vmfs_heartbeat_show_active(fs->vol));
+   return(vmfs_heartbeat_show_active(fs));
 }
 
 /* Convert a raw block ID in human readable form */
