@@ -45,7 +45,7 @@ int vmfs_inode_read(vmfs_inode_t *inode,u_char *buf);
 void vmfs_inode_show(vmfs_inode_t *inode);
 
 /* Get the offset corresponding to an inode in the FDC file */
-off_t vmfs_inode_get_offset(vmfs_volume_t *vol,m_u32_t blk_id);
+off_t vmfs_inode_get_offset(vmfs_fs_t *fs,m_u32_t blk_id);
 
 /* Get inode associated to a directory entry */
 int vmfs_inode_get(vmfs_fs_t *fs,vmfs_dirent_t *rec,u_char *buf);

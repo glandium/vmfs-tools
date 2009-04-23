@@ -105,7 +105,7 @@ static vmfs_file_t *vmfs_open_meta_file(vmfs_fs_t *fs,char *name,
       return NULL;
    
    /* Read the inode info */
-   inode_addr = vmfs_inode_get_offset(fs->vol,rec.block_id);
+   inode_addr = vmfs_inode_get_offset(fs,rec.block_id);
    inode_addr += fs->fdc_base;
 
    if (vmfs_vol_read_data(fs->vol,inode_addr,buf,sizeof(buf)) != sizeof(buf))
