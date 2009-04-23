@@ -153,7 +153,7 @@ int vmfs_vol_dump_bitmaps(vmfs_volume_t *vol)
 }
 
 /* Read FDC base information */
-static int vmfs_read_fdc_base(vmfs_volume_t *vol)
+static int vmfs_read_fdc_base(vmfs_fs_t *fs)
 {
    u_char buf[VMFS_INODE_SIZE];
    vmfs_inode_t inode;
@@ -161,42 +161,42 @@ static int vmfs_read_fdc_base(vmfs_volume_t *vol)
    m_u64_t len;
 
    /* Read the header */
-   if (vmfs_vol_read_data(vol,vol->fdc_base,buf,sizeof(buf)) < sizeof(buf))
+   if (vmfs_vol_read_data(fs->vol,fs->fdc_base,buf,sizeof(buf)) < sizeof(buf))
       return(-1);
 
-   vmfs_bmh_read(&vol->fdc_bmh,buf);
+   vmfs_bmh_read(&fs->vol->fdc_bmh,buf);
 
-   if (vol->debug_level > 0) {
+   if (fs->debug_level > 0) {
       printf("FDC bitmap:\n");
-      vmfs_bmh_show(&vol->fdc_bmh);
+      vmfs_bmh_show(&fs->vol->fdc_bmh);
    }
 
    /* Read the first inode part */
-   inode_pos = vol->fdc_base + vmfs_bitmap_get_area_data_addr(&vol->fdc_bmh,0);
+   inode_pos = fs->fdc_base + vmfs_bitmap_get_area_data_addr(&fs->vol->fdc_bmh,0);
 
-   if (fseeko(vol->fd,inode_pos,SEEK_SET) == -1)
+   if (fseeko(fs->vol->fd,inode_pos,SEEK_SET) == -1)
       return(-1);
    
-   len = vol->fs_info.block_size - (inode_pos - vol->fdc_base);
+   len = fs->fs_info.block_size - (inode_pos - fs->fdc_base);
 
-   if (vol->debug_level > 0) {
+   if (fs->debug_level > 0) {
       printf("Inodes at @0x%llx\n",(m_u64_t)inode_pos);
       printf("Length: 0x%8.8llx\n",len);
    }
 
    /* Read the root directory */
-   if (fread(buf,vol->fdc_bmh.data_size,1,vol->fd) != 1)
+   if (fread(buf,fs->vol->fdc_bmh.data_size,1,fs->vol->fd) != 1)
       return(-1);
 
    vmfs_inode_read(&inode,buf);
-   vmfs_read_rootdir(vol,buf);
+   vmfs_read_rootdir(fs->vol,buf);
 
    /* Read the meta files */
-   vmfs_open_all_meta_files(vol);
+   vmfs_open_all_meta_files(fs->vol);
 
    /* Dump bitmap info */
-   if (vol->debug_level > 0)
-      vmfs_vol_dump_bitmaps(vol);
+   if (fs->debug_level > 0)
+      vmfs_vol_dump_bitmaps(fs->vol);
 
    return(0);
 }
@@ -245,7 +245,7 @@ int vmfs_fs_open(vmfs_fs_t *fs)
       printf("FDC base = @0x%llx\n",(m_u64_t)fs->fdc_base);
 
    /* Read FDC base information */
-   if (vmfs_read_fdc_base(fs->vol) == -1) {
+   if (vmfs_read_fdc_base(fs) == -1) {
       fprintf(stderr,"VMFS: Unable to read FDC information\n");
       return(-1);
    }
