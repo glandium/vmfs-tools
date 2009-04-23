@@ -61,12 +61,6 @@ struct vmfs_volume {
    vmfs_fsinfo_t fs_info;
 };
 
-/* Get block size of a volume */
-static inline m_u64_t vmfs_vol_get_blocksize(vmfs_volume_t *vol)
-{
-   return(vol->fs_info.block_size);
-}
-
 /* Read a raw block of data */
 ssize_t vmfs_vol_read_data(vmfs_volume_t *vol,off_t pos,u_char *buf,size_t len);
 
