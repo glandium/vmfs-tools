@@ -184,7 +184,7 @@ int vmfs_dirent_readdir(vmfs_fs_t *fs,char *dir,vmfs_dirent_t ***dlist)
    *dlist = NULL;
    dcount = 0;
 
-   if (!(f = vmfs_file_open(fs->vol,dir)))
+   if (!(f = vmfs_file_open(fs,dir)))
       return(-1);
    
    dcount = f->inode.size / VMFS_DIRENT_SIZE;

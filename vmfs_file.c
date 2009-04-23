@@ -43,7 +43,7 @@ vmfs_file_t *vmfs_file_open_rec(vmfs_volume_t *vol,vmfs_dirent_t *rec)
 }
 
 /* Open a file */
-vmfs_file_t *vmfs_file_open(vmfs_volume_t *vol,char *filename)
+vmfs_file_t *vmfs_file_open(vmfs_fs_t *fs,char *filename)
 {
    vmfs_dirent_t rec;
    char *tmp_name;
@@ -52,13 +52,13 @@ vmfs_file_t *vmfs_file_open(vmfs_volume_t *vol,char *filename)
    if (!(tmp_name = strdup(filename)))
       return NULL;
 
-   res = vmfs_dirent_resolve_path(vol,vol->root_dir,tmp_name,1,&rec);
+   res = vmfs_dirent_resolve_path(fs->vol,fs->root_dir,tmp_name,1,&rec);
    free(tmp_name);
 
    if (res != 1)
       return NULL;
 
-   return(vmfs_file_open_rec(vol,&rec));
+   return(vmfs_file_open_rec(fs->vol,&rec));
 }
 
 /* Close a file */

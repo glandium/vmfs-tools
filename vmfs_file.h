@@ -33,7 +33,7 @@ vmfs_file_t *vmfs_file_create_struct(vmfs_volume_t *vol);
 vmfs_file_t *vmfs_file_open_rec(vmfs_volume_t *vol,vmfs_dirent_t *rec);
 
 /* Open a file */
-vmfs_file_t *vmfs_file_open(vmfs_volume_t *vol,char *filename);
+vmfs_file_t *vmfs_file_open(vmfs_fs_t *fs,char *filename);
 
 /* Close a file */
 int vmfs_file_close(vmfs_file_t *f);
