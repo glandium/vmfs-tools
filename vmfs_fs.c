@@ -64,7 +64,7 @@ void vmfs_fsinfo_show(vmfs_fsinfo_t *fsi)
 /* Read the root directory given its inode */
 static int vmfs_read_rootdir(vmfs_fs_t *fs,u_char *inode_buf)
 {
-   if (!(fs->root_dir = vmfs_file_create_struct(fs->vol)))
+   if (!(fs->root_dir = vmfs_file_create_struct(fs)))
       return(-1);
 
    if (vmfs_inode_bind(fs->root_dir,inode_buf) == -1) {
@@ -97,7 +97,7 @@ static vmfs_file_t *vmfs_open_meta_file(vmfs_fs_t *fs,char *name,
    vmfs_file_t *f;
    off_t inode_addr;
 
-   if (!(f = vmfs_file_create_struct(fs->vol)))
+   if (!(f = vmfs_file_create_struct(fs)))
       return NULL;
 
    /* Search the file name in root directory */

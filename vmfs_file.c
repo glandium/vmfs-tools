@@ -8,14 +8,14 @@
 #include "vmfs.h"
 
 /* Create a file structure */
-vmfs_file_t *vmfs_file_create_struct(vmfs_volume_t *vol)
+vmfs_file_t *vmfs_file_create_struct(vmfs_fs_t *fs)
 {
    vmfs_file_t *f;
 
    if (!(f = calloc(1,sizeof(*f))))
       return NULL;
 
-   f->vol = vol;
+   f->vol = fs->vol;
    return f;
 }
 
@@ -25,7 +25,7 @@ vmfs_file_t *vmfs_file_open_rec(vmfs_fs_t *fs,vmfs_dirent_t *rec)
    u_char buf[VMFS_INODE_SIZE];
    vmfs_file_t *f;
 
-   if (!(f = vmfs_file_create_struct(fs->vol)))
+   if (!(f = vmfs_file_create_struct(fs)))
       return NULL;
    
    /* Read the inode */

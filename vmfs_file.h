@@ -27,7 +27,7 @@ static inline m_u64_t vmfs_file_get_size(vmfs_file_t *f)
 }
 
 /* Create a file structure */
-vmfs_file_t *vmfs_file_create_struct(vmfs_volume_t *vol);
+vmfs_file_t *vmfs_file_create_struct(vmfs_fs_t *fs);
 
 /* Open a file based on a directory entry */
 vmfs_file_t *vmfs_file_open_rec(vmfs_fs_t *fs,vmfs_dirent_t *rec);
