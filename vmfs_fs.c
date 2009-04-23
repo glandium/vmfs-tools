@@ -249,8 +249,6 @@ int vmfs_fs_open(vmfs_fs_t *fs)
 
    /* Compute position of FDC base */
    fs->fdc_base = fs->vol->vmfs_base + VMFS_FDC_BASE;
-   /* Temporary */
-   memcpy(&fs->vol->fs_info, &fs->fs_info, sizeof(fs->fs_info));
 
    if (fs->debug_level > 0)
       printf("FDC base = @0x%llx\n",(m_u64_t)fs->fdc_base);

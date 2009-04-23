@@ -58,7 +58,6 @@ struct vmfs_volume {
 
    /* Volume and FS information */
    vmfs_volinfo_t vol_info;
-   vmfs_fsinfo_t fs_info;
 };
 
 /* Read a raw block of data */
