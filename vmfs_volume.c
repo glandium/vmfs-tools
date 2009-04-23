@@ -8,7 +8,7 @@
 #include "vmfs.h"
 
 /* Read a data block from the physical volume */
-ssize_t vmfs_vol_read_data(vmfs_volume_t *vol,off_t pos,u_char *buf,size_t len)
+static ssize_t vmfs_vol_read_data(vmfs_volume_t *vol,off_t pos,u_char *buf,size_t len)
 {
    if (fseeko(vol->fd,pos,SEEK_SET) != 0)
       return(-1);
@@ -25,7 +25,7 @@ ssize_t vmfs_vol_read(vmfs_volume_t *vol,off_t pos,u_char *buf,size_t len)
 }
 
 /* Read volume information */
-int vmfs_volinfo_read(vmfs_volinfo_t *vol,FILE *fd)
+static int vmfs_volinfo_read(vmfs_volinfo_t *vol,FILE *fd)
 {
    u_char buf[1024];
 
