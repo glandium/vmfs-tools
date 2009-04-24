@@ -220,8 +220,6 @@ vmfs_fs_t *vmfs_fs_create(vmfs_lvm_t *lvm,int debug_level)
 
    fs->lvm = lvm;
    fs->debug_level = debug_level;
-   /* Temporary, for compatibility */
-   fs->vol = fs->lvm->extents[0];
    return fs;
 }
 

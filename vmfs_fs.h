@@ -36,7 +36,6 @@ struct vmfs_fs {
    vmfs_fsinfo_t fs_info;
 
    /* Associated VMFS Volume */
-   vmfs_volume_t *vol;
    vmfs_lvm_t *lvm;
 
    /* Meta-files containing file system structures */
