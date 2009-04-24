@@ -237,6 +237,11 @@ int vmfs_fs_open(vmfs_fs_t *fs)
       return(-1);
    }
 
+   if (uuid_compare(fs->fs_info.lvm_uuid, fs->lvm->lvm_info.uuid)) {
+      fprintf(stderr,"VMFS: FS doesn't belong to the underlying LVM\n");
+      return(-1);
+   }
+
    if (fs->debug_level > 0)
       vmfs_fsinfo_show(&fs->fs_info);
 
