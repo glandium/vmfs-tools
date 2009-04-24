@@ -8,7 +8,8 @@
 #include "vmfs.h"
 
 /* Read a data block from the physical volume */
-static ssize_t vmfs_vol_read_data(vmfs_volume_t *vol,off_t pos,u_char *buf,size_t len)
+static ssize_t vmfs_vol_read_data(vmfs_volume_t *vol,off_t pos,
+                                  u_char *buf,size_t len)
 {
    if (fseeko(vol->fd,pos,SEEK_SET) != 0)
       return(-1);
@@ -35,10 +36,11 @@ static int vmfs_volinfo_read(vmfs_volinfo_t *vol,FILE *fd)
    if (fread(buf,sizeof(buf),1,fd) != 1)
       return(-1);
 
-   vol->magic   = read_le32(buf,VMFS_VOLINFO_OFS_MAGIC);
+   vol->magic = read_le32(buf,VMFS_VOLINFO_OFS_MAGIC);
 
    if (vol->magic != VMFS_VOLINFO_MAGIC) {
-      fprintf(stderr,"VMFS VolInfo: invalid magic number 0x%8.8x\n",vol->magic);
+      fprintf(stderr,"VMFS VolInfo: invalid magic number 0x%8.8x\n",
+              vol->magic);
       return(-1);
    }
 
@@ -78,7 +80,6 @@ void vmfs_volinfo_show(vmfs_volinfo_t *vol)
    printf("  - First Segment : %u\n",vol->first_segment);
    printf("  - Last Segment  : %u\n",vol->last_segment);
    printf("  - Num. Extents  : %u\n",vol->num_extents);
-
 
    printf("\n");
 }

@@ -33,10 +33,11 @@ static int vmfs_fsinfo_read(vmfs_fs_t *fs)
    if (vmfs_vol_read(fs->vol,VMFS_FSINFO_BASE,buf,sizeof(buf)) != sizeof(buf))
       return(-1);
 
-   fs->fs_info.magic       = read_le32(buf,VMFS_FSINFO_OFS_MAGIC);
+   fs->fs_info.magic = read_le32(buf,VMFS_FSINFO_OFS_MAGIC);
 
    if (fs->fs_info.magic != VMFS_FSINFO_MAGIC) {
-      fprintf(stderr,"VMFS FSInfo: invalid magic number 0x%8.8x\n",fs->fs_info.magic);
+      fprintf(stderr,"VMFS FSInfo: invalid magic number 0x%8.8x\n",
+              fs->fs_info.magic);
       return(-1);
    }
 
@@ -46,7 +47,8 @@ static int vmfs_fsinfo_read(vmfs_fs_t *fs)
    fs->fs_info.block_size  = read_le32(buf,VMFS_FSINFO_OFS_BLKSIZE);
 
    memcpy(fs->fs_info.uuid,buf+VMFS_FSINFO_OFS_UUID,sizeof(fs->fs_info.uuid));
-   memcpy(fs->fs_info.label,buf+VMFS_FSINFO_OFS_LABEL,sizeof(fs->fs_info.label));
+   memcpy(fs->fs_info.label,buf+VMFS_FSINFO_OFS_LABEL,
+          sizeof(fs->fs_info.label));
 
    return(0);
 }
@@ -189,7 +191,8 @@ static int vmfs_read_fdc_base(vmfs_fs_t *fs)
    }
 
    /* Read the root directory */
-   if (vmfs_vol_read(fs->vol,inode_pos,buf,fs->fdc_bmh.data_size) != fs->fdc_bmh.data_size)
+   if (vmfs_vol_read(fs->vol,inode_pos,buf,fs->fdc_bmh.data_size) 
+       != fs->fdc_bmh.data_size)
       return(-1);
 
    vmfs_inode_read(&inode,buf);
@@ -224,7 +227,7 @@ vmfs_fs_t *vmfs_fs_create(char *filename,int debug_level)
    return NULL;
 }
 
-/* Open a VMFS volume */
+/* Open a filesystem */
 int vmfs_fs_open(vmfs_fs_t *fs)
 {
    if (vmfs_vol_open(fs->vol))
