@@ -4,6 +4,7 @@
 /* VMFS types - forward declarations */
 typedef struct vmfs_volinfo vmfs_volinfo_t;
 typedef struct vmfs_fsinfo vmfs_fsinfo_t;
+typedef struct vmfs_lvminfo vmfs_lvminfo_t;
 typedef struct vmfs_heartbeat vmfs_heartbeat_t;
 typedef struct vmfs_bitmap_header vmfs_bitmap_header_t;
 typedef struct vmfs_bitmap_entry  vmfs_bitmap_entry_t;
@@ -14,6 +15,7 @@ typedef struct vmfs_blk_list vmfs_blk_list_t;
 typedef struct vmfs_file vmfs_file_t;
 typedef struct vmfs_volume vmfs_volume_t;
 typedef struct vmfs_fs vmfs_fs_t;
+typedef struct vmfs_lvm vmfs_lvm_t;
 
 #include "utils.h"
 #include "vmfs_heartbeat.h"
@@ -24,5 +26,6 @@ typedef struct vmfs_fs vmfs_fs_t;
 #include "vmfs_file.h"
 #include "vmfs_volume.h"
 #include "vmfs_fs.h"
+#include "vmfs_lvm.h"
 
 #endif
