@@ -5,6 +5,7 @@
 #define _GNU_SOURCE
 #include <string.h>
 #include <stdlib.h>
+#include <sys/stat.h>
 #include "vmfs.h"
 
 /* Read a data block from the physical volume */
@@ -83,6 +84,7 @@ void vmfs_volinfo_show(vmfs_volinfo_t *vol)
 vmfs_volume_t *vmfs_vol_create(char *filename,int debug_level)
 {
    vmfs_volume_t *vol;
+   struct stat st;
 
    if (!(vol = calloc(1,sizeof(*vol))))
       return NULL;
@@ -96,6 +98,8 @@ vmfs_volume_t *vmfs_vol_create(char *filename,int debug_level)
    }
 
    vol->debug_level = debug_level;
+   fstat(fileno(vol->fd),&st);
+   vol->is_blkdev=S_ISBLK(st.st_mode);
    return vol;
 
  err_open:
