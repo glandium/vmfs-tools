@@ -1,8 +1,6 @@
 #ifndef VMFS_VOLUME_H
 #define VMFS_VOLUME_H
 
-#include "vmfs_fs.h"
-
 /* === Volume Info === */
 #define VMFS_VOLINFO_BASE   0x100000
 #define VMFS_VOLINFO_MAGIC  0xc001d00d

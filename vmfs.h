@@ -23,5 +23,6 @@ typedef struct vmfs_fs vmfs_fs_t;
 #include "vmfs_dirent.h"
 #include "vmfs_file.h"
 #include "vmfs_volume.h"
+#include "vmfs_fs.h"
 
 #endif
