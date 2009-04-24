@@ -22,7 +22,7 @@ ssize_t vmfs_fs_read(vmfs_fs_t *fs,m_u32_t blk,off_t offset,
    pos  = (m_u64_t)blk * vmfs_fs_get_blocksize(fs);
    pos += offset;
 
-   return(vmfs_vol_read(fs->vol,pos,buf,len));
+   return(vmfs_lvm_read(fs->lvm,pos,buf,len));
 }
 
 /* Read filesystem information */
@@ -30,7 +30,7 @@ static int vmfs_fsinfo_read(vmfs_fs_t *fs)
 {
    u_char buf[512];
 
-   if (vmfs_vol_read(fs->vol,VMFS_FSINFO_BASE,buf,sizeof(buf)) != sizeof(buf))
+   if (vmfs_lvm_read(fs->lvm,VMFS_FSINFO_BASE,buf,sizeof(buf)) != sizeof(buf))
       return(-1);
 
    fs->fs_info.magic = read_le32(buf,VMFS_FSINFO_OFS_MAGIC);
@@ -117,7 +117,7 @@ static vmfs_file_t *vmfs_open_meta_file(vmfs_fs_t *fs,char *name,
    inode_addr = vmfs_inode_get_offset(fs,rec.block_id);
    inode_addr += fs->fdc_base;
 
-   if (vmfs_vol_read(fs->vol,inode_addr,buf,sizeof(buf)) != sizeof(buf))
+   if (vmfs_lvm_read(fs->lvm,inode_addr,buf,sizeof(buf)) != sizeof(buf))
       return NULL;
 
    /* Bind the associated inode */
@@ -170,7 +170,7 @@ static int vmfs_read_fdc_base(vmfs_fs_t *fs)
    m_u64_t len;
 
    /* Read the header */
-   if (vmfs_vol_read(fs->vol,fs->fdc_base,buf,sizeof(buf)) < sizeof(buf))
+   if (vmfs_lvm_read(fs->lvm,fs->fdc_base,buf,sizeof(buf)) < sizeof(buf))
       return(-1);
 
    vmfs_bmh_read(&fs->fdc_bmh,buf);
@@ -191,7 +191,7 @@ static int vmfs_read_fdc_base(vmfs_fs_t *fs)
    }
 
    /* Read the root directory */
-   if (vmfs_vol_read(fs->vol,inode_pos,buf,fs->fdc_bmh.data_size) 
+   if (vmfs_lvm_read(fs->lvm,inode_pos,buf,fs->fdc_bmh.data_size)
        != fs->fdc_bmh.data_size)
       return(-1);
 
