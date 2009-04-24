@@ -59,6 +59,9 @@ int vmfs_heartbeat_show_active(vmfs_fs_t *fs)
       if (hb.magic == VMFS_HB_MAGIC_ON) {
          vmfs_heartbeat_show(&hb);
          count++;
+      } else if (hb.magic != VMFS_HB_MAGIC_OFF) {
+         fprintf(stderr,"VMFS: unable to read heartbeat info.\n");
+         break;
       }
 
       pos += res;
