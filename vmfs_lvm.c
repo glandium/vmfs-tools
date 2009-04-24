@@ -66,6 +66,9 @@ int vmfs_lvm_add_extent(vmfs_lvm_t *lvm, char *filename)
       lvm->lvm_info.size = vol->vol_info.size;
       lvm->lvm_info.blocks = vol->vol_info.blocks;
       lvm->lvm_info.num_extents = vol->vol_info.num_extents;
+   } else if (uuid_compare(lvm->lvm_info.uuid, vol->vol_info.lvm_uuid)) {
+      fprintf(stderr, "VMFS: The %s file/device is not part of the LVM\n", filename);
+      return(-1);
    }
 
    lvm->extents[lvm->loaded_extents++] = vol;
