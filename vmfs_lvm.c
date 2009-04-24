@@ -38,6 +38,25 @@ ssize_t vmfs_lvm_read(vmfs_lvm_t *lvm,off_t pos,u_char *buf,size_t len)
    return(vmfs_vol_read(lvm->extents[extent],pos,buf,len));
 }
 
+/* Show lvm information */
+void vmfs_lvm_show(vmfs_lvm_t *lvm) {
+   char uuid_str[M_UUID_BUFLEN];
+   int i;
+
+   printf("Logical Volume Information:\n");
+   printf("  - UUID    : %s\n",m_uuid_to_str(lvm->lvm_info.uuid,uuid_str));
+   printf("  - Size    : %llu GB\n",
+          lvm->extents[0]->vol_info.size / (1024*1048576));
+   printf("  - Blocks  : %llu\n",lvm->extents[0]->vol_info.blocks);
+   printf("  - Num. Extents : %u\n",lvm->extents[0]->vol_info.num_extents);
+
+   printf("\n");
+
+   for(i = 0; i < lvm->loaded_extents; i++) {
+      vmfs_volinfo_show(&lvm->extents[i]->vol_info);
+   }
+}
+
 /* Create a volume structure */
 vmfs_lvm_t *vmfs_lvm_create(int debug_level)
 {

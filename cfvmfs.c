@@ -203,11 +203,7 @@ static int cmd_show_file_blocks(vmfs_fs_t *fs,int argc,char *argv[])
 /* Show volume information */
 static int cmd_show_volume(vmfs_fs_t *fs,int argc,char *argv[])
 {
-   vmfs_volinfo_show(&fs->vol->vol_info);
-   /* Only display fs info for the first extent */
-   if (fs->vol->vol_info.first_segment == 0)
-      vmfs_fsinfo_show(&fs->fs_info);
-
+   vmfs_lvm_show(fs->lvm);
    return(0);
 }
 

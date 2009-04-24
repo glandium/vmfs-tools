@@ -68,18 +68,13 @@ void vmfs_volinfo_show(vmfs_volinfo_t *vol)
 {
    char uuid_str[M_UUID_BUFLEN];
 
-   printf("VMFS Volume Information:\n");
+   printf("Physical Volume Information:\n");
+   printf("  - UUID    : %s\n",m_uuid_to_str(vol->uuid,uuid_str));
    printf("  - Version : %d\n",vol->version);
    printf("  - Name    : %s\n",vol->name);
-   printf("  - UUID    : %s\n",m_uuid_to_str(vol->uuid,uuid_str));
-   printf("\nLVM Information:\n");
-   printf("  - Size    : %llu Gb\n",vol->size / (1024*1048576));
-   printf("  - Blocks  : %llu\n",vol->blocks);
-   printf("  - UUID    : %s\n",m_uuid_to_str(vol->lvm_uuid,uuid_str));
    printf("  - Num. Segments : %u\n",vol->num_segments);
    printf("  - First Segment : %u\n",vol->first_segment);
    printf("  - Last Segment  : %u\n",vol->last_segment);
-   printf("  - Num. Extents  : %u\n",vol->num_extents);
 
    printf("\n");
 }
