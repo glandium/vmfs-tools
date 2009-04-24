@@ -315,7 +315,7 @@ static void show_usage(char *prog_name)
 {
    int i;
 
-   printf("Syntax: %s <device_name> <command> <args...>\n\n",prog_name);
+   printf("Syntax: %s <device_name...> <command> <args...>\n\n",prog_name);
    printf("Available commands:\n");
 
    for(i=0;cmd_array[i].name;i++)
@@ -339,19 +339,21 @@ int main(int argc,char *argv[])
 {
    vmfs_lvm_t *lvm;
    vmfs_fs_t *fs;
-   char *vol_name,*cmd_name;
-   struct cmd *cmd;
+   struct cmd *cmd = NULL;
+   int arg, i;
 
    if (argc < 3) {
       show_usage(argv[0]);
       return(0);
    }
    
-   vol_name = argv[1];
-   cmd_name = argv[2];
+   /* Scan arguments for a command */
+   for (arg = 1; arg < argc; arg++) {
+      if ((cmd = cmd_find(argv[arg])))
+         break;
+   }
 
-   if (!(cmd = cmd_find(cmd_name))) {
-      fprintf(stderr,"Unknown command '%s'.\n",cmd_name);
+   if (!cmd) {
       show_usage(argv[0]);
       return(0);
    }
@@ -361,9 +363,11 @@ int main(int argc,char *argv[])
       exit(EXIT_FAILURE);
    }
 
-   if (vmfs_lvm_add_extent(lvm,vol_name) == -1) {
-      fprintf(stderr,"Unable to open device/file \"%s\".\n",vol_name);
-      exit(EXIT_FAILURE);
+   for (i = 1; i < arg; i++) {
+      if (vmfs_lvm_add_extent(lvm,argv[i]) == -1) {
+         fprintf(stderr,"Unable to open device/file \"%s\".\n",argv[i]);
+         exit(EXIT_FAILURE);
+      }
    }
 
    if (!(fs = vmfs_fs_create(lvm,0))) {
@@ -376,5 +380,5 @@ int main(int argc,char *argv[])
       exit(EXIT_FAILURE);
    }
 
-   return(cmd->fn(fs,argc-3,&argv[3]));
+   return(cmd->fn(fs,argc-arg-1,&argv[arg+1]));
 }
