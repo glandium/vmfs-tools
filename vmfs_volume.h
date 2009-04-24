@@ -7,6 +7,7 @@
 
 #define VMFS_VOLINFO_OFS_MAGIC 0x0000
 #define VMFS_VOLINFO_OFS_VER   0x0004
+/* 0x000e LUN id */
 #define VMFS_VOLINFO_OFS_NAME  0x0012
 #define VMFS_VOLINFO_OFS_UUID  0x0082 
 /* 0x0092 64-bits timestamp in usec (volume ctime?) */
