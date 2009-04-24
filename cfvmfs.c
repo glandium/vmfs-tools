@@ -337,6 +337,7 @@ static struct cmd *cmd_find(char *name)
 
 int main(int argc,char *argv[])
 {
+   vmfs_lvm_t *lvm;
    vmfs_fs_t *fs;
    char *vol_name,*cmd_name;
    struct cmd *cmd;
@@ -355,8 +356,18 @@ int main(int argc,char *argv[])
       return(0);
    }
 
-   if (!(fs = vmfs_fs_create(vol_name,0))) {
+   if (!(lvm = vmfs_lvm_create(0))) {
+      fprintf(stderr,"Unable to create LVM structure\n");
+      exit(EXIT_FAILURE);
+   }
+
+   if (vmfs_lvm_add_extent(lvm,vol_name) == -1) {
       fprintf(stderr,"Unable to open device/file \"%s\".\n",vol_name);
+      exit(EXIT_FAILURE);
+   }
+
+   if (!(fs = vmfs_fs_create(lvm,0))) {
+      fprintf(stderr,"Unable to open filesystem\n");
       exit(EXIT_FAILURE);
    }
    

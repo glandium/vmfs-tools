@@ -209,28 +209,24 @@ static int vmfs_read_fdc_base(vmfs_fs_t *fs)
 }
 
 /* Create a FS structure */
-vmfs_fs_t *vmfs_fs_create(char *filename,int debug_level)
+vmfs_fs_t *vmfs_fs_create(vmfs_lvm_t *lvm,int debug_level)
 {
    vmfs_fs_t *fs;
 
    if (!(fs = calloc(1,sizeof(*fs))))
       return NULL;
 
-   if (!(fs->vol = vmfs_vol_create(filename, debug_level)))
-      goto err_vol;
-
+   fs->lvm = lvm;
    fs->debug_level = debug_level;
+   /* Temporary, for compatibility */
+   fs->vol = fs->lvm->extents[0];
    return fs;
-
- err_vol:
-   free(fs);
-   return NULL;
 }
 
 /* Open a filesystem */
 int vmfs_fs_open(vmfs_fs_t *fs)
 {
-   if (vmfs_vol_open(fs->vol))
+   if (vmfs_lvm_open(fs->lvm))
       return(-1);
 
    /* Read FS info */

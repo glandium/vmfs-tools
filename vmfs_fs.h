@@ -37,6 +37,7 @@ struct vmfs_fs {
 
    /* Associated VMFS Volume */
    vmfs_volume_t *vol;
+   vmfs_lvm_t *lvm;
 
    /* Meta-files containing file system structures */
    vmfs_file_t *fbb,*fdc,*pbc,*sbc,*vh,*root_dir;
@@ -62,7 +63,7 @@ void vmfs_fsinfo_show(vmfs_fsinfo_t *fsi);
 int vmfs_fs_dump_bitmaps(vmfs_fs_t *vol);
 
 /* Create a FS structure */
-vmfs_fs_t *vmfs_fs_create(char *filename,int debug_level);
+vmfs_fs_t *vmfs_fs_create(vmfs_lvm_t *lvm,int debug_level);
 
 /* Open a VMFS volume */
 int vmfs_fs_open(vmfs_fs_t *fs);
