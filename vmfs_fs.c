@@ -13,8 +13,6 @@
 #define VMFS_SBC_FILENAME  ".sbc.sf"
 #define VMFS_VH_FILENAME   ".vh.sf"
 
-#define VMFS_FDC_BASE       0x0400000
-
 /* Read a block from the filesystem */
 ssize_t vmfs_fs_read(vmfs_fs_t *fs,m_u32_t blk,off_t offset,
                       u_char *buf,size_t len)
@@ -241,8 +239,10 @@ int vmfs_fs_open(vmfs_fs_t *fs)
    if (fs->debug_level > 0)
       vmfs_fsinfo_show(&fs->fs_info);
 
-   /* Compute position of FDC base */
-   fs->fdc_base = VMFS_FDC_BASE;
+   /* Compute position of FDC base: it is located at the first
+      block start after heartbeat information */
+   fs->fdc_base = m_max(VMFS_HB_BASE + VMFS_HB_NUM * VMFS_HB_SIZE,
+                        vmfs_fs_get_blocksize(fs));
 
    if (fs->debug_level > 0)
       printf("FDC base = @0x%llx\n",(m_u64_t)fs->fdc_base);
