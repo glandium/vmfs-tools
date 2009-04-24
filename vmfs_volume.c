@@ -7,6 +7,7 @@
 #include <stdlib.h>
 #include <sys/stat.h>
 #include "vmfs.h"
+#include "scsi.h"
 
 /* Read a data block from the physical volume */
 static ssize_t vmfs_vol_read_data(vmfs_volume_t *vol,off_t pos,
@@ -46,6 +47,7 @@ static int vmfs_volinfo_read(vmfs_volinfo_t *vol,FILE *fd)
    }
 
    vol->version = read_le32(buf,VMFS_VOLINFO_OFS_VER);
+   vol->lun = buf[VMFS_VOLINFO_OFS_LUN];
 
    vol->name = strndup((char *)buf+VMFS_VOLINFO_OFS_NAME,
                        VMFS_VOLINFO_OFS_NAME_SIZE);
@@ -119,6 +121,9 @@ int vmfs_vol_open(vmfs_volume_t *vol)
       fprintf(stderr,"VMFS: Unable to read volume information\n");
       return(-1);
    }
+
+   if (vol->is_blkdev && (scsi_get_lun(fileno(vol->fd)) != vol->vol_info.lun))
+      fprintf(stderr,"VMFS: Warning: Lun ID mismatch on %s\n", vol->filename);
 
    if (vol->debug_level > 0) {
       vmfs_volinfo_show(&vol->vol_info);
