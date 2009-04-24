@@ -12,7 +12,7 @@
 #define VMFS_FSINFO_OFS_LABEL    0x001d
 #define VMFS_FSINFO_OFS_BLKSIZE  0x00a1
 /* 0x00a9 32-bits timestamp (ctime?) */
-/* 0x00b1 LVM uuid */
+#define VMFS_FSINFO_OFS_LVM_UUID 0x00b1
 
 struct vmfs_fsinfo {
    m_u32_t magic;
@@ -22,7 +22,7 @@ struct vmfs_fsinfo {
    char label[128];
 
    m_u64_t block_size;
-   uuid_t vol_uuid;
+   uuid_t lvm_uuid;
 };
 
 /* === VMFS filesystem === */

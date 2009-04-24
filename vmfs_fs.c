@@ -49,6 +49,8 @@ static int vmfs_fsinfo_read(vmfs_fs_t *fs)
    memcpy(fs->fs_info.uuid,buf+VMFS_FSINFO_OFS_UUID,sizeof(fs->fs_info.uuid));
    memcpy(fs->fs_info.label,buf+VMFS_FSINFO_OFS_LABEL,
           sizeof(fs->fs_info.label));
+   memcpy(fs->fs_info.lvm_uuid,buf+VMFS_FSINFO_OFS_LVM_UUID,
+          sizeof(fs->fs_info.lvm_uuid));
 
    return(0);
 }
