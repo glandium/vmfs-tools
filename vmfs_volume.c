@@ -133,6 +133,7 @@ void vmfs_volinfo_show(vmfs_volinfo_t *vol)
 
    printf("Physical Volume Information:\n");
    printf("  - UUID    : %s\n",m_uuid_to_str(vol->uuid,uuid_str));
+   printf("  - LUN     : %d\n",vol->lun);
    printf("  - Version : %d\n",vol->version);
    printf("  - Name    : %s\n",vol->name);
    printf("  - Num. Segments : %u\n",vol->num_segments);
