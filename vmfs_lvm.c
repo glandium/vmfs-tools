@@ -105,7 +105,7 @@ void vmfs_lvm_show(vmfs_lvm_t *lvm) {
    printf("\n");
 
    for(i = 0; i < lvm->loaded_extents; i++) {
-      vmfs_volinfo_show(&lvm->extents[i]->vol_info);
+      vmfs_vol_show(lvm->extents[i]);
    }
 }
 

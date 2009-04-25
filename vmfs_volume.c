@@ -140,18 +140,18 @@ static int vmfs_volinfo_read(vmfs_volinfo_t *vol,FILE *fd)
 }
 
 /* Show volume information */
-void vmfs_volinfo_show(vmfs_volinfo_t *vol)
+void vmfs_vol_show(vmfs_volume_t *vol)
 {
    char uuid_str[M_UUID_BUFLEN];
 
    printf("Physical Volume Information:\n");
-   printf("  - UUID    : %s\n",m_uuid_to_str(vol->uuid,uuid_str));
-   printf("  - LUN     : %d\n",vol->lun);
-   printf("  - Version : %d\n",vol->version);
-   printf("  - Name    : %s\n",vol->name);
-   printf("  - Num. Segments : %u\n",vol->num_segments);
-   printf("  - First Segment : %u\n",vol->first_segment);
-   printf("  - Last Segment  : %u\n",vol->last_segment);
+   printf("  - UUID    : %s\n",m_uuid_to_str(vol->vol_info.uuid,uuid_str));
+   printf("  - LUN     : %d\n",vol->vol_info.lun);
+   printf("  - Version : %d\n",vol->vol_info.version);
+   printf("  - Name    : %s\n",vol->vol_info.name);
+   printf("  - Num. Segments : %u\n",vol->vol_info.num_segments);
+   printf("  - First Segment : %u\n",vol->vol_info.first_segment);
+   printf("  - Last Segment  : %u\n",vol->vol_info.last_segment);
 
    printf("\n");
 }
@@ -200,7 +200,7 @@ int vmfs_vol_open(vmfs_volume_t *vol)
       fprintf(stderr,"VMFS: Warning: Lun ID mismatch on %s\n", vol->filename);
 
    if (vol->debug_level > 0) {
-      vmfs_volinfo_show(&vol->vol_info);
+      vmfs_vol_show(vol);
       printf("VMFS: volume opened successfully\n");
    }
    return(0);

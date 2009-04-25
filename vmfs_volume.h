@@ -78,7 +78,7 @@ int vmfs_vol_release(vmfs_volume_t *vol);
 int vmfs_vol_check_reservation(vmfs_volume_t *vol);
 
 /* Show volume information */
-void vmfs_volinfo_show(vmfs_volinfo_t *vol);
+void vmfs_vol_show(vmfs_volume_t *vol);
 
 /* Create a volume structure */
 vmfs_volume_t *vmfs_vol_create(char *filename,int debug_level);

@@ -55,18 +55,18 @@ static int vmfs_fsinfo_read(vmfs_fs_t *fs)
 }
 
 /* Show FS information */
-void vmfs_fsinfo_show(vmfs_fsinfo_t *fsi)
+void vmfs_fs_show(vmfs_fs_t *fs)
 {  
    char uuid_str[M_UUID_BUFLEN];
 
    printf("VMFS FS Information:\n");
 
-   printf("  - Vol. Version : %d\n",fsi->vol_version);
-   printf("  - Version      : %d\n",fsi->version);
-   printf("  - Label        : %s\n",fsi->label);
-   printf("  - UUID         : %s\n",m_uuid_to_str(fsi->uuid,uuid_str));
+   printf("  - Vol. Version : %d\n",fs->fs_info.vol_version);
+   printf("  - Version      : %d\n",fs->fs_info.version);
+   printf("  - Label        : %s\n",fs->fs_info.label);
+   printf("  - UUID         : %s\n",m_uuid_to_str(fs->fs_info.uuid,uuid_str));
    printf("  - Block size   : %llu (0x%llx)\n",
-          fsi->block_size,fsi->block_size);
+          fs->fs_info.block_size,fs->fs_info.block_size);
 
    printf("\n");
 }
@@ -240,7 +240,7 @@ int vmfs_fs_open(vmfs_fs_t *fs)
    }
 
    if (fs->debug_level > 0)
-      vmfs_fsinfo_show(&fs->fs_info);
+      vmfs_fs_show(fs);
 
    /* Compute position of FDC base: it is located at the first
       block start after heartbeat information */

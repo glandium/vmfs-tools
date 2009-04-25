@@ -56,7 +56,7 @@ ssize_t vmfs_fs_read(vmfs_fs_t *fs,m_u32_t blk,off_t offset,
                       u_char *buf,size_t len);
 
 /* Show FS information */
-void vmfs_fsinfo_show(vmfs_fsinfo_t *fsi);
+void vmfs_fs_show(vmfs_fs_t *fs);
 
 /* Dump volume bitmaps */
 int vmfs_fs_dump_bitmaps(vmfs_fs_t *vol);
