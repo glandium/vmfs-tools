@@ -60,7 +60,7 @@ int vmfs_heartbeat_show_active(vmfs_fs_t *fs)
    int count = 0;
 
    while(pos < VMFS_HB_SIZE * VMFS_HB_NUM) {
-      res = vmfs_fs_read(fs,0,VMFS_HB_BASE+pos,buf,sizeof(buf));
+      res = vmfs_lvm_read(fs->lvm,VMFS_HB_BASE+pos,buf,sizeof(buf));
 
       if (res != sizeof(buf)) {
          fprintf(stderr,"VMFS: unable to read heartbeat info.\n");
