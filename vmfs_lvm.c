@@ -32,8 +32,11 @@ static inline ssize_t vmfs_lvm_extent_size(vmfs_lvm_t *lvm,int extent)
    return(lvm->extents[extent]->vol_info.num_segments * VMFS_LVM_SEGMENT_SIZE);
 }
 
+typedef ssize_t (*vmfs_vol_io_func)(vmfs_volume_t *,off_t,u_char *,size_t);
+
 /* Read a raw block of data on logical volume */
-ssize_t vmfs_lvm_read(vmfs_lvm_t *lvm,off_t pos,u_char *buf,size_t len)
+static inline ssize_t vmfs_lvm_io(vmfs_lvm_t *lvm,off_t pos,u_char *buf,
+                                  size_t len,vmfs_vol_io_func func)
 {
    int extent = vmfs_lvm_get_extent_from_offset(lvm,pos);
 
@@ -47,25 +50,19 @@ ssize_t vmfs_lvm_read(vmfs_lvm_t *lvm,off_t pos,u_char *buf,size_t len)
       return(-1);
    }
 
-   return(vmfs_vol_read(lvm->extents[extent],pos,buf,len));
+   return(func(lvm->extents[extent],pos,buf,len));
+}
+
+/* Read a raw block of data on logical volume */
+ssize_t vmfs_lvm_read(vmfs_lvm_t *lvm,off_t pos,u_char *buf,size_t len)
+{
+   return(vmfs_lvm_io(lvm,pos,buf,len,vmfs_vol_read));
 }
 
 /* Write a raw block of data on logical volume */
 ssize_t vmfs_lvm_write(vmfs_lvm_t *lvm,off_t pos,u_char *buf,size_t len)
 {
-   int extent = vmfs_lvm_get_extent_from_offset(lvm,pos);
-
-   if (extent < 0)
-      return(-1);
-
-   pos -= lvm->extents[extent]->vol_info.first_segment * VMFS_LVM_SEGMENT_SIZE;
-   if ((pos + len) > vmfs_lvm_extent_size(lvm,extent)) {
-      /* TODO: Handle this case */
-      fprintf(stderr,"VMFS: i/o spanned over several extents is unsupported\n");
-      return(-1);
-   }
-
-   return(vmfs_vol_write(lvm->extents[extent],pos,buf,len));
+   return(vmfs_lvm_io(lvm,pos,buf,len,vmfs_vol_write));
 }
 
 /* Reserve the underlying volume given a LVM position */
