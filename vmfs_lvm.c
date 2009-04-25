@@ -68,6 +68,28 @@ ssize_t vmfs_lvm_write(vmfs_lvm_t *lvm,off_t pos,u_char *buf,size_t len)
    return(vmfs_vol_write(lvm->extents[extent],pos,buf,len));
 }
 
+/* Reserve the underlying volume given a LVM position */
+int vmfs_lvm_reserve(vmfs_lvm_t *lvm,off_t pos)
+{
+   int extent = vmfs_lvm_get_extent_from_offset(lvm,pos);
+
+   if (extent < 0)
+      return(-1);
+
+   return(vmfs_vol_reserve(lvm->extents[extent]));
+}
+
+/* Release the underlying volume given a LVM position */
+int vmfs_lvm_release(vmfs_lvm_t *lvm,off_t pos)
+{
+   int extent = vmfs_lvm_get_extent_from_offset(lvm,pos);
+
+   if (extent < 0)
+      return(-1);
+
+   return(vmfs_vol_release(lvm->extents[extent]));
+}
+
 /* Show lvm information */
 void vmfs_lvm_show(vmfs_lvm_t *lvm) {
    char uuid_str[M_UUID_BUFLEN];

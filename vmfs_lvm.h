@@ -30,6 +30,12 @@ ssize_t vmfs_lvm_read(vmfs_lvm_t *lvm,off_t pos,u_char *buf,size_t len);
 /* Read a raw block of data on logical volume */
 ssize_t vmfs_lvm_read(vmfs_lvm_t *lvm,off_t pos,u_char *buf,size_t len);
 
+/* Reserve the underlying volume given a LVM position */
+int vmfs_lvm_reserve(vmfs_lvm_t *lvm,off_t pos);
+
+/* Release the underlying volume given a LVM position */
+int vmfs_lvm_release(vmfs_lvm_t *lvm,off_t pos);
+
 /* Show lvm information */
 void vmfs_lvm_show(vmfs_lvm_t *lvm);
 
