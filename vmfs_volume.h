@@ -50,7 +50,7 @@ struct vmfs_volinfo {
 /* === VMFS mounted-volume === */
 struct vmfs_volume {
    char *filename;
-   FILE *fd;
+   int fd;
    int debug_level;
    int is_blkdev;
    int scsi_reservation;

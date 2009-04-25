@@ -5,6 +5,8 @@
 #define _GNU_SOURCE
 #include <string.h>
 #include <stdlib.h>
+#include <unistd.h>
+#include <fcntl.h>
 #include <sys/stat.h>
 #include "vmfs.h"
 #include "scsi.h"
@@ -13,10 +15,10 @@
 static ssize_t vmfs_vol_read_data(vmfs_volume_t *vol,off_t pos,
                                   u_char *buf,size_t len)
 {
-   if (fseeko(vol->fd,pos,SEEK_SET) != 0)
+   if (lseek(vol->fd,pos,SEEK_SET) == -1)
       return(-1);
 
-   return(fread(buf,1,len,vol->fd));
+   return(read(vol->fd,buf,len));
 }
 
 /* Read a raw block of data on logical volume */
@@ -31,10 +33,10 @@ ssize_t vmfs_vol_read(vmfs_volume_t *vol,off_t pos,u_char *buf,size_t len)
 static ssize_t vmfs_vol_write_data(vmfs_volume_t *vol,off_t pos,
                                    u_char *buf,size_t len)
 {
-   if (fseeko(vol->fd,pos,SEEK_SET) != 0)
+   if (lseek(vol->fd,pos,SEEK_SET) == -1)
       return(-1);
 
-   return(fwrite(buf,1,len,vol->fd));
+   return(write(vol->fd,buf,len));
 }
 
 /* Write a raw block of data on logical volume */
@@ -51,7 +53,7 @@ int vmfs_vol_reserve(vmfs_volume_t *vol)
    if (!vol->scsi_reservation)
       return(-1);
 
-   return(scsi_reserve(fileno(vol->fd)));
+   return(scsi_reserve(vol->fd));
 }
 
 /* Volume release */
@@ -60,7 +62,7 @@ int vmfs_vol_release(vmfs_volume_t *vol)
    if (!vol->scsi_reservation)
       return(-1);
 
-   return(scsi_release(fileno(vol->fd)));
+   return(scsi_release(vol->fd));
 }
 
 /* 
@@ -76,8 +78,8 @@ int vmfs_vol_check_reservation(vmfs_volume_t *vol)
       return(0);
 
    /* Try SCSI commands */
-   res[0] = scsi_reserve(fileno(vol->fd));
-   res[1] = scsi_release(fileno(vol->fd));
+   res[0] = scsi_reserve(vol->fd);
+   res[1] = scsi_release(vol->fd);
 
    /* Error with the commands */
    if ((res[0] < 0) || (res[1] < 0))
@@ -88,14 +90,14 @@ int vmfs_vol_check_reservation(vmfs_volume_t *vol)
 }
 
 /* Read volume information */
-static int vmfs_volinfo_read(vmfs_volinfo_t *vol,FILE *fd)
+static int vmfs_volinfo_read(vmfs_volinfo_t *vol,int fd)
 {
    u_char buf[1024];
 
-   if (fseeko(fd,VMFS_VOLINFO_BASE,SEEK_SET) != 0)
+   if (lseek(fd,VMFS_VOLINFO_BASE,SEEK_SET) == -1)
       return(-1);
 
-   if (fread(buf,sizeof(buf),1,fd) != 1)
+   if (read(fd,buf,sizeof(buf)) != sizeof(buf))
       return(-1);
 
    vol->magic = read_le32(buf,VMFS_VOLINFO_OFS_MAGIC);
@@ -168,13 +170,13 @@ vmfs_volume_t *vmfs_vol_create(char *filename,int debug_level)
    if (!(vol->filename = strdup(filename)))
       goto err_filename;
 
-   if (!(vol->fd = fopen(vol->filename,"r"))) {
-      perror("fopen");
+   if (!(vol->fd = open(vol->filename,O_RDONLY))) {
+      perror("open");
       goto err_open;
    }
 
    vol->debug_level = debug_level;
-   fstat(fileno(vol->fd),&st);
+   fstat(vol->fd,&st);
    vol->is_blkdev=S_ISBLK(st.st_mode);
    return vol;
 
@@ -196,7 +198,7 @@ int vmfs_vol_open(vmfs_volume_t *vol)
       return(-1);
    }
 
-   if (vol->is_blkdev && (scsi_get_lun(fileno(vol->fd)) != vol->vol_info.lun))
+   if (vol->is_blkdev && (scsi_get_lun(vol->fd) != vol->vol_info.lun))
       fprintf(stderr,"VMFS: Warning: Lun ID mismatch on %s\n", vol->filename);
 
    if (vol->debug_level > 0) {
