@@ -27,8 +27,8 @@ struct vmfs_lvm {
 /* Read a raw block of data on logical volume */
 ssize_t vmfs_lvm_read(vmfs_lvm_t *lvm,off_t pos,u_char *buf,size_t len);
 
-/* Read a raw block of data on logical volume */
-ssize_t vmfs_lvm_read(vmfs_lvm_t *lvm,off_t pos,u_char *buf,size_t len);
+/* Write a raw block of data on logical volume */
+ssize_t vmfs_lvm_write(vmfs_lvm_t *lvm,off_t pos,u_char *buf,size_t len);
 
 /* Reserve the underlying volume given a LVM position */
 int vmfs_lvm_reserve(vmfs_lvm_t *lvm,off_t pos);
