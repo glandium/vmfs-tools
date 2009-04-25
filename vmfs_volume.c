@@ -170,7 +170,7 @@ vmfs_volume_t *vmfs_vol_create(char *filename,int debug_level)
    if (!(vol->filename = strdup(filename)))
       goto err_filename;
 
-   if (!(vol->fd = open(vol->filename,O_RDONLY))) {
+   if ((vol->fd = open(vol->filename,O_RDWR)) < 0) {
       perror("open");
       goto err_open;
    }
