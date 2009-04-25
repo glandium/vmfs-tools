@@ -12,12 +12,14 @@
 
 #define VMFS_HB_OFS_MAGIC   0x0000
 #define VMFS_HB_OFS_POS     0x0004
+#define VMFS_HB_OFS_SEQ     0x000c
 #define VMFS_HB_OFS_UPTIME  0x0014
 #define VMFS_HB_OFS_UUID    0x001c
 
 struct vmfs_heartbeat {
    m_u32_t magic;
    m_u64_t position;
+   m_u64_t seq;          /* Sequence number */
    m_u64_t uptime;       /* Uptime (in usec) of the locker */
    uuid_t uuid;          /* UUID of the server */
 };

@@ -17,6 +17,7 @@ int vmfs_heartbeat_read(vmfs_heartbeat_t *hb,u_char *buf)
 {
    hb->magic    = read_le32(buf,VMFS_HB_OFS_MAGIC);
    hb->position = read_le64(buf,VMFS_HB_OFS_POS);
+   hb->seq      = read_le64(buf,VMFS_HB_OFS_SEQ);
    hb->uptime   = read_le64(buf,VMFS_HB_OFS_UPTIME);
    read_uuid(buf,VMFS_HB_OFS_UUID,&hb->uuid);
 
@@ -30,9 +31,10 @@ void vmfs_heartbeat_show(vmfs_heartbeat_t *hb)
    
    printf("Heartbeat ID 0x%llx:\n",hb->position);
 
-   printf("  - Magic  : 0x%8.8x\n",hb->magic);
-   printf("  - Uptime : 0x%8.8llx\n",hb->uptime);
-   printf("  - UUID   : %s\n",m_uuid_to_str(hb->uuid,uuid_str));
+   printf("  - Magic    : 0x%8.8x\n",hb->magic);
+   printf("  - Sequence : 0x%8.8llx\n",hb->seq);
+   printf("  - Uptime   : 0x%8.8llx\n",hb->uptime);
+   printf("  - UUID     : %s\n",m_uuid_to_str(hb->uuid,uuid_str));
 
    printf("\n");
 }
