@@ -13,11 +13,33 @@
 
 #include "utils.h"
 
-
-/* Convert an UUID into a string (TODO: respect VMware format ?) */
+/* Convert an UUID into a string */
 char *m_uuid_to_str(uuid_t uuid,char *str)
 {
-   uuid_unparse(uuid, str);
+   m_u32_t time_low;
+   m_u32_t time_mid;
+   m_u16_t clock_seq;
+   time_low = read_le32(uuid,0);
+   time_mid = read_le32(uuid,4);
+   clock_seq = read_le16(uuid,8);
+   sprintf(str,
+      "%02x%02x%02x%02x-%02x%02x%02x%02x-%02x%02x-%02x%02x%02x%02x%02x%02x",
+      time_low >> 24,
+      time_low >> 16 & 0xff,
+      time_low >> 8 & 0xff,
+      time_low & 0xff,
+      time_mid >> 24,
+      time_mid >> 16 & 0xff,
+      time_mid >> 8 & 0xff,
+      time_mid & 0xff,
+      clock_seq >> 8 & 0xff,
+      clock_seq & 0xff,
+      uuid[10],
+      uuid[11],
+      uuid[12],
+      uuid[13],
+      uuid[14],
+      uuid[15]);
    return str;
 }
 

@@ -122,6 +122,19 @@ static int vmfs_volinfo_read(vmfs_volinfo_t *vol,FILE *fd)
    vol->num_extents = read_le32(buf,VMFS_LVMINFO_OFS_NUM_EXTENTS);
 
    read_uuid(buf,VMFS_LVMINFO_OFS_UUID,&vol->lvm_uuid);
+#ifdef VMFS_CHECK
+   {
+      /* The LVM UUID also appears as a string, so we can check whether our
+         formatting function is correct. */
+      char uuidstr1[M_UUID_BUFLEN], uuidstr2[M_UUID_BUFLEN];
+      memcpy(uuidstr1,buf+VMFS_LVMINFO_OFS_UUID_STR,M_UUID_BUFLEN-1);
+      uuidstr1[M_UUID_BUFLEN-1] = 0;
+      if (memcmp(m_uuid_to_str(vol->lvm_uuid,uuidstr2),uuidstr1,M_UUID_BUFLEN-1)) {
+         fprintf(stderr, "uuid mismatch:\n%s\n%s\n",uuidstr1,uuidstr2);
+         return(-1);
+      }
+   }
+#endif
 
    return(0);
 }

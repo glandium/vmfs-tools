@@ -9,7 +9,7 @@
 #define m_max(a,b) (((a) > (b)) ? (a) : (b))
 #define m_min(a,b) (((a) < (b)) ? (a) : (b))
 
-#define M_UUID_BUFLEN  128
+#define M_UUID_BUFLEN  36
 
 typedef unsigned char m_u8_t;
 typedef unsigned short m_u16_t;
