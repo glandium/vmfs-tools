@@ -13,6 +13,7 @@
 
 #include "utils.h"
 
+
 /* Convert an UUID into a string (TODO: respect VMware format ?) */
 char *m_uuid_to_str(uuid_t uuid,char *str)
 {

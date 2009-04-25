@@ -2,6 +2,7 @@
 #define UTILS_H
 
 #include <stdio.h>
+#include <string.h>
 #include <uuid/uuid.h>
 
 /* Max and min macro */
@@ -51,6 +52,12 @@ static inline m_u64_t read_le64(u_char *p,int offset)
    return((m_u64_t)read_le32(p,offset) + 
           ((m_u64_t)read_le32(p,offset+4) << 32));
 #endif
+}
+
+/* Read an UUID at a given offset in a buffer */
+static inline void read_uuid(u_char *buf,int offset,uuid_t *uuid)
+{
+   memcpy(uuid,buf+offset,sizeof(uuid_t));
 }
 
 /* Convert an UUID into a string */
