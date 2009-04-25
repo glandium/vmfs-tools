@@ -36,7 +36,7 @@ int vmfs_inode_read(vmfs_inode_t *inode,u_char *buf)
          break;
    }
 
-   memcpy(inode->hb_uuid,buf+VMFS_INODE_OFS_HB_UUID,sizeof(inode->hb_uuid));
+   read_uuid(buf,VMFS_INODE_OFS_HB_UUID,&inode->hb_uuid);
    return(0);
 }
 

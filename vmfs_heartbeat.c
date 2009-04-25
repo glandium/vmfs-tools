@@ -18,7 +18,7 @@ int vmfs_heartbeat_read(vmfs_heartbeat_t *hb,u_char *buf)
    hb->magic    = read_le32(buf,VMFS_HB_OFS_MAGIC);
    hb->position = read_le64(buf,VMFS_HB_OFS_POS);
    hb->uptime   = read_le64(buf,VMFS_HB_OFS_UPTIME);
-   memcpy(hb->uuid,buf+VMFS_HB_OFS_UUID,sizeof(hb->uuid));
+   read_uuid(buf,VMFS_HB_OFS_UUID,&hb->uuid);
 
    return(0);
 }

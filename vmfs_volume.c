@@ -112,7 +112,7 @@ static int vmfs_volinfo_read(vmfs_volinfo_t *vol,FILE *fd)
    vol->name = strndup((char *)buf+VMFS_VOLINFO_OFS_NAME,
                        VMFS_VOLINFO_OFS_NAME_SIZE);
 
-   memcpy(vol->uuid,buf+VMFS_VOLINFO_OFS_UUID,sizeof(vol->uuid));
+   read_uuid(buf,VMFS_VOLINFO_OFS_UUID,&vol->uuid);
 
    vol->size    = read_le64(buf,VMFS_LVMINFO_OFS_SIZE);
    vol->blocks  = read_le64(buf,VMFS_LVMINFO_OFS_BLKS);
@@ -121,7 +121,7 @@ static int vmfs_volinfo_read(vmfs_volinfo_t *vol,FILE *fd)
    vol->last_segment = read_le32(buf,VMFS_LVMINFO_OFS_LAST_SEGMENT);
    vol->num_extents = read_le32(buf,VMFS_LVMINFO_OFS_NUM_EXTENTS);
 
-   memcpy(vol->lvm_uuid,buf+VMFS_LVMINFO_OFS_UUID,sizeof(vol->lvm_uuid));
+   read_uuid(buf,VMFS_LVMINFO_OFS_UUID,&vol->lvm_uuid);
 
    return(0);
 }
