@@ -30,6 +30,17 @@ static inline m_u16_t read_le16(u_char *p,int offset)
 #endif
 }
 
+/* Write a 16-bit word in little endian format */
+static inline void write_le16(u_char *p,int offset,m_u16_t val)
+{
+#ifdef LE_AND_NO_ALIGN
+   *(m_u16_t *)&p[offset] = val;
+#else
+   p[offset]   = val & 0xFF;
+   p[offset+1] = val >> 8;
+#endif
+}
+
 /* Read a 32-bit word in little endian format */
 static inline m_u32_t read_le32(u_char *p,int offset)
 {
@@ -40,6 +51,19 @@ static inline m_u32_t read_le32(u_char *p,int offset)
           ((m_u32_t)p[offset+1] << 8) |
           ((m_u32_t)p[offset+2] << 16) |
           ((m_u32_t)p[offset+3] << 24));
+#endif
+}
+
+/* Write a 32-bit word in little endian format */
+static inline void write_le32(u_char *p,int offset,m_u32_t val)
+{
+#ifdef LE_AND_NO_ALIGN
+   *(m_u32_t *)&p[offset] = val;
+#else
+   p[offset]   = val & 0xFF;
+   p[offset+1] = val >> 8;
+   p[offset+2] = val >> 16;
+   p[offset+3] = val >> 24;
 #endif
 }
 
@@ -54,10 +78,27 @@ static inline m_u64_t read_le64(u_char *p,int offset)
 #endif
 }
 
+/* Write a 64-bit word in little endian format */
+static inline void write_le64(u_char *p,int offset,m_u64_t val)
+{
+#ifdef LE_AND_NO_ALIGN
+   *(m_u64_t *)&p[offset] = val;
+#else
+   write_le32(p,offset,val);
+   write_le32(p,offset+4,val);
+#endif
+}
+
 /* Read an UUID at a given offset in a buffer */
 static inline void read_uuid(u_char *buf,int offset,uuid_t *uuid)
 {
    memcpy(uuid,buf+offset,sizeof(uuid_t));
+}
+
+/* Write an UUID to a given offset in a buffer */
+static inline void write_uuid(u_char *buf,int offset,uuid_t *uuid)
+{
+   memcpy(buf+offset,uuid,sizeof(uuid_t));
 }
 
 /* Convert an UUID into a string */
