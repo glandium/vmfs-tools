@@ -68,6 +68,15 @@ ssize_t vmfs_vol_read(vmfs_volume_t *vol,off_t pos,u_char *buf,size_t len);
 /* Write a raw block of data on logical volume */
 ssize_t vmfs_vol_write(vmfs_volume_t *vol,off_t pos,u_char *buf,size_t len);
 
+/* Volume reservation */
+int vmfs_vol_reserve(vmfs_volume_t *vol);
+
+/* Volume release */
+int vmfs_vol_release(vmfs_volume_t *vol);
+
+/* Check if physical volume support reservation */
+int vmfs_vol_check_reservation(vmfs_volume_t *vol);
+
 /* Show volume information */
 void vmfs_volinfo_show(vmfs_volinfo_t *vol);
 
