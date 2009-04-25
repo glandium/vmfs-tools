@@ -64,6 +64,9 @@ struct vmfs_volume {
 /* Read a raw block of data on logical volume */
 ssize_t vmfs_vol_read(vmfs_volume_t *vol,off_t pos,u_char *buf,size_t len);
 
+/* Write a raw block of data on logical volume */
+ssize_t vmfs_vol_write(vmfs_volume_t *vol,off_t pos,u_char *buf,size_t len);
+
 /* Show volume information */
 void vmfs_volinfo_show(vmfs_volinfo_t *vol);
 

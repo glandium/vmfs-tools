@@ -27,6 +27,24 @@ ssize_t vmfs_vol_read(vmfs_volume_t *vol,off_t pos,u_char *buf,size_t len)
    return(vmfs_vol_read_data(vol,pos,buf,len));
 }
 
+/* Write a data block to the physical volume */
+static ssize_t vmfs_vol_write_data(vmfs_volume_t *vol,off_t pos,
+                                   u_char *buf,size_t len)
+{
+   if (fseeko(vol->fd,pos,SEEK_SET) != 0)
+      return(-1);
+
+   return(fwrite(buf,1,len,vol->fd));
+}
+
+/* Write a raw block of data on logical volume */
+ssize_t vmfs_vol_write(vmfs_volume_t *vol,off_t pos,u_char *buf,size_t len)
+{
+   pos += vol->vmfs_base + 0x1000000;
+
+   return(vmfs_vol_write_data(vol,pos,buf,len));
+}
+
 /* Read volume information */
 static int vmfs_volinfo_read(vmfs_volinfo_t *vol,FILE *fd)
 {
