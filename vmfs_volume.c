@@ -45,6 +45,48 @@ ssize_t vmfs_vol_write(vmfs_volume_t *vol,off_t pos,u_char *buf,size_t len)
    return(vmfs_vol_write_data(vol,pos,buf,len));
 }
 
+/* Volume reservation */
+int vmfs_vol_reserve(vmfs_volume_t *vol)
+{
+   if (!vol->scsi_reservation)
+      return(-1);
+
+   return(scsi_reserve(fileno(vol->fd)));
+}
+
+/* Volume release */
+int vmfs_vol_release(vmfs_volume_t *vol)
+{
+   if (!vol->scsi_reservation)
+      return(-1);
+
+   return(scsi_release(fileno(vol->fd)));
+}
+
+/* 
+ * Check if physical volume support reservation.
+ * TODO: We should probably check some capabilities info.
+ */
+int vmfs_vol_check_reservation(vmfs_volume_t *vol)
+{
+   int res[2];
+
+   /* The device must be a block device */
+   if (!vol->is_blkdev)
+      return(0);
+
+   /* Try SCSI commands */
+   res[0] = scsi_reserve(fileno(vol->fd));
+   res[1] = scsi_release(fileno(vol->fd));
+
+   /* Error with the commands */
+   if ((res[0] < 0) || (res[1] < 0))
+      return(0);
+
+   vol->scsi_reservation = 1;
+   return(1);
+}
+
 /* Read volume information */
 static int vmfs_volinfo_read(vmfs_volinfo_t *vol,FILE *fd)
 {

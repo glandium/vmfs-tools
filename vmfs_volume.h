@@ -53,6 +53,7 @@ struct vmfs_volume {
    FILE *fd;
    int debug_level;
    int is_blkdev;
+   int scsi_reservation;
 
    /* VMFS volume base */
    off_t vmfs_base;
