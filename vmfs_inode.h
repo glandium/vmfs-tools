@@ -41,6 +41,9 @@ struct vmfs_inode {
 /* Read an inode */
 int vmfs_inode_read(vmfs_inode_t *inode,u_char *buf);
 
+/* Write an inode */
+int vmfs_inode_write(vmfs_inode_t *inode,u_char *buf);
+
 /* Show an inode */
 void vmfs_inode_show(vmfs_inode_t *inode);
 

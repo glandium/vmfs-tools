@@ -40,6 +40,26 @@ int vmfs_inode_read(vmfs_inode_t *inode,u_char *buf)
    return(0);
 }
 
+/* Write an inode */
+int vmfs_inode_write(vmfs_inode_t *inode,u_char *buf)
+{
+   write_le32(buf,VMFS_INODE_OFS_GRP_ID,inode->group_id);
+   write_le64(buf,VMFS_INODE_OFS_POS,inode->position);
+   write_le64(buf,VMFS_INODE_OFS_HB_POS,inode->hb_pos);
+   write_le32(buf,VMFS_INODE_OFS_HB_LOCK,inode->hb_lock);
+   write_le32(buf,VMFS_INODE_OFS_ID,inode->id);
+   write_le32(buf,VMFS_INODE_OFS_ID2,inode->id2);
+   write_le32(buf,VMFS_INODE_OFS_TYPE,inode->type);
+   write_le64(buf,VMFS_INODE_OFS_SIZE,inode->size);
+   write_le32(buf,VMFS_INODE_OFS_MTIME,inode->mtime);
+   write_le32(buf,VMFS_INODE_OFS_CTIME,inode->ctime);
+   write_le32(buf,VMFS_INODE_OFS_ATIME,inode->atime);
+   write_le32(buf,VMFS_INODE_OFS_UID,inode->uid);
+   write_le32(buf,VMFS_INODE_OFS_GID,inode->gid);
+   write_le32(buf,VMFS_INODE_OFS_MODE,inode->mode);
+   return(0);
+}
+
 /* Show an inode */
 void vmfs_inode_show(vmfs_inode_t *inode)
 {
