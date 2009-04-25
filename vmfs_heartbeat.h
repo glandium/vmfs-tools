@@ -27,6 +27,9 @@ struct vmfs_heartbeat {
 /* Read a heartbeart info */
 int vmfs_heartbeat_read(vmfs_heartbeat_t *hb,u_char *buf);
 
+/* Write a heartbeat info */
+int vmfs_heartbeat_write(vmfs_heartbeat_t *hb,u_char *buf);
+
 /* Show heartbeat info */
 void vmfs_heartbeat_show(vmfs_heartbeat_t *hb);
 

@@ -24,6 +24,17 @@ int vmfs_heartbeat_read(vmfs_heartbeat_t *hb,u_char *buf)
    return(0);
 }
 
+/* Write a heartbeat info */
+int vmfs_heartbeat_write(vmfs_heartbeat_t *hb,u_char *buf)
+{
+   write_le32(buf,VMFS_HB_OFS_MAGIC,hb->magic);
+   write_le64(buf,VMFS_HB_OFS_POS,hb->position);
+   write_le64(buf,VMFS_HB_OFS_SEQ,hb->seq);
+   write_le64(buf,VMFS_HB_OFS_UPTIME,hb->uptime);
+   write_uuid(buf,VMFS_HB_OFS_UUID,&hb->uuid);
+   return(0);
+}
+
 /* Show heartbeat info */
 void vmfs_heartbeat_show(vmfs_heartbeat_t *hb)
 {
