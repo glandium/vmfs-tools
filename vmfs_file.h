@@ -20,6 +20,17 @@ struct vmfs_file {
    /* ... */
 };
 
+static inline mode_t vmfs_file_type2mode(m_u32_t type) {
+   switch (type) {
+   case VMFS_FILE_TYPE_DIR:
+      return S_IFDIR;
+   case VMFS_FILE_TYPE_SYMLINK:
+      return S_IFLNK;
+   default:
+      return S_IFREG;
+   }
+}
+
 /* Get file size */
 static inline m_u64_t vmfs_file_get_size(const vmfs_file_t *f)
 {

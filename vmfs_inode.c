@@ -25,18 +25,7 @@ int vmfs_inode_read(vmfs_inode_t *inode,const u_char *buf)
    inode->mode     = read_le32(buf,VMFS_INODE_OFS_MODE);
 
    /* "corrected" mode */
-   inode->cmode    = inode->mode;
-
-   switch(inode->type) {
-      case VMFS_FILE_TYPE_DIR:
-         inode->cmode |= S_IFDIR;
-         break;
-      case VMFS_FILE_TYPE_SYMLINK:
-         inode->cmode |= S_IFLNK;
-         break;
-      default:
-         inode->cmode |= S_IFREG;
-   }
+   inode->cmode    = inode->mode | vmfs_file_type2mode(inode->type);
 
    read_uuid(buf,VMFS_INODE_OFS_HB_UUID,&inode->hb_uuid);
    return(0);
