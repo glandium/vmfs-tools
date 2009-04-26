@@ -8,7 +8,7 @@
 #include "vmfs.h"
 
 /* Create a file structure */
-vmfs_file_t *vmfs_file_create_struct(vmfs_fs_t *fs)
+vmfs_file_t *vmfs_file_create_struct(const vmfs_fs_t *fs)
 {
    vmfs_file_t *f;
 
@@ -20,7 +20,7 @@ vmfs_file_t *vmfs_file_create_struct(vmfs_fs_t *fs)
 }
 
 /* Open a file based on a directory entry */
-vmfs_file_t *vmfs_file_open_rec(vmfs_fs_t *fs,vmfs_dirent_t *rec)
+vmfs_file_t *vmfs_file_open_rec(const vmfs_fs_t *fs,const vmfs_dirent_t *rec)
 {
    u_char buf[VMFS_INODE_SIZE];
    vmfs_file_t *f;
@@ -43,7 +43,7 @@ vmfs_file_t *vmfs_file_open_rec(vmfs_fs_t *fs,vmfs_dirent_t *rec)
 }
 
 /* Open a file */
-vmfs_file_t *vmfs_file_open(vmfs_fs_t *fs,char *filename)
+vmfs_file_t *vmfs_file_open(const vmfs_fs_t *fs,const char *filename)
 {
    vmfs_dirent_t rec;
    char *tmp_name;
@@ -103,7 +103,7 @@ int vmfs_file_seek(vmfs_file_t *f,off_t pos,int whence)
 /* Read data from a file */
 ssize_t vmfs_file_read(vmfs_file_t *f,u_char *buf,size_t len)
 {
-   vmfs_bitmap_header_t *sbc_bmh;
+   const vmfs_bitmap_header_t *sbc_bmh;
    vmfs_file_t *sbc;
    u_int blk_pos;
    m_u32_t blk_id,blk_type;
@@ -245,13 +245,13 @@ int vmfs_file_dump(vmfs_file_t *f,off_t pos,size_t len,FILE *fd_out)
 }
 
 /* Get file status */
-int vmfs_file_fstat(vmfs_file_t *f,struct stat *buf)
+int vmfs_file_fstat(const vmfs_file_t *f,struct stat *buf)
 {
    return(vmfs_inode_stat(&f->inode,buf));
 }
 
 /* Get file status (similar to fstat(), but with a path) */
-static int vmfs_file_stat_internal(vmfs_fs_t *fs,char *path,
+static int vmfs_file_stat_internal(const vmfs_fs_t *fs,const char *path,
                                    int follow_symlink,
                                    struct stat *buf)
 {
@@ -272,13 +272,13 @@ static int vmfs_file_stat_internal(vmfs_fs_t *fs,char *path,
 }
 
 /* Get file file status (follow symlink) */
-int vmfs_file_stat(vmfs_fs_t *fs,char *path,struct stat *buf)
+int vmfs_file_stat(const vmfs_fs_t *fs,const char *path,struct stat *buf)
 {
    return(vmfs_file_stat_internal(fs,path,1,buf));
 }
 
 /* Get file file status (do not follow symlink) */
-int vmfs_file_lstat(vmfs_fs_t *fs,char *path,struct stat *buf)
+int vmfs_file_lstat(const vmfs_fs_t *fs,const char *path,struct stat *buf)
 {   
    return(vmfs_file_stat_internal(fs,path,0,buf));
 }

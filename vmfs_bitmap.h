@@ -29,14 +29,14 @@ struct vmfs_bitmap_entry {
 
 /* Get address of a given area (pointing to bitmap array) */
 static inline off_t 
-vmfs_bitmap_get_area_addr(vmfs_bitmap_header_t *bmh,u_int area)
+vmfs_bitmap_get_area_addr(const vmfs_bitmap_header_t *bmh,u_int area)
 {
    return(bmh->hdr_size + (area * bmh->area_size));
 }
 
 /* Get data address of a given area (after the bitmap array) */
 static inline off_t
-vmfs_bitmap_get_area_data_addr(vmfs_bitmap_header_t *bmh,u_int area)
+vmfs_bitmap_get_area_data_addr(const vmfs_bitmap_header_t *bmh,u_int area)
 {
    off_t addr;
 
@@ -46,26 +46,27 @@ vmfs_bitmap_get_area_data_addr(vmfs_bitmap_header_t *bmh,u_int area)
 }
 
 /* Read a bitmap header */
-int vmfs_bmh_read(vmfs_bitmap_header_t *bmh,u_char *buf);
+int vmfs_bmh_read(vmfs_bitmap_header_t *bmh,const u_char *buf);
 
 /* Show bitmap information */
-void vmfs_bmh_show(vmfs_bitmap_header_t *bmh);
+void vmfs_bmh_show(const vmfs_bitmap_header_t *bmh);
 
 /* Read a bitmap entry */
-int vmfs_bme_read(vmfs_bitmap_entry_t *bme,u_char *buf,int copy_bitmap);
+int vmfs_bme_read(vmfs_bitmap_entry_t *bme,const u_char *buf,int copy_bitmap);
 
 /* Get address of a block */
-off_t vmfs_bitmap_get_block_addr(vmfs_bitmap_header_t *bmh,m_u32_t blk);
+off_t vmfs_bitmap_get_block_addr(const vmfs_bitmap_header_t *bmh,m_u32_t blk);
 
 /* Count the total number of allocated items in a bitmap area */
 m_u32_t vmfs_bitmap_area_allocated_items(vmfs_file_t *f,
-                                         vmfs_bitmap_header_t *bmh,
+                                         const vmfs_bitmap_header_t *bmh,
                                          u_int area);
 
 /* Count the total number of allocated items in a bitmap */
-m_u32_t vmfs_bitmap_allocated_items(vmfs_file_t *f,vmfs_bitmap_header_t *bmh);
+m_u32_t vmfs_bitmap_allocated_items(vmfs_file_t *f,
+                                    const vmfs_bitmap_header_t *bmh);
 
 /* Check coherency of a bitmap file */
-int vmfs_bitmap_check(vmfs_file_t *f,vmfs_bitmap_header_t *bmh);
+int vmfs_bitmap_check(vmfs_file_t *f,const vmfs_bitmap_header_t *bmh);
 
 #endif

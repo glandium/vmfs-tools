@@ -14,7 +14,7 @@
 #include "utils.h"
 
 /* Convert an UUID into a string */
-char *m_uuid_to_str(uuid_t uuid,char *str)
+char *m_uuid_to_str(const uuid_t uuid,char *str)
 {
    m_u32_t time_low;
    m_u32_t time_mid;
@@ -44,7 +44,7 @@ char *m_uuid_to_str(uuid_t uuid,char *str)
 }
 
 /* Convert a timestamp to a string */
-char *m_ctime(time_t *ct,char *buf,size_t buf_len)
+char *m_ctime(const time_t *ct,char *buf,size_t buf_len)
 {
    struct tm ctm;
 
@@ -100,7 +100,7 @@ char *m_fmode_to_str(u_int mode,char *buf)
 }
 
 /* Dump a structure in hexa and ascii */
-void mem_dump(FILE *f_output,u_char *pkt,u_int len)
+void mem_dump(FILE *f_output,const u_char *pkt,u_int len)
 {
    u_int x,i = 0, tmp;
 

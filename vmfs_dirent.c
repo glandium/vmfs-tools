@@ -7,7 +7,7 @@
 #include "vmfs.h"
 
 /* Read a directory entry */
-int vmfs_dirent_read(vmfs_dirent_t *entry,u_char *buf)
+int vmfs_dirent_read(vmfs_dirent_t *entry,const u_char *buf)
 {
    entry->type      = read_le32(buf,VMFS_DIRENT_OFS_TYPE);
    entry->block_id  = read_le32(buf,VMFS_DIRENT_OFS_BLK_ID);
@@ -17,7 +17,7 @@ int vmfs_dirent_read(vmfs_dirent_t *entry,u_char *buf)
 }
 
 /* Show a directory entry */
-void vmfs_dirent_show(vmfs_dirent_t *entry)
+void vmfs_dirent_show(const vmfs_dirent_t *entry)
 {
    printf("  - Type      : 0x%x\n",entry->type);
    printf("  - Block ID  : 0x%8.8x\n",entry->block_id);
@@ -26,7 +26,7 @@ void vmfs_dirent_show(vmfs_dirent_t *entry)
 }
 
 /* Search for an entry into a directory */
-int vmfs_dirent_search(vmfs_file_t *dir_entry,char *name,vmfs_dirent_t *rec)
+int vmfs_dirent_search(vmfs_file_t *dir_entry,const char *name,vmfs_dirent_t *rec)
 {
    u_char buf[VMFS_DIRENT_SIZE];
    int dir_count;
@@ -51,7 +51,7 @@ int vmfs_dirent_search(vmfs_file_t *dir_entry,char *name,vmfs_dirent_t *rec)
 }
 
 /* Read a symlink */
-static char *vmfs_dirent_read_symlink(vmfs_fs_t *fs,vmfs_dirent_t *entry)
+static char *vmfs_dirent_read_symlink(const vmfs_fs_t *fs,vmfs_dirent_t *entry)
 {
    vmfs_file_t *f;
    size_t str_len;
@@ -79,12 +79,12 @@ static char *vmfs_dirent_read_symlink(vmfs_fs_t *fs,vmfs_dirent_t *entry)
 }
 
 /* Resolve a path name to a directory entry */
-int vmfs_dirent_resolve_path(vmfs_fs_t *fs,vmfs_file_t *base_dir,
-                             char *name,int follow_symlink,
+int vmfs_dirent_resolve_path(const vmfs_fs_t *fs,vmfs_file_t *base_dir,
+                             const char *name,int follow_symlink,
                              vmfs_dirent_t *rec)
 {
    vmfs_file_t *cur_dir,*sub_dir;
-   char *ptr,*sl,*symlink;
+   char *nam, *ptr,*sl,*symlink;
    int close_dir = 0;
    int res = 1;
    int res2;
@@ -94,7 +94,7 @@ int vmfs_dirent_resolve_path(vmfs_fs_t *fs,vmfs_file_t *base_dir,
    if (vmfs_dirent_search(cur_dir,".",rec) != 1)
       return(-1);
 
-   ptr = name;
+   nam = ptr = strdup(name);
    
    while(*ptr != 0) {
       sl = strchr(ptr,'/');
@@ -152,6 +152,7 @@ int vmfs_dirent_resolve_path(vmfs_fs_t *fs,vmfs_file_t *base_dir,
       close_dir = 1;
       ptr = sl + 1;
    }
+   free(nam);
 
    if (close_dir)
       vmfs_file_close(cur_dir);
@@ -174,7 +175,7 @@ void vmfs_dirent_free_dlist(int count,vmfs_dirent_t ***dlist)
 }
 
 /* Read a directory */
-int vmfs_dirent_readdir(vmfs_fs_t *fs,char *dir,vmfs_dirent_t ***dlist)
+int vmfs_dirent_readdir(const vmfs_fs_t *fs,const char *dir,vmfs_dirent_t ***dlist)
 {
    u_char buf[VMFS_DIRENT_SIZE];
    vmfs_dirent_t *entry;

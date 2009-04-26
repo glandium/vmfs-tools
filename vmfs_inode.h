@@ -39,24 +39,24 @@ struct vmfs_inode {
 };
 
 /* Read an inode */
-int vmfs_inode_read(vmfs_inode_t *inode,u_char *buf);
+int vmfs_inode_read(vmfs_inode_t *inode,const u_char *buf);
 
 /* Write an inode */
-int vmfs_inode_write(vmfs_inode_t *inode,u_char *buf);
+int vmfs_inode_write(const vmfs_inode_t *inode,u_char *buf);
 
 /* Show an inode */
-void vmfs_inode_show(vmfs_inode_t *inode);
+void vmfs_inode_show(const vmfs_inode_t *inode);
 
 /* Get the offset corresponding to an inode in the FDC file */
-off_t vmfs_inode_get_offset(vmfs_fs_t *fs,m_u32_t blk_id);
+off_t vmfs_inode_get_offset(const vmfs_fs_t *fs,m_u32_t blk_id);
 
 /* Get inode associated to a directory entry */
-int vmfs_inode_get(vmfs_fs_t *fs,vmfs_dirent_t *rec,u_char *buf);
+int vmfs_inode_get(const vmfs_fs_t *fs,const vmfs_dirent_t *rec,u_char *buf);
 
 /* Bind inode info to a file */
-int vmfs_inode_bind(vmfs_file_t *f,u_char *inode_buf);
+int vmfs_inode_bind(vmfs_file_t *f,const u_char *inode_buf);
 
 /* Get inode status */
-int vmfs_inode_stat(vmfs_inode_t *inode,struct stat *buf);
+int vmfs_inode_stat(const vmfs_inode_t *inode,struct stat *buf);
 
 #endif

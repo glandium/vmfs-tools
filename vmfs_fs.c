@@ -14,7 +14,7 @@
 #define VMFS_VH_FILENAME   ".vh.sf"
 
 /* Read a block from the filesystem */
-ssize_t vmfs_fs_read(vmfs_fs_t *fs,m_u32_t blk,off_t offset,
+ssize_t vmfs_fs_read(const vmfs_fs_t *fs,m_u32_t blk,off_t offset,
                       u_char *buf,size_t len)
 {
    off_t pos;
@@ -55,7 +55,7 @@ static int vmfs_fsinfo_read(vmfs_fs_t *fs)
 }
 
 /* Show FS information */
-void vmfs_fs_show(vmfs_fs_t *fs)
+void vmfs_fs_show(const vmfs_fs_t *fs)
 {  
    char uuid_str[M_UUID_BUFLEN];
 
@@ -145,7 +145,7 @@ static int vmfs_open_all_meta_files(vmfs_fs_t *fs)
 }
 
 /* Dump volume bitmaps */
-int vmfs_fs_dump_bitmaps(vmfs_fs_t *fs)
+int vmfs_fs_dump_bitmaps(const vmfs_fs_t *fs)
 {
    printf("FBB bitmap:\n");
    vmfs_bmh_show(&fs->fbb_bmh);

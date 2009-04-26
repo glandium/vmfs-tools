@@ -7,7 +7,7 @@
 #include "vmfs.h"
 
 /* Read an inode */
-int vmfs_inode_read(vmfs_inode_t *inode,u_char *buf)
+int vmfs_inode_read(vmfs_inode_t *inode,const u_char *buf)
 {
    inode->group_id = read_le32(buf,VMFS_INODE_OFS_GRP_ID);
    inode->position = read_le64(buf,VMFS_INODE_OFS_POS);
@@ -43,7 +43,7 @@ int vmfs_inode_read(vmfs_inode_t *inode,u_char *buf)
 }
 
 /* Write an inode */
-int vmfs_inode_write(vmfs_inode_t *inode,u_char *buf)
+int vmfs_inode_write(const vmfs_inode_t *inode,u_char *buf)
 {
    write_le32(buf,VMFS_INODE_OFS_GRP_ID,inode->group_id);
    write_le64(buf,VMFS_INODE_OFS_POS,inode->position);
@@ -63,7 +63,7 @@ int vmfs_inode_write(vmfs_inode_t *inode,u_char *buf)
 }
 
 /* Show an inode */
-void vmfs_inode_show(vmfs_inode_t *inode)
+void vmfs_inode_show(const vmfs_inode_t *inode)
 {
    char tbuf[64];
 
@@ -88,7 +88,7 @@ void vmfs_inode_show(vmfs_inode_t *inode)
 }
 
 /* Get the offset corresponding to an inode in the FDC file */
-off_t vmfs_inode_get_offset(vmfs_fs_t *fs,m_u32_t blk_id)
+off_t vmfs_inode_get_offset(const vmfs_fs_t *fs,m_u32_t blk_id)
 {
    m_u32_t subgroup,number;
    off_t inode_addr;
@@ -106,7 +106,7 @@ off_t vmfs_inode_get_offset(vmfs_fs_t *fs,m_u32_t blk_id)
 }
 
 /* Get inode associated to a directory entry */
-int vmfs_inode_get(vmfs_fs_t *fs,vmfs_dirent_t *rec,u_char *buf)
+int vmfs_inode_get(const vmfs_fs_t *fs,const vmfs_dirent_t *rec,u_char *buf)
 {
    m_u32_t blk_id = rec->block_id;
    off_t inode_addr;
@@ -128,7 +128,7 @@ int vmfs_inode_get(vmfs_fs_t *fs,vmfs_dirent_t *rec,u_char *buf)
 static int vmfs_inode_resolve_pb(vmfs_file_t *f,u_int base_pos,m_u32_t blk_id)
 {
    u_char buf[4096];
-   vmfs_bitmap_header_t *pbc_bmh;
+   const vmfs_bitmap_header_t *pbc_bmh;
    vmfs_file_t *pbc;
    m_u32_t pbc_blk,dblk;
    m_u32_t subgroup,number;
@@ -168,7 +168,7 @@ static int vmfs_inode_resolve_pb(vmfs_file_t *f,u_int base_pos,m_u32_t blk_id)
 }
 
 /* Bind inode info to a file */
-int vmfs_inode_bind(vmfs_file_t *f,u_char *inode_buf)
+int vmfs_inode_bind(vmfs_file_t *f,const u_char *inode_buf)
 {
    m_u32_t exp_blks,cur_pos = 0;
    m_u32_t blk_id,blk_type;
@@ -230,7 +230,7 @@ int vmfs_inode_bind(vmfs_file_t *f,u_char *inode_buf)
 }
 
 /* Get inode status */
-int vmfs_inode_stat(vmfs_inode_t *inode,struct stat *buf)
+int vmfs_inode_stat(const vmfs_inode_t *inode,struct stat *buf)
 {
    memset(buf,0,sizeof(*buf));
    buf->st_mode  = inode->cmode;

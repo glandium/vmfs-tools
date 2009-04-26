@@ -13,7 +13,7 @@
 #include "vmfs.h"
 
 /* Read a bitmap header */
-int vmfs_bmh_read(vmfs_bitmap_header_t *bmh,u_char *buf)
+int vmfs_bmh_read(vmfs_bitmap_header_t *bmh,const u_char *buf)
 {
    bmh->items_per_bitmap_entry = read_le32(buf,0x0);
    bmh->bmp_entries_per_area   = read_le32(buf,0x4);
@@ -26,7 +26,7 @@ int vmfs_bmh_read(vmfs_bitmap_header_t *bmh,u_char *buf)
 }
 
 /* Show bitmap information */
-void vmfs_bmh_show(vmfs_bitmap_header_t *bmh)
+void vmfs_bmh_show(const vmfs_bitmap_header_t *bmh)
 {
    printf("  - Items per bitmap entry: %d (0x%x)\n",
           bmh->items_per_bitmap_entry,bmh->items_per_bitmap_entry);
@@ -42,7 +42,7 @@ void vmfs_bmh_show(vmfs_bitmap_header_t *bmh)
 }
 
 /* Read a bitmap entry */
-int vmfs_bme_read(vmfs_bitmap_entry_t *bme,u_char *buf,int copy_bitmap)
+int vmfs_bme_read(vmfs_bitmap_entry_t *bme,const u_char *buf,int copy_bitmap)
 {
    bme->magic    = read_le32(buf,0x0);
    bme->position = read_le64(buf,0x4);
@@ -59,7 +59,7 @@ int vmfs_bme_read(vmfs_bitmap_entry_t *bme,u_char *buf,int copy_bitmap)
 }
 
 /* Get address of a block */
-off_t vmfs_bitmap_get_block_addr(vmfs_bitmap_header_t *bmh,m_u32_t blk)
+off_t vmfs_bitmap_get_block_addr(const vmfs_bitmap_header_t *bmh,m_u32_t blk)
 {
    m_u32_t items_per_area;
    off_t addr;
@@ -76,7 +76,7 @@ off_t vmfs_bitmap_get_block_addr(vmfs_bitmap_header_t *bmh,m_u32_t blk)
 
 /* Count the total number of allocated items in a bitmap area */
 m_u32_t vmfs_bitmap_area_allocated_items(vmfs_file_t *f,
-                                         vmfs_bitmap_header_t *bmh,
+                                         const vmfs_bitmap_header_t *bmh,
                                          u_int area)
 
 {
@@ -99,7 +99,7 @@ m_u32_t vmfs_bitmap_area_allocated_items(vmfs_file_t *f,
 }
 
 /* Count the total number of allocated items in a bitmap */
-m_u32_t vmfs_bitmap_allocated_items(vmfs_file_t *f,vmfs_bitmap_header_t *bmh)
+m_u32_t vmfs_bitmap_allocated_items(vmfs_file_t *f,const vmfs_bitmap_header_t *bmh)
 {
    m_u32_t count;
    u_int i;
@@ -111,7 +111,7 @@ m_u32_t vmfs_bitmap_allocated_items(vmfs_file_t *f,vmfs_bitmap_header_t *bmh)
 }
 
 /* Check coherency of a bitmap file */
-int vmfs_bitmap_check(vmfs_file_t *f,vmfs_bitmap_header_t *bmh)
+int vmfs_bitmap_check(vmfs_file_t *f,const vmfs_bitmap_header_t *bmh)
 {  
    u_char buf[VMFS_BITMAP_ENTRY_SIZE];
    vmfs_bitmap_entry_t entry;

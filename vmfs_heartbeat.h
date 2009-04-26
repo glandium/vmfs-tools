@@ -25,15 +25,15 @@ struct vmfs_heartbeat {
 };
 
 /* Read a heartbeart info */
-int vmfs_heartbeat_read(vmfs_heartbeat_t *hb,u_char *buf);
+int vmfs_heartbeat_read(vmfs_heartbeat_t *hb,const u_char *buf);
 
 /* Write a heartbeat info */
-int vmfs_heartbeat_write(vmfs_heartbeat_t *hb,u_char *buf);
+int vmfs_heartbeat_write(const vmfs_heartbeat_t *hb,u_char *buf);
 
 /* Show heartbeat info */
-void vmfs_heartbeat_show(vmfs_heartbeat_t *hb);
+void vmfs_heartbeat_show(const vmfs_heartbeat_t *hb);
 
 /* Show the active locks */
-int vmfs_heartbeat_show_active(vmfs_fs_t *fs);
+int vmfs_heartbeat_show_active(const vmfs_fs_t *fs);
 
 #endif

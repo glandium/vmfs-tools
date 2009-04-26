@@ -16,23 +16,24 @@ struct vmfs_dirent {
 };
 
 /* Read a file descriptor */
-int vmfs_dirent_read(vmfs_dirent_t *entry,u_char *buf);
+int vmfs_dirent_read(vmfs_dirent_t *entry,const u_char *buf);
 
 /* Show a directory entry */
-void vmfs_dirent_show(vmfs_dirent_t *entry);
+void vmfs_dirent_show(const vmfs_dirent_t *entry);
 
 /* Search for an entry into a directory */
-int vmfs_dirent_search(vmfs_file_t *dir_entry,char *name,vmfs_dirent_t *rec);
+int vmfs_dirent_search(vmfs_file_t *dir_entry,const char *name,
+                       vmfs_dirent_t *rec);
 
 /* Resolve a path name to a directory entry */
-int vmfs_dirent_resolve_path(vmfs_fs_t *fs,vmfs_file_t *base_dir,
-                             char *name,int follow_symlink,
+int vmfs_dirent_resolve_path(const vmfs_fs_t *fs, vmfs_file_t *base_dir,
+                             const char *name,int follow_symlink,
                              vmfs_dirent_t *rec);
 
 /* Free a directory list (returned by readdir) */
 void vmfs_dirent_free_dlist(int count,vmfs_dirent_t ***dlist);
 
 /* Read a directory */
-int vmfs_dirent_readdir(vmfs_fs_t *fs,char *dir,vmfs_dirent_t ***dlist);
+int vmfs_dirent_readdir(const vmfs_fs_t *fs,const char *dir,vmfs_dirent_t ***dlist);
 
 #endif

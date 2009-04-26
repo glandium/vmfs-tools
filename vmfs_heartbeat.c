@@ -13,7 +13,7 @@
 #include "vmfs.h"
 
 /* Read a heartbeart info */
-int vmfs_heartbeat_read(vmfs_heartbeat_t *hb,u_char *buf)
+int vmfs_heartbeat_read(vmfs_heartbeat_t *hb,const u_char *buf)
 {
    hb->magic    = read_le32(buf,VMFS_HB_OFS_MAGIC);
    hb->position = read_le64(buf,VMFS_HB_OFS_POS);
@@ -25,7 +25,7 @@ int vmfs_heartbeat_read(vmfs_heartbeat_t *hb,u_char *buf)
 }
 
 /* Write a heartbeat info */
-int vmfs_heartbeat_write(vmfs_heartbeat_t *hb,u_char *buf)
+int vmfs_heartbeat_write(const vmfs_heartbeat_t *hb,u_char *buf)
 {
    write_le32(buf,VMFS_HB_OFS_MAGIC,hb->magic);
    write_le64(buf,VMFS_HB_OFS_POS,hb->position);
@@ -36,7 +36,7 @@ int vmfs_heartbeat_write(vmfs_heartbeat_t *hb,u_char *buf)
 }
 
 /* Show heartbeat info */
-void vmfs_heartbeat_show(vmfs_heartbeat_t *hb)
+void vmfs_heartbeat_show(const vmfs_heartbeat_t *hb)
 {
    char uuid_str[M_UUID_BUFLEN];
    
@@ -51,7 +51,7 @@ void vmfs_heartbeat_show(vmfs_heartbeat_t *hb)
 }
 
 /* Show the active locks */
-int vmfs_heartbeat_show_active(vmfs_fs_t *fs)
+int vmfs_heartbeat_show_active(const vmfs_fs_t *fs)
 {
    u_char buf[VMFS_HB_SIZE];
    vmfs_heartbeat_t hb;

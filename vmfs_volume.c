@@ -12,7 +12,7 @@
 #include "scsi.h"
 
 /* Read a data block from the physical volume */
-static ssize_t vmfs_vol_read_data(vmfs_volume_t *vol,off_t pos,
+static ssize_t vmfs_vol_read_data(const vmfs_volume_t *vol,off_t pos,
                                   u_char *buf,size_t len)
 {
    if (lseek(vol->fd,pos,SEEK_SET) == -1)
@@ -22,7 +22,7 @@ static ssize_t vmfs_vol_read_data(vmfs_volume_t *vol,off_t pos,
 }
 
 /* Read a raw block of data on logical volume */
-ssize_t vmfs_vol_read(vmfs_volume_t *vol,off_t pos,u_char *buf,size_t len)
+ssize_t vmfs_vol_read(const vmfs_volume_t *vol,off_t pos,u_char *buf,size_t len)
 {
    pos += vol->vmfs_base + 0x1000000;
 
@@ -30,8 +30,8 @@ ssize_t vmfs_vol_read(vmfs_volume_t *vol,off_t pos,u_char *buf,size_t len)
 }
 
 /* Write a data block to the physical volume */
-static ssize_t vmfs_vol_write_data(vmfs_volume_t *vol,off_t pos,
-                                   u_char *buf,size_t len)
+static ssize_t vmfs_vol_write_data(const vmfs_volume_t *vol,off_t pos,
+                                   const u_char *buf,size_t len)
 {
    if (lseek(vol->fd,pos,SEEK_SET) == -1)
       return(-1);
@@ -40,7 +40,8 @@ static ssize_t vmfs_vol_write_data(vmfs_volume_t *vol,off_t pos,
 }
 
 /* Write a raw block of data on logical volume */
-ssize_t vmfs_vol_write(vmfs_volume_t *vol,off_t pos,u_char *buf,size_t len)
+ssize_t vmfs_vol_write(const vmfs_volume_t *vol,off_t pos,const u_char *buf,
+                       size_t len)
 {
    pos += vol->vmfs_base + 0x1000000;
 
@@ -48,7 +49,7 @@ ssize_t vmfs_vol_write(vmfs_volume_t *vol,off_t pos,u_char *buf,size_t len)
 }
 
 /* Volume reservation */
-int vmfs_vol_reserve(vmfs_volume_t *vol)
+int vmfs_vol_reserve(const vmfs_volume_t *vol)
 {
    if (!vol->scsi_reservation)
       return(-1);
@@ -57,7 +58,7 @@ int vmfs_vol_reserve(vmfs_volume_t *vol)
 }
 
 /* Volume release */
-int vmfs_vol_release(vmfs_volume_t *vol)
+int vmfs_vol_release(const vmfs_volume_t *vol)
 {
    if (!vol->scsi_reservation)
       return(-1);
@@ -142,7 +143,7 @@ static int vmfs_volinfo_read(vmfs_volinfo_t *vol,int fd)
 }
 
 /* Show volume information */
-void vmfs_vol_show(vmfs_volume_t *vol)
+void vmfs_vol_show(const vmfs_volume_t *vol)
 {
    char uuid_str[M_UUID_BUFLEN];
 
@@ -159,7 +160,7 @@ void vmfs_vol_show(vmfs_volume_t *vol)
 }
 
 /* Create a volume structure */
-vmfs_volume_t *vmfs_vol_create(char *filename,int debug_level)
+vmfs_volume_t *vmfs_vol_create(const char *filename,int debug_level)
 {
    vmfs_volume_t *vol;
    struct stat st;

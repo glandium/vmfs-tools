@@ -46,20 +46,20 @@ struct vmfs_fs {
 };
 
 /* Get block size of a volume */
-static inline m_u64_t vmfs_fs_get_blocksize(vmfs_fs_t *fs)
+static inline m_u64_t vmfs_fs_get_blocksize(const vmfs_fs_t *fs)
 {
    return(fs->fs_info.block_size);
 }
 
 /* Read a block from the filesystem */
-ssize_t vmfs_fs_read(vmfs_fs_t *fs,m_u32_t blk,off_t offset,
+ssize_t vmfs_fs_read(const vmfs_fs_t *fs,m_u32_t blk,off_t offset,
                       u_char *buf,size_t len);
 
 /* Show FS information */
-void vmfs_fs_show(vmfs_fs_t *fs);
+void vmfs_fs_show(const vmfs_fs_t *fs);
 
 /* Dump volume bitmaps */
-int vmfs_fs_dump_bitmaps(vmfs_fs_t *vol);
+int vmfs_fs_dump_bitmaps(const vmfs_fs_t *vol);
 
 /* Create a FS structure */
 vmfs_fs_t *vmfs_fs_create(vmfs_lvm_t *lvm,int debug_level);
