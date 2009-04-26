@@ -13,8 +13,26 @@ static int vmfs_fuse_getattr(const char *path, struct stat *stbuf)
    return(vmfs_file_lstat(fs, path, stbuf) ? -ENOENT : 0);
 }
 
+static int vmfs_fuse_readdir(const char *path, void *buf,
+                             fuse_fill_dir_t filler, off_t offset,
+                             struct fuse_file_info *fi)
+{
+   vmfs_dirent_t **dlist;
+   struct stat st = {0, };
+   int i,num;
+   num = vmfs_dirent_readdir(fs, path, &dlist);
+   for (i = 0; i < num; i++) {
+      st.st_mode = vmfs_file_type2mode(dlist[i]->type);
+      if (filler(buf, dlist[i]->name, &st, 0))
+         break;
+   }
+   vmfs_dirent_free_dlist(num, &dlist);
+   return(0);
+}
+
 const static struct fuse_operations vmfs_oper = {
    .getattr = vmfs_fuse_getattr,
+   .readdir = vmfs_fuse_readdir,
 };
 
 struct vmfs_fuse_opts {
