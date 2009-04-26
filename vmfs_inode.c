@@ -34,6 +34,8 @@ int vmfs_inode_read(vmfs_inode_t *inode,u_char *buf)
       case VMFS_FILE_TYPE_SYMLINK:
          inode->cmode |= S_IFLNK;
          break;
+      default:
+         inode->cmode |= S_IFREG;
    }
 
    read_uuid(buf,VMFS_INODE_OFS_HB_UUID,&inode->hb_uuid);
