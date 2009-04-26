@@ -200,6 +200,13 @@ static int cmd_show_file_blocks(vmfs_fs_t *fs,int argc,char *argv[])
    return(0);
 }
 
+/* Show filesystem information */
+static int cmd_show_fs(vmfs_fs_t *fs,int argc,char *argv[])
+{
+   vmfs_fs_show(fs);
+   return(0);
+}
+
 /* Show volume information */
 static int cmd_show_volume(vmfs_fs_t *fs,int argc,char *argv[])
 {
@@ -299,6 +306,7 @@ struct cmd cmd_array[] = {
    { "show_dirent", "Show directory entry", cmd_show_dirent },
    { "show_inode", "Show inode", cmd_show_inode },
    { "show_file_blocks", "Show file blocks", cmd_show_file_blocks },
+   { "show_fs", "Show file system info", cmd_show_fs },
    { "show_volume", "Show volume general info", cmd_show_volume },
    { "show_vol_bitmaps", "Show volume bitmaps", cmd_show_vol_bitmaps },
    { "check_vol_bitmaps", "Check volume bitmaps", cmd_check_vol_bitmaps },
