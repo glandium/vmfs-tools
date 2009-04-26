@@ -30,9 +30,38 @@ static int vmfs_fuse_readdir(const char *path, void *buf,
    return(0);
 }
 
+static int vmfs_fuse_open(const char *path, struct fuse_file_info *fi)
+{
+   vmfs_file_t *file = vmfs_file_open(fs, path);
+   if (!file)
+      return -ENOENT;
+
+   fi->fh = (uint64_t)(unsigned long)file;
+   return(0);
+}
+
+static int vmfs_fuse_read(const char *path, char *buf, size_t size,
+                          off_t offset, struct fuse_file_info *fi)
+{
+   vmfs_file_t *file = (vmfs_file_t *)(unsigned long)fi->fh;
+   vmfs_file_seek(file, offset, SEEK_SET); /* This is not thread-safe */
+   return vmfs_file_read(file, (u_char *)buf, size);
+}
+
+static int vmfs_fuse_release(const char *path, struct fuse_file_info *fi)
+{
+   vmfs_file_close((vmfs_file_t *)(unsigned long)fi->fh);
+
+   return(0);
+}
+
+
 const static struct fuse_operations vmfs_oper = {
    .getattr = vmfs_fuse_getattr,
    .readdir = vmfs_fuse_readdir,
+   .open = vmfs_fuse_open,
+   .read = vmfs_fuse_read,
+   .release = vmfs_fuse_release,
 };
 
 struct vmfs_fuse_opts {
