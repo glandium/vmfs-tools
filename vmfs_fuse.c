@@ -3,9 +3,18 @@
 #include <fuse.h>
 #include <stdlib.h>
 #include <string.h>
+#include <errno.h>
 #include "vmfs.h"
 
+static vmfs_fs_t *fs;
+
+static int vmfs_fuse_getattr(const char *path, struct stat *stbuf)
+{
+   return(vmfs_file_lstat(fs, path, stbuf) ? -ENOENT : 0);
+}
+
 const static struct fuse_operations vmfs_oper = {
+   .getattr = vmfs_fuse_getattr,
 };
 
 struct vmfs_fuse_opts {
@@ -30,7 +39,6 @@ int main(int argc, char *argv[])
 {
    struct fuse_args args = FUSE_ARGS_INIT(argc, argv);
    struct vmfs_fuse_opts opts = { 0, };
-   vmfs_fs_t *fs;
    vmfs_lvm_t *lvm;
    int err = -1;
 
