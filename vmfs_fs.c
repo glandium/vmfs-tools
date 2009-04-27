@@ -218,7 +218,7 @@ vmfs_fs_t *vmfs_fs_create(vmfs_lvm_t *lvm)
       return NULL;
 
    fs->lvm = lvm;
-   fs->debug_level = lvm->debug_level;
+   fs->debug_level = lvm->flags.debug_level;
    return fs;
 }
 

@@ -51,7 +51,7 @@ struct vmfs_volinfo {
 struct vmfs_volume {
    char *filename;
    int fd;
-   int debug_level;
+   vmfs_flags_t flags;
    int is_blkdev;
    int scsi_reservation;
 
@@ -81,7 +81,7 @@ int vmfs_vol_check_reservation(vmfs_volume_t *vol);
 void vmfs_vol_show(const vmfs_volume_t *vol);
 
 /* Create a volume structure */
-vmfs_volume_t *vmfs_vol_create(const char *filename,int debug_level);
+vmfs_volume_t *vmfs_vol_create(const char *filename,vmfs_flags_t flags);
 
 /* Open a VMFS volume */
 int vmfs_vol_open(vmfs_volume_t *vol);

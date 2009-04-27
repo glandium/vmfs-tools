@@ -160,7 +160,7 @@ void vmfs_vol_show(const vmfs_volume_t *vol)
 }
 
 /* Create a volume structure */
-vmfs_volume_t *vmfs_vol_create(const char *filename,int debug_level)
+vmfs_volume_t *vmfs_vol_create(const char *filename,vmfs_flags_t flags)
 {
    vmfs_volume_t *vol;
    struct stat st;
@@ -176,7 +176,7 @@ vmfs_volume_t *vmfs_vol_create(const char *filename,int debug_level)
       goto err_open;
    }
 
-   vol->debug_level = debug_level;
+   vol->flags = flags;
    fstat(vol->fd,&st);
    vol->is_blkdev=S_ISBLK(st.st_mode);
    return vol;
@@ -202,7 +202,7 @@ int vmfs_vol_open(vmfs_volume_t *vol)
    if (vol->is_blkdev && (scsi_get_lun(vol->fd) != vol->vol_info.lun))
       fprintf(stderr,"VMFS: Warning: Lun ID mismatch on %s\n", vol->filename);
 
-   if (vol->debug_level > 0) {
+   if (vol->flags.debug_level > 0) {
       vmfs_vol_show(vol);
       printf("VMFS: volume opened successfully\n");
    }

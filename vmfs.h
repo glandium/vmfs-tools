@@ -17,6 +17,15 @@ typedef struct vmfs_volume vmfs_volume_t;
 typedef struct vmfs_fs vmfs_fs_t;
 typedef struct vmfs_lvm vmfs_lvm_t;
 
+union vmfs_flags {
+   int packed;
+   struct {
+      unsigned int debug_level:4;
+   };
+};
+
+typedef union vmfs_flags vmfs_flags_t __attribute__((transparent_union));
+
 #include "utils.h"
 #include "vmfs_heartbeat.h"
 #include "vmfs_block.h"

@@ -107,14 +107,14 @@ void vmfs_lvm_show(const vmfs_lvm_t *lvm) {
 }
 
 /* Create a volume structure */
-vmfs_lvm_t *vmfs_lvm_create(int debug_level)
+vmfs_lvm_t *vmfs_lvm_create(vmfs_flags_t flags)
 {
    vmfs_lvm_t *lvm;
 
    if (!(lvm = calloc(1,sizeof(*lvm))))
       return NULL;
 
-   lvm->debug_level = debug_level;
+   lvm->flags = flags;
    return lvm;
 }
 
@@ -123,7 +123,7 @@ int vmfs_lvm_add_extent(vmfs_lvm_t *lvm, const char *filename)
 {
    vmfs_volume_t *vol;
 
-   if (!(vol = vmfs_vol_create(filename, lvm->debug_level)))
+   if (!(vol = vmfs_vol_create(filename, lvm->flags)))
       return(-1);
 
    if (vmfs_vol_open(vol))
