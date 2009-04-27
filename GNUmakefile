@@ -3,7 +3,7 @@ CFLAGS=-Wall -O2 -g -D_FILE_OFFSET_BITS=64
 LDFLAGS=$(shell pkg-config --libs uuid)
 SRC=$(wildcard *.c)
 OBJS=$(SRC:%.c=%.o)
-PROGRAMS=cfvmfs vmfs_fuse
+PROGRAMS=debugvmfs vmfs_fuse
 
 all: $(PROGRAMS)
 
