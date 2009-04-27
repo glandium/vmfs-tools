@@ -210,7 +210,7 @@ static int vmfs_read_fdc_base(vmfs_fs_t *fs)
 }
 
 /* Create a FS structure */
-vmfs_fs_t *vmfs_fs_create(vmfs_lvm_t *lvm,int debug_level)
+vmfs_fs_t *vmfs_fs_create(vmfs_lvm_t *lvm)
 {
    vmfs_fs_t *fs;
 
@@ -218,7 +218,7 @@ vmfs_fs_t *vmfs_fs_create(vmfs_lvm_t *lvm,int debug_level)
       return NULL;
 
    fs->lvm = lvm;
-   fs->debug_level = debug_level;
+   fs->debug_level = lvm->debug_level;
    return fs;
 }
 

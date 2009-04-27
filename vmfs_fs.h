@@ -62,7 +62,7 @@ void vmfs_fs_show(const vmfs_fs_t *fs);
 int vmfs_fs_dump_bitmaps(const vmfs_fs_t *vol);
 
 /* Create a FS structure */
-vmfs_fs_t *vmfs_fs_create(vmfs_lvm_t *lvm,int debug_level);
+vmfs_fs_t *vmfs_fs_create(vmfs_lvm_t *lvm);
 
 /* Open a VMFS volume */
 int vmfs_fs_open(vmfs_fs_t *fs);

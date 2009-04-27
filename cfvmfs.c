@@ -374,7 +374,7 @@ int main(int argc,char *argv[])
       }
    }
 
-   if (!(fs = vmfs_fs_create(lvm,0))) {
+   if (!(fs = vmfs_fs_create(lvm))) {
       fprintf(stderr,"Unable to open filesystem\n");
       exit(EXIT_FAILURE);
    }
