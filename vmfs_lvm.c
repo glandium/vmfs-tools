@@ -115,6 +115,10 @@ vmfs_lvm_t *vmfs_lvm_create(vmfs_flags_t flags)
       return NULL;
 
    lvm->flags = flags;
+
+   if (flags.read_write)
+      fprintf(stderr, "VMFS: R/W support is experimental. Use at your own risk\n");
+
    return lvm;
 }
 
