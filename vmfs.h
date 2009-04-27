@@ -21,6 +21,7 @@ union vmfs_flags {
    int packed;
    struct {
       unsigned int debug_level:4;
+      unsigned int read_write:1;
    };
 };
 

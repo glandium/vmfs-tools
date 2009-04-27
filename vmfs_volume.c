@@ -171,7 +171,7 @@ vmfs_volume_t *vmfs_vol_create(const char *filename,vmfs_flags_t flags)
    if (!(vol->filename = strdup(filename)))
       goto err_filename;
 
-   if ((vol->fd = open(vol->filename,O_RDWR)) < 0) {
+   if ((vol->fd = open(vol->filename, flags.read_write?O_RDWR:O_RDONLY)) < 0) {
       perror("open");
       goto err_open;
    }
