@@ -65,16 +65,31 @@ const static struct fuse_operations vmfs_oper = {
 };
 
 struct vmfs_fuse_opts {
-   char *dev;
+   vmfs_lvm_t *lvm;
+   int mountpoint_set;
 };
 
 static int vmfs_fuse_opts_func(void *data, const char *arg, int key,
                 struct fuse_args *outargs)
 {
    struct vmfs_fuse_opts *opts = (struct vmfs_fuse_opts *) data;
+   struct stat st;
    if (key == FUSE_OPT_KEY_NONOPT) {
-      if (opts->dev == NULL) {
-         opts->dev = strdup(arg);
+      if (opts->mountpoint_set) {
+         fprintf(stderr, "'%s' is not allowed here\n", arg);
+         return -1;
+      }
+      if (stat(arg, &st)) {
+         fprintf(stderr, "Error stat()ing '%s'\n", arg);
+         return -1;
+      }
+      if (S_ISDIR(st.st_mode)) {
+         opts->mountpoint_set = 1;
+      } else if (S_ISREG(st.st_mode) || S_ISBLK(st.st_mode)) {
+         if (vmfs_lvm_add_extent(opts->lvm,arg) == -1) {
+            fprintf(stderr,"Unable to open device/file \"%s\".\n",arg);
+            return -1;
+         }
          return 0;
       }
    }
@@ -86,26 +101,19 @@ int main(int argc, char *argv[])
 {
    struct fuse_args args = FUSE_ARGS_INIT(argc, argv);
    struct vmfs_fuse_opts opts = { 0, };
-   vmfs_lvm_t *lvm;
    int err = -1;
 
-   if ((fuse_opt_parse(&args, &opts, NULL, &vmfs_fuse_opts_func) == -1) ||
-       (opts.dev == NULL) ||
-       (fuse_opt_add_arg(&args, "-odefault_permissions"))) {
-      goto cleanup;
-   }
-
-   if (!(lvm = vmfs_lvm_create(0))) {
+   if (!(opts.lvm = vmfs_lvm_create(0))) {
       fprintf(stderr,"Unable to create LVM structure\n");
       goto cleanup;
    }
 
-   if (vmfs_lvm_add_extent(lvm,opts.dev) == -1) {
-      fprintf(stderr,"Unable to open device/file \"%s\".\n",opts.dev);
+   if ((fuse_opt_parse(&args, &opts, NULL, &vmfs_fuse_opts_func) == -1) ||
+       (fuse_opt_add_arg(&args, "-odefault_permissions"))) {
       goto cleanup;
    }
 
-   if (!(fs = vmfs_fs_create(lvm))) {
+   if (!(fs = vmfs_fs_create(opts.lvm))) {
       fprintf(stderr,"Unable to open filesystem\n");
       goto cleanup;
    }
@@ -119,7 +127,6 @@ int main(int argc, char *argv[])
 
 cleanup:
    fuse_opt_free_args(&args);
-   free(opts.dev);
 
    return err ? 1 : 0;
 }
