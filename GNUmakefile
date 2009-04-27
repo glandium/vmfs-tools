@@ -1,9 +1,9 @@
-CC=gcc
-CFLAGS=-Wall -O2 -g -D_FILE_OFFSET_BITS=64
-LDFLAGS=$(shell pkg-config --libs uuid)
-SRC=$(wildcard *.c)
-OBJS=$(SRC:%.c=%.o)
-PROGRAMS=debugvmfs vmfs_fuse
+CC := gcc
+CFLAGS := -Wall -O2 -g -D_FILE_OFFSET_BITS=64
+LDFLAGS := $(shell pkg-config --libs uuid)
+SRC := $(wildcard *.c)
+OBJS := $(SRC:%.c=%.o)
+PROGRAMS := debugvmfs vmfs_fuse
 
 all: $(PROGRAMS)
 
@@ -20,7 +20,7 @@ $(OBJS): %.o: %.c $(wildcard *.h)
 $(PROGRAMS):
 	$(CC) -o $@ $^ $(LDFLAGS)
 
-clean: CLEAN=$(filter $(PROGRAMS) $(OBJS),$(wildcard *))
+clean: CLEAN := $(filter $(PROGRAMS) $(OBJS),$(wildcard *))
 clean:
 	$(if $(CLEAN),rm $(CLEAN))
 
