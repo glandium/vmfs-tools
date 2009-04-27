@@ -29,7 +29,7 @@ clean: CLEAN := $(filter $(PROGRAMS) $(OBJS) $(PACKAGE)-%.tar.gz,$(wildcard *))
 clean:
 	$(if $(CLEAN),rm $(CLEAN))
 
-ALL_DIST := $(SRC) $(HEADERS) $(MAKEFILE_LIST)
+ALL_DIST := $(SRC) $(HEADERS) $(MAKEFILE_LIST) LICENSE README
 DIST_DIR := $(PACKAGE)-$(VERSION)
 dist: $(ALL_DIST)
 	@rm -rf "$(DIST_DIR)"

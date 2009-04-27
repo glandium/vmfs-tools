@@ -1,0 +1,10 @@
+vmfs-tools - Tools to access VMFS filesystems
+=============================================
+
+Originally loosely based on http://code.google.com/p/vmfs/ from fluidOps,
+this set of tools has since evolved to handle more features from VMFS, such
+as extents, and allows to access VMFS through the standard Linux VFS with
+the help of the FUSE framework.
+
+While it is still work in progress and is not destined for production use
+yet, it can be of some help for some people.
