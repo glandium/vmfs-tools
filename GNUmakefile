@@ -8,6 +8,7 @@ SRC := $(wildcard *.c)
 HEADERS := $(wildcard *.h)
 OBJS := $(SRC:%.c=%.o)
 PROGRAMS := debugvmfs vmfs-fuse
+prefix := /usr
 
 all: $(PROGRAMS)
 
@@ -37,4 +38,8 @@ dist: $(ALL_DIST)
 	tar -zcf "$(DIST_DIR).tar.gz" "$(DIST_DIR)"
 	@rm -rf "$(DIST_DIR)"
 
-.PHONY: all clean dist
+install:
+	install -d -m 0755 $(DESTDIR)$(prefix)/sbin
+	install -m 0755 $(PROGRAMS) $(DESTDIR)$(prefix)/sbin
+
+.PHONY: all clean dist install
