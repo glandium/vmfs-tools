@@ -37,4 +37,4 @@ dist: $(ALL_DIST)
 	tar -zcf "$(DIST_DIR).tar.gz" "$(DIST_DIR)"
 	@rm -rf "$(DIST_DIR)"
 
-.PHONY: all clean
+.PHONY: all clean dist
