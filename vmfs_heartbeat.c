@@ -32,12 +32,12 @@
 /* Read a heartbeart info */
 int vmfs_heartbeat_read(vmfs_heartbeat_t *hb,const u_char *buf)
 {
-   hb->magic    = read_le32(buf,VMFS_HB_OFS_MAGIC);
-   hb->position = read_le64(buf,VMFS_HB_OFS_POS);
-   hb->seq      = read_le64(buf,VMFS_HB_OFS_SEQ);
-   hb->uptime   = read_le64(buf,VMFS_HB_OFS_UPTIME);
+   hb->magic       = read_le32(buf,VMFS_HB_OFS_MAGIC);
+   hb->position    = read_le64(buf,VMFS_HB_OFS_POS);
+   hb->seq         = read_le64(buf,VMFS_HB_OFS_SEQ);
+   hb->uptime      = read_le64(buf,VMFS_HB_OFS_UPTIME);
+   hb->journal_blk = read_le32(buf,VMFS_HB_OFS_JOURNAL_BLK);
    read_uuid(buf,VMFS_HB_OFS_UUID,&hb->uuid);
-
    return(0);
 }
 
@@ -48,6 +48,7 @@ int vmfs_heartbeat_write(const vmfs_heartbeat_t *hb,u_char *buf)
    write_le64(buf,VMFS_HB_OFS_POS,hb->position);
    write_le64(buf,VMFS_HB_OFS_SEQ,hb->seq);
    write_le64(buf,VMFS_HB_OFS_UPTIME,hb->uptime);
+   write_le32(buf,VMFS_HB_OFS_JOURNAL_BLK,hb->journal_blk);
    write_uuid(buf,VMFS_HB_OFS_UUID,&hb->uuid);
    return(0);
 }

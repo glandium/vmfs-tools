@@ -27,11 +27,12 @@
 #define VMFS_HB_MAGIC_OFF   0xabcdef01
 #define VMFS_HB_MAGIC_ON    0xabcdef02
 
-#define VMFS_HB_OFS_MAGIC   0x0000
-#define VMFS_HB_OFS_POS     0x0004
-#define VMFS_HB_OFS_SEQ     0x000c
-#define VMFS_HB_OFS_UPTIME  0x0014
-#define VMFS_HB_OFS_UUID    0x001c
+#define VMFS_HB_OFS_MAGIC        0x0000
+#define VMFS_HB_OFS_POS          0x0004
+#define VMFS_HB_OFS_SEQ          0x000c
+#define VMFS_HB_OFS_UPTIME       0x0014
+#define VMFS_HB_OFS_UUID         0x001c
+#define VMFS_HB_OFS_JOURNAL_BLK  0x002c
 
 struct vmfs_heartbeat {
    m_u32_t magic;
@@ -39,6 +40,7 @@ struct vmfs_heartbeat {
    m_u64_t seq;          /* Sequence number */
    m_u64_t uptime;       /* Uptime (in usec) of the locker */
    uuid_t uuid;          /* UUID of the server */
+   m_u32_t journal_blk;  /* Journal block */
 };
 
 /* Read a heartbeart info */
