@@ -305,6 +305,60 @@ static int cmd_convert_block_id(vmfs_fs_t *fs,int argc,char *argv[])
    return(0);
 }
 
+/* Read a block */
+static int cmd_read_block(vmfs_fs_t *fs,int argc,char *argv[])
+{    
+   m_u32_t sbc_subgroup,sbc_number,sbc_blk;
+   m_u32_t blk_id,blk_type;
+   m_u64_t blk_size;
+   off_t sbc_addr;
+   u_char *buf;
+
+   if (argc == 0) {
+      printf("Usage: read_block blk_id\n");
+      return(-1);
+   }
+
+   blk_size = vmfs_fs_get_blocksize(fs);
+
+   if (!(buf = malloc(blk_size)))
+      return(-1);
+
+   blk_id = (m_u32_t)strtoul(argv[0],NULL,16);
+   blk_type = VMFS_BLK_TYPE(blk_id);
+
+   switch(blk_type) {
+      /* Full Block */
+      case VMFS_BLK_TYPE_FB:
+         vmfs_fs_read(fs,VMFS_BLK_FB_NUMBER(blk_id),0,buf,blk_size);
+         mem_dump(stdout,buf,blk_size);
+         break;
+
+      /* Sub-Block */
+      case VMFS_BLK_TYPE_SB:
+         blk_size = fs->sbc_bmh.data_size;
+
+         sbc_subgroup = VMFS_BLK_SB_SUBGROUP(blk_id);
+         sbc_number   = VMFS_BLK_SB_NUMBER(blk_id);
+
+         sbc_blk = sbc_number * fs->sbc_bmh.items_per_bitmap_entry;
+         sbc_blk += sbc_subgroup;
+         
+         sbc_addr = vmfs_bitmap_get_block_addr(&fs->sbc_bmh,sbc_blk);
+
+         vmfs_file_seek(fs->sbc,sbc_addr,SEEK_SET);
+         vmfs_file_read(fs->sbc,buf,blk_size);
+         mem_dump(stdout,buf,blk_size);
+         break;
+
+      default:
+         fprintf(stderr,"Unsupported block type 0x%2.2x\n",blk_type);
+   }
+
+   free(buf);
+   return(0);
+}
+
 struct cmd {
    char *name;
    char *description;
@@ -325,6 +379,7 @@ struct cmd cmd_array[] = {
    { "check_vol_bitmaps", "Check volume bitmaps", cmd_check_vol_bitmaps },
    { "show_heartbeats", "Show active heartbeats", cmd_show_heartbeats },
    { "convert_block_id", "Convert block ID", cmd_convert_block_id },
+   { "read_block", "Read a block", cmd_read_block },
    { NULL, NULL },
 };
 
