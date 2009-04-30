@@ -69,7 +69,7 @@ int vmfs_bme_read(vmfs_bitmap_entry_t *bme,const u_char *buf,int copy_bitmap)
    bme->alloc    = read_le32(buf,0x20c);
 
    if (copy_bitmap) {
-      memcpy(bme->bitmap,&buf[VMFS_BME_OFS_BITMAP ],(bme->total+7)/8);
+      memcpy(bme->bitmap,&buf[VMFS_BME_OFS_BITMAP],(bme->total+7)/8);
    }
 
    return(0);
@@ -82,13 +82,94 @@ off_t vmfs_bitmap_get_block_addr(const vmfs_bitmap_header_t *bmh,m_u32_t blk)
    off_t addr;
    u_int area;
 
-   items_per_area = bmh->bmp_entries_per_area * bmh->items_per_bitmap_entry;
+   items_per_area = vmfs_bitmap_get_items_per_area(bmh,blk);
    area = blk / items_per_area;
 
    addr  = vmfs_bitmap_get_area_data_addr(bmh,area);
    addr += (blk % items_per_area) * bmh->data_size;
 
    return(addr);
+}
+
+/* Read a bitmap entry given a block id */
+int vmfs_bitmap_get_entry(vmfs_file_t *f,const vmfs_bitmap_header_t *bmh,
+                          u_int blk,vmfs_bitmap_entry_t *entry)
+{   
+   u_char buf[VMFS_BITMAP_ENTRY_SIZE];
+   m_u32_t items_per_area;
+   u_int entry_idx,area;
+   off_t addr;
+
+   items_per_area = vmfs_bitmap_get_items_per_area(bmh,blk);
+   area = blk / items_per_area;
+
+   entry_idx = (blk % items_per_area) / bmh->items_per_bitmap_entry;
+
+   addr = vmfs_bitmap_get_area_addr(bmh,area);
+   addr += entry_idx * VMFS_BITMAP_ENTRY_SIZE;
+
+   vmfs_file_seek(f,addr,SEEK_SET);
+
+   if (vmfs_file_read(f,buf,VMFS_BITMAP_ENTRY_SIZE) != VMFS_BITMAP_ENTRY_SIZE)
+      return(-1);
+
+   vmfs_bme_read(entry,buf,1);
+   return(0);
+}
+
+/* Get offset of an item in a bitmap entry */
+static void 
+vmfs_bitmap_get_item_offset(const vmfs_bitmap_header_t *bmh,u_int blk,
+                            u_int *array_idx,u_int *bit_idx)
+{
+   u_int idx;
+
+   idx = blk % bmh->items_per_bitmap_entry;
+   *array_idx = idx / 8;
+   *bit_idx   = idx & 0x07;
+}
+
+/* Mark an item as free or allocated */
+int vmfs_bitmap_set_item_status(const vmfs_bitmap_header_t *bmh,
+                                vmfs_bitmap_entry_t *entry,
+                                u_int blk,int status)
+{
+   u_int array_idx,bit_idx;
+   u_int bit_mask;
+
+   vmfs_bitmap_get_item_offset(bmh,blk,&array_idx,&bit_idx);
+   bit_mask = 1 << bit_idx;
+
+   if (status == 0) {
+      /* item is already freed */
+      if (entry->bitmap[array_idx] & bit_mask)
+         return(-1);
+
+      entry->bitmap[array_idx] |= bit_mask;
+      entry->free++;
+   } else {
+      /* item is already allocated */
+      if (!(entry->bitmap[array_idx] & bit_mask))
+         return(-1);
+      
+      entry->bitmap[array_idx] &= ~bit_mask;
+      entry->alloc++;
+   }
+
+   return(0);
+}
+
+/* Get the status of an item (0=free,1=allocated) */
+int vmfs_bitmap_get_item_status(const vmfs_bitmap_header_t *bmh,
+                                vmfs_bitmap_entry_t *entry,u_int blk)
+{
+   u_int array_idx,bit_idx;
+   u_int bit_mask;
+
+   vmfs_bitmap_get_item_offset(bmh,blk,&array_idx,&bit_idx);
+   bit_mask = 1 << bit_idx;
+
+   return((entry->bitmap[array_idx] & bit_mask) ? 0 : 1);
 }
 
 /* Count the total number of allocated items in a bitmap area */
@@ -116,7 +197,8 @@ m_u32_t vmfs_bitmap_area_allocated_items(vmfs_file_t *f,
 }
 
 /* Count the total number of allocated items in a bitmap */
-m_u32_t vmfs_bitmap_allocated_items(vmfs_file_t *f,const vmfs_bitmap_header_t *bmh)
+m_u32_t vmfs_bitmap_allocated_items(vmfs_file_t *f,
+                                    const vmfs_bitmap_header_t *bmh)
 {
    m_u32_t count;
    u_int i;

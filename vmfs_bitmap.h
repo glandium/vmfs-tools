@@ -44,6 +44,13 @@ struct vmfs_bitmap_entry {
    m_u8_t bitmap[0];
 };
 
+/* Get number of items per area */
+static inline u_int 
+vmfs_bitmap_get_items_per_area(const vmfs_bitmap_header_t *bmh,u_int id)
+{
+   return(bmh->bmp_entries_per_area * bmh->items_per_bitmap_entry);
+}
+
 /* Get address of a given area (pointing to bitmap array) */
 static inline off_t 
 vmfs_bitmap_get_area_addr(const vmfs_bitmap_header_t *bmh,u_int area)
@@ -73,6 +80,19 @@ int vmfs_bme_read(vmfs_bitmap_entry_t *bme,const u_char *buf,int copy_bitmap);
 
 /* Get address of a block */
 off_t vmfs_bitmap_get_block_addr(const vmfs_bitmap_header_t *bmh,m_u32_t blk);
+
+/* Read a bitmap entry given a block id */
+int vmfs_bitmap_get_entry(vmfs_file_t *f,const vmfs_bitmap_header_t *bmh,
+                          u_int blk,vmfs_bitmap_entry_t *entry);
+
+/* Mark an item as free or allocated */
+int vmfs_bitmap_set_item_status(const vmfs_bitmap_header_t *bmh,
+                                vmfs_bitmap_entry_t *entry,
+                                u_int blk,int status);
+
+/* Get the status of an item (0=free,1=allocated) */
+int vmfs_bitmap_get_item_status(const vmfs_bitmap_header_t *bmh,
+                                vmfs_bitmap_entry_t *entry,u_int blk);
 
 /* Count the total number of allocated items in a bitmap area */
 m_u32_t vmfs_bitmap_area_allocated_items(vmfs_file_t *f,
