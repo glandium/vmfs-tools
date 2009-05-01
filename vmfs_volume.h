@@ -71,8 +71,8 @@ struct vmfs_lvminfo_raw {
    m_u32_t num_extents;
 } __attribute__((packed));
 
-#define VMFS_LVMINFO_OFS_SIZE          0x0200
-#define VMFS_LVMINFO(field) (VMFS_LVMINFO_OFS_SIZE + offsetof(struct vmfs_lvminfo_raw, field))
+#define VMFS_LVMINFO(field) (VMFS_LVMINFO_OFFSET + offsetof(struct vmfs_lvminfo_raw, field))
+#define VMFS_LVMINFO_OFS_SIZE          VMFS_LVMINFO(size)
 #define VMFS_LVMINFO_OFS_BLKS          VMFS_LVMINFO(blocks)
 #define VMFS_LVMINFO_OFS_UUID_STR      VMFS_LVMINFO(uuid_str)
 #define VMFS_LVMINFO_OFS_UUID          VMFS_LVMINFO(uuid)
