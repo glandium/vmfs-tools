@@ -18,28 +18,54 @@
 #ifndef VMFS_INODE_H
 #define VMFS_INODE_H
 
+#include <stddef.h>
 #include <sys/stat.h>
 
 #define VMFS_INODE_SIZE  0x800
-
-#define VMFS_INODE_OFS_GRP_ID     0x0000
-#define VMFS_INODE_OFS_POS        0x0004
-#define VMFS_INODE_OFS_HB_POS     0x000c
-#define VMFS_INODE_OFS_HB_LOCK    0x0024
-#define VMFS_INODE_OFS_HB_UUID    0x0028
-#define VMFS_INODE_OFS_ID         0x0200
-#define VMFS_INODE_OFS_ID2        0x0204
-#define VMFS_INODE_OFS_TYPE       0x020c
-#define VMFS_INODE_OFS_SIZE       0x0214
-#define VMFS_INODE_OFS_MTIME      0x022c
-#define VMFS_INODE_OFS_CTIME      0x0230
-#define VMFS_INODE_OFS_ATIME      0x0234
-#define VMFS_INODE_OFS_UID        0x0238
-#define VMFS_INODE_OFS_GID        0x023c
-#define VMFS_INODE_OFS_MODE       0x0240
-
-#define VMFS_INODE_OFS_BLK_ARRAY  0x0400
 #define VMFS_INODE_BLK_COUNT      0x100
+
+struct vmfs_inode_raw {
+   m_u32_t group_id;
+   m_u64_t pos;
+   m_u64_t hb_pos;
+   u_char _unknown0[16];
+   m_u32_t hb_lock;
+   uuid_t hb_uuid;
+   u_char _unknown1[456];
+   m_u32_t id;
+   m_u32_t id2;
+   m_u32_t _unknown2;
+   m_u32_t type;
+   m_u32_t _unknown3;
+   m_u64_t size;
+   u_char _unknown4[16];
+   m_u32_t mtime;
+   m_u32_t ctime;
+   m_u32_t atime;
+   m_u32_t uid;
+   m_u32_t gid;
+   m_u32_t mode;
+   u_char _unknown5[444];
+   m_u32_t blocks[VMFS_INODE_BLK_COUNT];
+} __attribute__((packed));
+
+#define VMFS_INODE_OFS_GRP_ID     offsetof(struct vmfs_inode_raw, group_id)
+#define VMFS_INODE_OFS_POS        offsetof(struct vmfs_inode_raw, pos)
+#define VMFS_INODE_OFS_HB_POS     offsetof(struct vmfs_inode_raw, hb_pos)
+#define VMFS_INODE_OFS_HB_LOCK    offsetof(struct vmfs_inode_raw, hb_lock)
+#define VMFS_INODE_OFS_HB_UUID    offsetof(struct vmfs_inode_raw, hb_uuid)
+#define VMFS_INODE_OFS_ID         offsetof(struct vmfs_inode_raw, id)
+#define VMFS_INODE_OFS_ID2        offsetof(struct vmfs_inode_raw, id2)
+#define VMFS_INODE_OFS_TYPE       offsetof(struct vmfs_inode_raw, type)
+#define VMFS_INODE_OFS_SIZE       offsetof(struct vmfs_inode_raw, size)
+#define VMFS_INODE_OFS_MTIME      offsetof(struct vmfs_inode_raw, mtime)
+#define VMFS_INODE_OFS_CTIME      offsetof(struct vmfs_inode_raw, ctime)
+#define VMFS_INODE_OFS_ATIME      offsetof(struct vmfs_inode_raw, atime)
+#define VMFS_INODE_OFS_UID        offsetof(struct vmfs_inode_raw, uid)
+#define VMFS_INODE_OFS_GID        offsetof(struct vmfs_inode_raw, gid)
+#define VMFS_INODE_OFS_MODE       offsetof(struct vmfs_inode_raw, mode)
+
+#define VMFS_INODE_OFS_BLK_ARRAY  offsetof(struct vmfs_inode_raw, blocks)
 
 struct vmfs_inode {
    m_u32_t group_id;
