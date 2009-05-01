@@ -27,9 +27,9 @@
 struct vmfs_volinfo_raw {
    m_u32_t magic;
    m_u32_t ver;
-   u_char _unknown0[5];
+   u_char _unknown0[6];
    u_char lun;
-   u_char _unknown1[4];
+   u_char _unknown1[3];
    char name[28];
    u_char _unknown2[84]; /* There are strange things at the beginning of this
                           * array ; on some filesystems, it looks like the lun
