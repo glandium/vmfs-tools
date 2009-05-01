@@ -18,6 +18,8 @@
 #ifndef VMFS_HEARTBEAT_H
 #define VMFS_HEARTBEAT_H
 
+#include <stddef.h>
+
 #define VMFS_HB_BASE  0x0300000
 
 #define VMFS_HB_SIZE  0x200
@@ -27,12 +29,21 @@
 #define VMFS_HB_MAGIC_OFF   0xabcdef01
 #define VMFS_HB_MAGIC_ON    0xabcdef02
 
-#define VMFS_HB_OFS_MAGIC        0x0000
-#define VMFS_HB_OFS_POS          0x0004
-#define VMFS_HB_OFS_SEQ          0x000c
-#define VMFS_HB_OFS_UPTIME       0x0014
-#define VMFS_HB_OFS_UUID         0x001c
-#define VMFS_HB_OFS_JOURNAL_BLK  0x002c
+struct vmfs_heartbeart_raw {
+   m_u32_t magic;
+   m_u64_t pos;
+   m_u64_t seq;
+   m_u64_t uptime;
+   uuid_t uuid;
+   m_u32_t journal_block;
+} __attribute__((packed));
+
+#define VMFS_HB_OFS_MAGIC        offsetof(struct vmfs_heartbeart_raw, magic)
+#define VMFS_HB_OFS_POS          offsetof(struct vmfs_heartbeart_raw, pos)
+#define VMFS_HB_OFS_SEQ          offsetof(struct vmfs_heartbeart_raw, seq)
+#define VMFS_HB_OFS_UPTIME       offsetof(struct vmfs_heartbeart_raw, uptime)
+#define VMFS_HB_OFS_UUID         offsetof(struct vmfs_heartbeart_raw, uuid)
+#define VMFS_HB_OFS_JOURNAL_BLK  offsetof(struct vmfs_heartbeart_raw, journal_block)
 
 struct vmfs_heartbeat {
    m_u32_t magic;
