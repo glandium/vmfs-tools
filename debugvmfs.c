@@ -365,6 +365,9 @@ struct cmd {
    int (*fn)(vmfs_fs_t *fs,int argc,char *argv[]);
 };
 
+/* Opens a shell */
+static int cmd_shell(vmfs_fs_t *fs,int argc,char *argv[]);
+
 struct cmd cmd_array[] = {
    { "cat", "Concatenate files and print on standard output", cmd_cat },
    { "dir", "List files in specified directory", cmd_dir },
@@ -380,6 +383,7 @@ struct cmd cmd_array[] = {
    { "show_heartbeats", "Show active heartbeats", cmd_show_heartbeats },
    { "convert_block_id", "Convert block ID", cmd_convert_block_id },
    { "read_block", "Read a block", cmd_read_block },
+   { "shell", "Opens a shell", cmd_shell },
    { NULL, NULL },
 };
 
@@ -405,6 +409,44 @@ static struct cmd *cmd_find(char *name)
          return(&cmd_array[i]);
 
    return NULL;
+}
+
+/* Opens a shell */
+static int cmd_shell(vmfs_fs_t *fs,int argc,char *argv[])
+{
+   struct cmd *cmd = NULL;
+   char buf[512];
+   int aargc;
+   char *aargv[256]; /* With a command buffer of 512 bytes, there can't be
+                      * more arguments than that */
+
+   do {
+      fprintf(stdout, "debugvmfs> ");
+      if (!fgets(buf, 511, stdin)) {
+         fprintf(stdout, "\n");
+         return(0);
+      }
+      buf[strlen(buf)-1] = 0;
+      if (!strcmp(buf, "exit") || !strcmp(buf, "quit"))
+         return(0);
+      aargc = 0;
+      aargv[0] = buf;
+      while((aargv[++aargc] = strchr(aargv[aargc - 1], ' '))) {
+         while (*(aargv[aargc]) == ' ')
+            *(aargv[aargc]++) = 0;
+      }
+      cmd = cmd_find(aargv[0]);
+      if (!cmd) {
+        int i;
+        printf("Unknown command: %s\n", aargv[0]);
+        printf("Available commands:\n");
+        for(i=0;cmd_array[i].name;i++)
+           if (cmd_array[i].fn != cmd_shell)
+              printf("  - %s : %s\n",cmd_array[i].name,cmd_array[i].description);
+      } else if (cmd->fn != cmd_shell) {
+        cmd->fn(fs,aargc-1,&aargv[1]);
+      }
+   } while (1);
 }
 
 int main(int argc,char *argv[])
