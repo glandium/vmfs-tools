@@ -22,9 +22,9 @@
 
 struct vmfs_lvminfo {
    uuid_t uuid;
-   m_u32_t num_extents;
-   m_u64_t size;
-   m_u64_t blocks;
+   uint32_t num_extents;
+   uint64_t size;
+   uint64_t blocks;
 };
 
 /* === LVM === */

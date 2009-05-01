@@ -39,20 +39,20 @@ typedef uint64_t m_u64_t;
 #endif
 
 /* Read a 16-bit word in little endian format */
-static inline m_u16_t read_le16(const u_char *p,int offset)
+static inline uint16_t read_le16(const u_char *p,int offset)
 {
 #ifdef LE_AND_NO_ALIGN
-   return(*((m_u16_t *)&p[offset]));
+   return(*((uint16_t *)&p[offset]));
 #else
-   return((m_u16_t)p[offset] | ((m_u16_t)p[offset+1] << 8));
+   return((uint16_t)p[offset] | ((uint16_t)p[offset+1] << 8));
 #endif
 }
 
 /* Write a 16-bit word in little endian format */
-static inline void write_le16(u_char *p,int offset,m_u16_t val)
+static inline void write_le16(u_char *p,int offset,uint16_t val)
 {
 #ifdef LE_AND_NO_ALIGN
-   *(m_u16_t *)&p[offset] = val;
+   *(uint16_t *)&p[offset] = val;
 #else
    p[offset]   = val & 0xFF;
    p[offset+1] = val >> 8;
@@ -60,23 +60,23 @@ static inline void write_le16(u_char *p,int offset,m_u16_t val)
 }
 
 /* Read a 32-bit word in little endian format */
-static inline m_u32_t read_le32(const u_char *p,int offset)
+static inline uint32_t read_le32(const u_char *p,int offset)
 {
 #ifdef LE_AND_NO_ALIGN
-   return(*((m_u32_t *)&p[offset]));
+   return(*((uint32_t *)&p[offset]));
 #else
-   return((m_u32_t)p[offset] |
-          ((m_u32_t)p[offset+1] << 8) |
-          ((m_u32_t)p[offset+2] << 16) |
-          ((m_u32_t)p[offset+3] << 24));
+   return((uint32_t)p[offset] |
+          ((uint32_t)p[offset+1] << 8) |
+          ((uint32_t)p[offset+2] << 16) |
+          ((uint32_t)p[offset+3] << 24));
 #endif
 }
 
 /* Write a 32-bit word in little endian format */
-static inline void write_le32(u_char *p,int offset,m_u32_t val)
+static inline void write_le32(u_char *p,int offset,uint32_t val)
 {
 #ifdef LE_AND_NO_ALIGN
-   *(m_u32_t *)&p[offset] = val;
+   *(uint32_t *)&p[offset] = val;
 #else
    p[offset]   = val & 0xFF;
    p[offset+1] = val >> 8;
@@ -86,21 +86,21 @@ static inline void write_le32(u_char *p,int offset,m_u32_t val)
 }
 
 /* Read a 64-bit word in little endian format */
-static inline m_u64_t read_le64(const u_char *p,int offset)
+static inline uint64_t read_le64(const u_char *p,int offset)
 {
 #ifdef LE_AND_NO_ALIGN
-   return(*((m_u64_t *)&p[offset]));
+   return(*((uint64_t *)&p[offset]));
 #else
-   return((m_u64_t)read_le32(p,offset) + 
-          ((m_u64_t)read_le32(p,offset+4) << 32));
+   return((uint64_t)read_le32(p,offset) +
+          ((uint64_t)read_le32(p,offset+4) << 32));
 #endif
 }
 
 /* Write a 64-bit word in little endian format */
-static inline void write_le64(u_char *p,int offset,m_u64_t val)
+static inline void write_le64(u_char *p,int offset,uint64_t val)
 {
 #ifdef LE_AND_NO_ALIGN
-   *(m_u64_t *)&p[offset] = val;
+   *(uint64_t *)&p[offset] = val;
 #else
    write_le32(p,offset,val);
    write_le32(p,offset+4,val);

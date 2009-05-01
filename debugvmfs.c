@@ -132,7 +132,7 @@ static int cmd_dirl(vmfs_fs_t *fs,int argc,char *argv[])
 /* "df" (disk free) command */
 static int cmd_df(vmfs_fs_t *fs,int argc,char *argv[])
 {
-   m_u32_t alloc,total;
+   uint32_t alloc,total;
 
    total = fs->fbb_bmh.total_items;
    alloc = vmfs_bitmap_allocated_items(fs->fbb,&fs->fbb_bmh);
@@ -263,7 +263,7 @@ static int cmd_show_heartbeats(vmfs_fs_t *fs,int argc,char *argv[])
 /* Convert a raw block ID in human readable form */
 static int cmd_convert_block_id(vmfs_fs_t *fs,int argc,char *argv[])
 {
-   m_u32_t blk_id,blk_type;
+   uint32_t blk_id,blk_type;
    int i;
 
    if (argc == 0) {
@@ -272,7 +272,7 @@ static int cmd_convert_block_id(vmfs_fs_t *fs,int argc,char *argv[])
    }
    
    for(i=0;i<argc;i++) {
-      blk_id = (m_u32_t)strtoul(argv[i],NULL,16);
+      blk_id = (uint32_t)strtoul(argv[i],NULL,16);
       blk_type = VMFS_BLK_TYPE(blk_id);
 
       printf("Block ID 0x%8.8x: ",blk_id);
@@ -308,9 +308,9 @@ static int cmd_convert_block_id(vmfs_fs_t *fs,int argc,char *argv[])
 /* Read a block */
 static int cmd_read_block(vmfs_fs_t *fs,int argc,char *argv[])
 {    
-   m_u32_t sbc_subgroup,sbc_number,sbc_blk;
-   m_u32_t blk_id,blk_type;
-   m_u64_t blk_size;
+   uint32_t sbc_subgroup,sbc_number,sbc_blk;
+   uint32_t blk_id,blk_type;
+   uint64_t blk_size;
    off_t sbc_addr;
    u_char *buf;
 
@@ -324,7 +324,7 @@ static int cmd_read_block(vmfs_fs_t *fs,int argc,char *argv[])
    if (!(buf = malloc(blk_size)))
       return(-1);
 
-   blk_id = (m_u32_t)strtoul(argv[0],NULL,16);
+   blk_id = (uint32_t)strtoul(argv[0],NULL,16);
    blk_type = VMFS_BLK_TYPE(blk_id);
 
    switch(blk_type) {

@@ -31,12 +31,12 @@
 #define VMFS_VH_FILENAME   ".vh.sf"
 
 /* Read a block from the filesystem */
-ssize_t vmfs_fs_read(const vmfs_fs_t *fs,m_u32_t blk,off_t offset,
+ssize_t vmfs_fs_read(const vmfs_fs_t *fs,uint32_t blk,off_t offset,
                       u_char *buf,size_t len)
 {
    off_t pos;
 
-   pos  = (m_u64_t)blk * vmfs_fs_get_blocksize(fs);
+   pos  = (uint64_t)blk * vmfs_fs_get_blocksize(fs);
    pos += offset;
 
    return(vmfs_lvm_read(fs->lvm,pos,buf,len));
@@ -185,7 +185,7 @@ static int vmfs_read_fdc_base(vmfs_fs_t *fs)
    u_char buf[VMFS_INODE_SIZE];
    vmfs_inode_t inode;
    off_t inode_pos;
-   m_u64_t len;
+   uint64_t len;
 
    /* Read the header */
    if (vmfs_lvm_read(fs->lvm,fs->fdc_base,buf,sizeof(buf)) < sizeof(buf))
@@ -204,7 +204,7 @@ static int vmfs_read_fdc_base(vmfs_fs_t *fs)
    len = fs->fs_info.block_size - (inode_pos - fs->fdc_base);
 
    if (fs->debug_level > 0) {
-      printf("Inodes at @0x%llx\n",(m_u64_t)inode_pos);
+      printf("Inodes at @0x%llx\n",(uint64_t)inode_pos);
       printf("Length: 0x%8.8llx\n",len);
    }
 
@@ -265,7 +265,7 @@ int vmfs_fs_open(vmfs_fs_t *fs)
                         vmfs_fs_get_blocksize(fs));
 
    if (fs->debug_level > 0)
-      printf("FDC base = @0x%llx\n",(m_u64_t)fs->fdc_base);
+      printf("FDC base = @0x%llx\n",(uint64_t)fs->fdc_base);
 
    /* Read FDC base information */
    if (vmfs_read_fdc_base(fs) == -1) {

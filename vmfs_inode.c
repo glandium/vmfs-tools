@@ -94,11 +94,11 @@ void vmfs_inode_show(const vmfs_inode_t *inode)
 }
 
 /* Get the offset corresponding to an inode in the FDC file */
-off_t vmfs_inode_get_offset(const vmfs_fs_t *fs,m_u32_t blk_id)
+off_t vmfs_inode_get_offset(const vmfs_fs_t *fs,uint32_t blk_id)
 {
-   m_u32_t subgroup,number;
+   uint32_t subgroup,number;
    off_t inode_addr;
-   m_u32_t fdc_blk;
+   uint32_t fdc_blk;
 
    subgroup = VMFS_BLK_FD_SUBGROUP(blk_id);
    number   = VMFS_BLK_FD_NUMBER(blk_id);
@@ -114,7 +114,7 @@ off_t vmfs_inode_get_offset(const vmfs_fs_t *fs,m_u32_t blk_id)
 /* Get inode associated to a directory entry */
 int vmfs_inode_get(const vmfs_fs_t *fs,const vmfs_dirent_t *rec,u_char *buf)
 {
-   m_u32_t blk_id = rec->block_id;
+   uint32_t blk_id = rec->block_id;
    off_t inode_addr;
    ssize_t len;
 
@@ -131,13 +131,13 @@ int vmfs_inode_get(const vmfs_fs_t *fs,const vmfs_dirent_t *rec,u_char *buf)
 }
 
 /* Resolve pointer blocks */
-static int vmfs_inode_resolve_pb(vmfs_file_t *f,u_int base_pos,m_u32_t blk_id)
+static int vmfs_inode_resolve_pb(vmfs_file_t *f,u_int base_pos,uint32_t blk_id)
 {
    u_char buf[4096];
    const vmfs_bitmap_header_t *pbc_bmh;
    vmfs_file_t *pbc;
-   m_u32_t pbc_blk,dblk;
-   m_u32_t subgroup,number;
+   uint32_t pbc_blk,dblk;
+   uint32_t subgroup,number;
    size_t len;
    ssize_t res;
    off_t addr;
@@ -176,9 +176,9 @@ static int vmfs_inode_resolve_pb(vmfs_file_t *f,u_int base_pos,m_u32_t blk_id)
 /* Bind inode info to a file */
 int vmfs_inode_bind(vmfs_file_t *f,const u_char *inode_buf)
 {
-   m_u32_t exp_blks,cur_pos = 0;
-   m_u32_t blk_id,blk_type;
-   m_u64_t blk_size;
+   uint32_t exp_blks,cur_pos = 0;
+   uint32_t blk_id,blk_type;
+   uint64_t blk_size;
    u_int icount;
    u_int factor;
    int i;
@@ -190,7 +190,7 @@ int vmfs_inode_bind(vmfs_file_t *f,const u_char *inode_buf)
    vmfs_blk_list_init(&f->blk_list,exp_blks);
 
    /* Indirect block count (in pointer blocks) */
-   icount = f->fs->pbc_bmh.data_size / sizeof(m_u32_t);
+   icount = f->fs->pbc_bmh.data_size / sizeof(uint32_t);
    factor = 1;
 
    for(i=0;i<VMFS_INODE_BLK_COUNT;i++) {

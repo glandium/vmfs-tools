@@ -30,12 +30,12 @@
 #define VMFS_HB_MAGIC_ON    0xabcdef02
 
 struct vmfs_heartbeart_raw {
-   m_u32_t magic;
-   m_u64_t pos;
-   m_u64_t seq;
-   m_u64_t uptime;
+   uint32_t magic;
+   uint64_t pos;
+   uint64_t seq;
+   uint64_t uptime;
    uuid_t uuid;
-   m_u32_t journal_block;
+   uint32_t journal_block;
 } __attribute__((packed));
 
 #define VMFS_HB_OFS_MAGIC        offsetof(struct vmfs_heartbeart_raw, magic)
@@ -46,12 +46,12 @@ struct vmfs_heartbeart_raw {
 #define VMFS_HB_OFS_JOURNAL_BLK  offsetof(struct vmfs_heartbeart_raw, journal_block)
 
 struct vmfs_heartbeat {
-   m_u32_t magic;
-   m_u64_t position;
-   m_u64_t seq;          /* Sequence number */
-   m_u64_t uptime;       /* Uptime (in usec) of the locker */
+   uint32_t magic;
+   uint64_t position;
+   uint64_t seq;          /* Sequence number */
+   uint64_t uptime;       /* Uptime (in usec) of the locker */
    uuid_t uuid;          /* UUID of the server */
-   m_u32_t journal_blk;  /* Journal block */
+   uint32_t journal_blk;  /* Journal block */
 };
 
 /* Read a heartbeart info */

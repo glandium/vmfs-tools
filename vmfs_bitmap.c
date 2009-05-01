@@ -76,9 +76,9 @@ int vmfs_bme_read(vmfs_bitmap_entry_t *bme,const u_char *buf,int copy_bitmap)
 }
 
 /* Get address of a block */
-off_t vmfs_bitmap_get_block_addr(const vmfs_bitmap_header_t *bmh,m_u32_t blk)
+off_t vmfs_bitmap_get_block_addr(const vmfs_bitmap_header_t *bmh,uint32_t blk)
 {
-   m_u32_t items_per_area;
+   uint32_t items_per_area;
    off_t addr;
    u_int area;
 
@@ -96,7 +96,7 @@ int vmfs_bitmap_get_entry(vmfs_file_t *f,const vmfs_bitmap_header_t *bmh,
                           u_int blk,vmfs_bitmap_entry_t *entry)
 {   
    u_char buf[VMFS_BITMAP_ENTRY_SIZE];
-   m_u32_t items_per_area;
+   uint32_t items_per_area;
    u_int entry_idx,area;
    off_t addr;
 
@@ -173,14 +173,14 @@ int vmfs_bitmap_get_item_status(const vmfs_bitmap_header_t *bmh,
 }
 
 /* Count the total number of allocated items in a bitmap area */
-m_u32_t vmfs_bitmap_area_allocated_items(vmfs_file_t *f,
+uint32_t vmfs_bitmap_area_allocated_items(vmfs_file_t *f,
                                          const vmfs_bitmap_header_t *bmh,
                                          u_int area)
 
 {
    u_char buf[VMFS_BITMAP_ENTRY_SIZE];
    vmfs_bitmap_entry_t entry;
-   m_u32_t count;
+   uint32_t count;
    int i;
 
    vmfs_file_seek(f,vmfs_bitmap_get_area_addr(bmh,area),SEEK_SET);
@@ -197,10 +197,10 @@ m_u32_t vmfs_bitmap_area_allocated_items(vmfs_file_t *f,
 }
 
 /* Count the total number of allocated items in a bitmap */
-m_u32_t vmfs_bitmap_allocated_items(vmfs_file_t *f,
+uint32_t vmfs_bitmap_allocated_items(vmfs_file_t *f,
                                     const vmfs_bitmap_header_t *bmh)
 {
-   m_u32_t count;
+   uint32_t count;
    u_int i;
    
    for(i=0,count=0;i<bmh->area_count;i++)
@@ -214,9 +214,9 @@ int vmfs_bitmap_check(vmfs_file_t *f,const vmfs_bitmap_header_t *bmh)
 {  
    u_char buf[VMFS_BITMAP_ENTRY_SIZE];
    vmfs_bitmap_entry_t entry;
-   m_u32_t total_items;
-   m_u32_t magic;
-   m_u32_t entry_id;
+   uint32_t total_items;
+   uint32_t magic;
+   uint32_t entry_id;
    int i,j,k,errors;
    int bmap_size;
    int bmap_count;

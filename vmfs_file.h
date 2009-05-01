@@ -37,7 +37,7 @@ struct vmfs_file {
    /* ... */
 };
 
-static inline mode_t vmfs_file_type2mode(m_u32_t type) {
+static inline mode_t vmfs_file_type2mode(uint32_t type) {
    switch (type) {
    case VMFS_FILE_TYPE_DIR:
       return S_IFDIR;
@@ -49,7 +49,7 @@ static inline mode_t vmfs_file_type2mode(m_u32_t type) {
 }
 
 /* Get file size */
-static inline m_u64_t vmfs_file_get_size(const vmfs_file_t *f)
+static inline uint64_t vmfs_file_get_size(const vmfs_file_t *f)
 {
    return(f->inode.size);
 }

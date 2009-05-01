@@ -25,8 +25,8 @@
 #define VMFS_VOLINFO_MAGIC  0xc001d00d
 
 struct vmfs_volinfo_raw {
-   m_u32_t magic;
-   m_u32_t ver;
+   uint32_t magic;
+   uint32_t ver;
    u_char _unknown0[6];
    u_char lun;
    u_char _unknown1[3];
@@ -36,8 +36,8 @@ struct vmfs_volinfo_raw {
                           * name as exposed by ESX, but on others, it looks
                           * just like garbage */
    uuid_t uuid;
-   m_u64_t ctime; /* ctime? in usec */
-   m_u64_t mtime; /* mtime? in usec */
+   uint64_t ctime; /* ctime? in usec */
+   uint64_t mtime; /* mtime? in usec */
 } __attribute__((packed));
 
 #define VMFS_VOLINFO_OFS_MAGIC offsetof(struct vmfs_volinfo_raw, magic)
@@ -52,23 +52,23 @@ struct vmfs_volinfo_raw {
 #define VMFS_LVMINFO_OFFSET            0x0200
 
 struct vmfs_lvminfo_raw {
-   m_u64_t size;
-   m_u64_t blocks; /* Seems to always be sum(num_segments for all extents) +
+   uint64_t size;
+   uint64_t blocks; /* Seems to always be sum(num_segments for all extents) +
                     * num_extents */
-   m_u32_t _unknown0;
+   uint32_t _unknown0;
    char uuid_str[35];
    u_char _unknown1[29];
    uuid_t uuid;
-   m_u32_t _unknown2;
-   m_u64_t ctime; /* ctime? in usec */
-   m_u32_t _unknown3;
-   m_u32_t num_segments;
-   m_u32_t first_segment;
-   m_u32_t _unknown4;
-   m_u32_t last_segment;
-   m_u32_t _unknown5;
-   m_u64_t mtime; /* mtime? in usec */
-   m_u32_t num_extents;
+   uint32_t _unknown2;
+   uint64_t ctime; /* ctime? in usec */
+   uint32_t _unknown3;
+   uint32_t num_segments;
+   uint32_t first_segment;
+   uint32_t _unknown4;
+   uint32_t last_segment;
+   uint32_t _unknown5;
+   uint64_t mtime; /* mtime? in usec */
+   uint32_t num_extents;
 } __attribute__((packed));
 
 #define VMFS_LVMINFO(field) (VMFS_LVMINFO_OFFSET + offsetof(struct vmfs_lvminfo_raw, field))
@@ -86,16 +86,16 @@ struct vmfs_lvminfo_raw {
 /* Other segment information seem relative to the extent (always the same pattern on all extents) */
 
 struct vmfs_volinfo {
-   m_u32_t magic;
-   m_u32_t version;
+   uint32_t magic;
+   uint32_t version;
    char *name;
    uuid_t uuid;
    int lun;
 
-   m_u64_t size;
-   m_u64_t blocks;
+   uint64_t size;
+   uint64_t blocks;
    uuid_t lvm_uuid;
-   m_u32_t num_segments,
+   uint32_t num_segments,
            first_segment,
            last_segment,
            num_extents;

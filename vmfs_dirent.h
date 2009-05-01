@@ -23,9 +23,9 @@
 #define VMFS_DIRENT_SIZE    0x8c
 
 struct vmfs_dirent_raw {
-   m_u32_t type;
-   m_u32_t block_id;
-   m_u32_t record_id;
+   uint32_t type;
+   uint32_t block_id;
+   uint32_t record_id;
    char name[128];
 } __attribute__((packed));
 
@@ -35,9 +35,9 @@ struct vmfs_dirent_raw {
 #define VMFS_DIRENT_OFS_NAME    offsetof(struct vmfs_dirent_raw, name)
 
 struct vmfs_dirent {
-   m_u32_t type;
-   m_u32_t block_id;
-   m_u32_t record_id;
+   uint32_t type;
+   uint32_t block_id;
+   uint32_t record_id;
    char name[128];
 };
 

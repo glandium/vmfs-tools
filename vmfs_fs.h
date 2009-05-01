@@ -25,17 +25,17 @@
 #define VMFS_FSINFO_MAGIC  0x2fabf15e
 
 struct vmfs_fsinfo_raw {
-   m_u32_t magic;
-   m_u32_t volver;
+   uint32_t magic;
+   uint32_t volver;
    u_char ver;
    uuid_t uuid;
-   m_u32_t _unknown0;
+   uint32_t _unknown0;
    char label[128];
-   m_u32_t _unknown1;
-   m_u32_t blocksize;
-   m_u32_t _unknown2;
-   m_u32_t ctime; /* ctime? in seconds */
-   m_u32_t _unknown3;
+   uint32_t _unknown1;
+   uint32_t blocksize;
+   uint32_t _unknown2;
+   uint32_t ctime; /* ctime? in seconds */
+   uint32_t _unknown3;
    uuid_t lvm_uuid;
    u_char _unknown4[31];
 } __attribute__((packed));
@@ -49,13 +49,13 @@ struct vmfs_fsinfo_raw {
 #define VMFS_FSINFO_OFS_LVM_UUID offsetof(struct vmfs_fsinfo_raw, lvm_uuid)
 
 struct vmfs_fsinfo {
-   m_u32_t magic;
-   m_u32_t vol_version;
-   m_u32_t version;
+   uint32_t magic;
+   uint32_t vol_version;
+   uint32_t version;
    uuid_t uuid;
    char label[128];
 
-   m_u64_t block_size;
+   uint64_t block_size;
    uuid_t lvm_uuid;
 };
 
@@ -80,13 +80,13 @@ struct vmfs_fs {
 };
 
 /* Get block size of a volume */
-static inline m_u64_t vmfs_fs_get_blocksize(const vmfs_fs_t *fs)
+static inline uint64_t vmfs_fs_get_blocksize(const vmfs_fs_t *fs)
 {
    return(fs->fs_info.block_size);
 }
 
 /* Read a block from the filesystem */
-ssize_t vmfs_fs_read(const vmfs_fs_t *fs,m_u32_t blk,off_t offset,
+ssize_t vmfs_fs_read(const vmfs_fs_t *fs,uint32_t blk,off_t offset,
                       u_char *buf,size_t len);
 
 /* Show FS information */

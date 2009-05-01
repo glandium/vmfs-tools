@@ -33,9 +33,9 @@
 /* Convert an UUID into a string */
 char *m_uuid_to_str(const uuid_t uuid,char *str)
 {
-   m_u32_t time_low;
-   m_u32_t time_mid;
-   m_u16_t clock_seq;
+   uint32_t time_low;
+   uint32_t time_mid;
+   uint16_t clock_seq;
    time_low = read_le32(uuid,0);
    time_mid = read_le32(uuid,4);
    clock_seq = read_le16(uuid,8);

@@ -123,9 +123,9 @@ ssize_t vmfs_file_read(vmfs_file_t *f,u_char *buf,size_t len)
    const vmfs_bitmap_header_t *sbc_bmh;
    vmfs_file_t *sbc;
    u_int blk_pos;
-   m_u32_t blk_id,blk_type;
-   m_u64_t blk_size,blk_len;
-   m_u64_t file_size,offset;
+   uint32_t blk_id,blk_type;
+   uint64_t blk_size,blk_len;
+   uint64_t file_size,offset;
    ssize_t res,rlen = 0;
    size_t clen,exp_len;
 
@@ -167,7 +167,7 @@ ssize_t vmfs_file_read(vmfs_file_t *f,u_char *buf,size_t len)
 
 #if 0
             printf("vmfs_file_read: f->pos=0x%llx, offset=0x%8.8llx\n",
-                   (m_u64_t)f->pos,offset);
+                   (uint64_t)f->pos,offset);
 #endif
 
             res = vmfs_fs_read(f->fs,VMFS_BLK_FB_NUMBER(blk_id),offset,
@@ -176,7 +176,7 @@ ssize_t vmfs_file_read(vmfs_file_t *f,u_char *buf,size_t len)
 
          /* Sub-Block */
          case VMFS_BLK_TYPE_SB: {
-            m_u32_t sbc_subgroup,sbc_number,sbc_blk;
+            uint32_t sbc_subgroup,sbc_number,sbc_blk;
             off_t sbc_addr;
 
             offset = f->pos % sbc_bmh->data_size;

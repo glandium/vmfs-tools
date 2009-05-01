@@ -25,28 +25,28 @@
 #define VMFS_INODE_BLK_COUNT      0x100
 
 struct vmfs_inode_raw {
-   m_u32_t group_id;
-   m_u64_t pos;
-   m_u64_t hb_pos;
+   uint32_t group_id;
+   uint64_t pos;
+   uint64_t hb_pos;
    u_char _unknown0[16];
-   m_u32_t hb_lock;
+   uint32_t hb_lock;
    uuid_t hb_uuid;
    u_char _unknown1[456];
-   m_u32_t id;
-   m_u32_t id2;
-   m_u32_t _unknown2;
-   m_u32_t type;
-   m_u32_t _unknown3;
-   m_u64_t size;
+   uint32_t id;
+   uint32_t id2;
+   uint32_t _unknown2;
+   uint32_t type;
+   uint32_t _unknown3;
+   uint64_t size;
    u_char _unknown4[16];
-   m_u32_t mtime;
-   m_u32_t ctime;
-   m_u32_t atime;
-   m_u32_t uid;
-   m_u32_t gid;
-   m_u32_t mode;
+   uint32_t mtime;
+   uint32_t ctime;
+   uint32_t atime;
+   uint32_t uid;
+   uint32_t gid;
+   uint32_t mode;
    u_char _unknown5[444];
-   m_u32_t blocks[VMFS_INODE_BLK_COUNT];
+   uint32_t blocks[VMFS_INODE_BLK_COUNT];
 } __attribute__((packed));
 
 #define VMFS_INODE_OFS_GRP_ID     offsetof(struct vmfs_inode_raw, group_id)
@@ -68,17 +68,17 @@ struct vmfs_inode_raw {
 #define VMFS_INODE_OFS_BLK_ARRAY  offsetof(struct vmfs_inode_raw, blocks)
 
 struct vmfs_inode {
-   m_u32_t group_id;
-   m_u64_t position;
-   m_u64_t hb_pos;
-   m_u32_t hb_lock;
+   uint32_t group_id;
+   uint64_t position;
+   uint64_t hb_pos;
+   uint32_t hb_lock;
    uuid_t  hb_uuid;
-   m_u32_t id,id2;
-   m_u32_t type;
-   m_u64_t size;
+   uint32_t id,id2;
+   uint32_t type;
+   uint64_t size;
    time_t  mtime,ctime,atime;
-   m_u32_t uid,gid;
-   m_u32_t mode,cmode;
+   uint32_t uid,gid;
+   uint32_t mode,cmode;
 };
 
 /* Read an inode */
@@ -91,7 +91,7 @@ int vmfs_inode_write(const vmfs_inode_t *inode,u_char *buf);
 void vmfs_inode_show(const vmfs_inode_t *inode);
 
 /* Get the offset corresponding to an inode in the FDC file */
-off_t vmfs_inode_get_offset(const vmfs_fs_t *fs,m_u32_t blk_id);
+off_t vmfs_inode_get_offset(const vmfs_fs_t *fs,uint32_t blk_id);
 
 /* Get inode associated to a directory entry */
 int vmfs_inode_get(const vmfs_fs_t *fs,const vmfs_dirent_t *rec,u_char *buf);
