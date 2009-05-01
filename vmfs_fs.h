@@ -18,18 +18,35 @@
 #ifndef VMFS_FS_H
 #define VMFS_FS_H
 
+#include <stddef.h>
+
 /* === FS Info === */
 #define VMFS_FSINFO_BASE   0x0200000
 #define VMFS_FSINFO_MAGIC  0x2fabf15e
 
-#define VMFS_FSINFO_OFS_MAGIC    0x0000
-#define VMFS_FSINFO_OFS_VOLVER   0x0004
-#define VMFS_FSINFO_OFS_VER      0x0008
-#define VMFS_FSINFO_OFS_UUID     0x0009
-#define VMFS_FSINFO_OFS_LABEL    0x001d
-#define VMFS_FSINFO_OFS_BLKSIZE  0x00a1
-/* 0x00a9 32-bits timestamp (ctime?) */
-#define VMFS_FSINFO_OFS_LVM_UUID 0x00b1
+struct vmfs_fsinfo_raw {
+   m_u32_t magic;
+   m_u32_t volver;
+   u_char ver;
+   uuid_t uuid;
+   m_u32_t _unknown0;
+   char label[128];
+   m_u32_t _unknown1;
+   m_u32_t blocksize;
+   m_u32_t _unknown2;
+   m_u32_t ctime; /* ctime? in seconds */
+   m_u32_t _unknown3;
+   uuid_t lvm_uuid;
+   u_char _unknown4[31];
+} __attribute__((packed));
+
+#define VMFS_FSINFO_OFS_MAGIC    offsetof(struct vmfs_fsinfo_raw, magic)
+#define VMFS_FSINFO_OFS_VOLVER   offsetof(struct vmfs_fsinfo_raw, volver)
+#define VMFS_FSINFO_OFS_VER      offsetof(struct vmfs_fsinfo_raw, ver)
+#define VMFS_FSINFO_OFS_UUID     offsetof(struct vmfs_fsinfo_raw, uuid)
+#define VMFS_FSINFO_OFS_LABEL    offsetof(struct vmfs_fsinfo_raw, label)
+#define VMFS_FSINFO_OFS_BLKSIZE  offsetof(struct vmfs_fsinfo_raw, blocksize)
+#define VMFS_FSINFO_OFS_LVM_UUID offsetof(struct vmfs_fsinfo_raw, lvm_uuid)
 
 struct vmfs_fsinfo {
    m_u32_t magic;
