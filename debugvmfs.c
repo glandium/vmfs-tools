@@ -17,6 +17,7 @@
  */
 
 #include <stdlib.h>
+#include <unistd.h>
 #include <string.h>
 #include <sys/stat.h>
 #include <sys/types.h>
@@ -419,9 +420,11 @@ static int cmd_shell(vmfs_fs_t *fs,int argc,char *argv[])
    int aargc;
    char *aargv[256]; /* With a command buffer of 512 bytes, there can't be
                       * more arguments than that */
+   int prompt = isatty(fileno(stdin));
 
    do {
-      fprintf(stdout, "debugvmfs> ");
+      if (prompt)
+         fprintf(stdout, "debugvmfs> ");
       if (!fgets(buf, 511, stdin)) {
          fprintf(stdout, "\n");
          return(0);
