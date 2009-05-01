@@ -29,11 +29,6 @@
 
 #define M_UUID_BUFLEN  36
 
-typedef uint8_t m_u8_t;
-typedef uint16_t m_u16_t;
-typedef uint32_t m_u32_t;
-typedef uint64_t m_u64_t;
-
 #if defined(__amd64__) || defined(__i386__)
 #define LE_AND_NO_ALIGN 1
 #endif
