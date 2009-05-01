@@ -18,31 +18,68 @@
 #ifndef VMFS_VOLUME_H
 #define VMFS_VOLUME_H
 
+#include <stddef.h>
+
 /* === Volume Info === */
 #define VMFS_VOLINFO_BASE   0x100000
 #define VMFS_VOLINFO_MAGIC  0xc001d00d
 
-#define VMFS_VOLINFO_OFS_MAGIC 0x0000
-#define VMFS_VOLINFO_OFS_VER   0x0004
-#define VMFS_VOLINFO_OFS_LUN   0x000e
-#define VMFS_VOLINFO_OFS_NAME  0x0012
-#define VMFS_VOLINFO_OFS_UUID  0x0082 
-/* 0x0092 64-bits timestamp in usec (volume ctime?) */
-/* 0x009a 64-bits timestamp in usec (volume mtime?) */
+struct vmfs_volinfo_raw {
+   m_u32_t magic;
+   m_u32_t ver;
+   u_char _unknown0[5];
+   u_char lun;
+   u_char _unknown1[4];
+   char name[28];
+   u_char _unknown2[84]; /* There are strange things at the beginning of this
+                          * array ; on some filesystems, it looks like the lun
+                          * name as exposed by ESX, but on others, it looks
+                          * just like garbage */
+   uuid_t uuid;
+   m_u64_t ctime; /* ctime? in usec */
+   m_u64_t mtime; /* mtime? in usec */
+} __attribute__((packed));
 
-#define VMFS_VOLINFO_OFS_NAME_SIZE     28
+#define VMFS_VOLINFO_OFS_MAGIC offsetof(struct vmfs_volinfo_raw, magic)
+#define VMFS_VOLINFO_OFS_VER   offsetof(struct vmfs_volinfo_raw, ver)
+#define VMFS_VOLINFO_OFS_LUN   offsetof(struct vmfs_volinfo_raw, lun)
+#define VMFS_VOLINFO_OFS_NAME  offsetof(struct vmfs_volinfo_raw, name)
+#define VMFS_VOLINFO_OFS_UUID  offsetof(struct vmfs_volinfo_raw, uuid)
+
+#define VMFS_VOLINFO_OFS_NAME_SIZE     sizeof(((struct vmfs_volinfo_raw *)(0))->name)
 
 /* === LVM Info === */
+#define VMFS_LVMINFO_OFFSET            0x0200
+
+struct vmfs_lvminfo_raw {
+   m_u64_t size;
+   m_u64_t blocks; /* Seems to always be sum(num_segments for all extents) +
+                    * num_extents */
+   m_u32_t _unknown0;
+   char uuid_str[35];
+   u_char _unknown1[29];
+   uuid_t uuid;
+   m_u32_t _unknown2;
+   m_u64_t ctime; /* ctime? in usec */
+   m_u32_t _unknown3;
+   m_u32_t num_segments;
+   m_u32_t first_segment;
+   m_u32_t _unknown4;
+   m_u32_t last_segment;
+   m_u32_t _unknown5;
+   m_u64_t mtime; /* mtime? in usec */
+   m_u32_t num_extents;
+} __attribute__((packed));
+
 #define VMFS_LVMINFO_OFS_SIZE          0x0200
-#define VMFS_LVMINFO_OFS_BLKS          0x0208 /* Seems to be systematically sum(VMFS_LVMINFO_OFS_NUM_SEGMENTS for all extents) + VMFS_LVMINFO_OFS_NUM_EXTENTS */
-#define VMFS_LVMINFO_OFS_UUID_STR      0x0214
-#define VMFS_LVMINFO_OFS_UUID          0x0254
-/* 0x0268 64-bits timestamp in usec (lvm ctime?) */
-#define VMFS_LVMINFO_OFS_NUM_SEGMENTS  0x0274
-#define VMFS_LVMINFO_OFS_FIRST_SEGMENT 0x0278
-#define VMFS_LVMINFO_OFS_LAST_SEGMENT  0x0280
-/* 0x0288 64-bits timestamp in usec (lvm mtime?) */
-#define VMFS_LVMINFO_OFS_NUM_EXTENTS   0x0290
+#define VMFS_LVMINFO(field) (VMFS_LVMINFO_OFS_SIZE + offsetof(struct vmfs_lvminfo_raw, field))
+#define VMFS_LVMINFO_OFS_BLKS          VMFS_LVMINFO(blocks)
+#define VMFS_LVMINFO_OFS_UUID_STR      VMFS_LVMINFO(uuid_str)
+#define VMFS_LVMINFO_OFS_UUID          VMFS_LVMINFO(uuid)
+#define VMFS_LVMINFO_OFS_NUM_SEGMENTS  VMFS_LVMINFO(num_segments)
+#define VMFS_LVMINFO_OFS_FIRST_SEGMENT VMFS_LVMINFO(first_segment)
+#define VMFS_LVMINFO_OFS_LAST_SEGMENT  VMFS_LVMINFO(last_segment)
+#define VMFS_LVMINFO_OFS_NUM_EXTENTS   VMFS_LVMINFO(num_extents)
 
 /* Segment information are at 0x80600 + i * 0x80 for i between 0 and VMFS_LVMINFO_OFS_NUM_SEGMENTS */
 /* At 0x10 (64-bits) or 0x14 (32-bits) within a segment info, it seems like something related to the absolute segment number in the logical volume (looks like absolute segment number << 4 on 32-bits) */
