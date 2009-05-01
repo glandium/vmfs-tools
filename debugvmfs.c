@@ -137,18 +137,18 @@ static int cmd_df(vmfs_fs_t *fs,int argc,char *argv[])
    total = fs->fbb_bmh.total_items;
    alloc = vmfs_bitmap_allocated_items(fs->fbb,&fs->fbb_bmh);
 
-   printf("Block size       : %llu bytes\n",vmfs_fs_get_blocksize(fs));
+   printf("Block size       : %"PRIu64" bytes\n",vmfs_fs_get_blocksize(fs));
 
    printf("Total blocks     : %u\n",total);
-   printf("Total size       : %llu Mb\n",
+   printf("Total size       : %"PRIu64" Mb\n",
           (vmfs_fs_get_blocksize(fs)*total)/1048576);
 
    printf("Allocated blocks : %u\n",alloc);
-   printf("Allocated space  : %llu Mb\n",
+   printf("Allocated space  : %"PRIu64" Mb\n",
           (vmfs_fs_get_blocksize(fs)*alloc)/1048576);
 
    printf("Free blocks      : %u\n",total-alloc);
-   printf("Free size        : %llu Mb\n",
+   printf("Free size        : %"PRIu64" Mb\n",
           (vmfs_fs_get_blocksize(fs)*(total-alloc))/1048576);
 
    return(0);

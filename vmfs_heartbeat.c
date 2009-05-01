@@ -58,11 +58,11 @@ void vmfs_heartbeat_show(const vmfs_heartbeat_t *hb)
 {
    char uuid_str[M_UUID_BUFLEN];
    
-   printf("Heartbeat ID 0x%llx:\n",hb->position);
+   printf("Heartbeat ID 0x%"PRIx64":\n",hb->position);
 
    printf("  - Magic    : 0x%8.8x\n",hb->magic);
-   printf("  - Sequence : 0x%8.8llx\n",hb->seq);
-   printf("  - Uptime   : 0x%8.8llx\n",hb->uptime);
+   printf("  - Sequence : 0x%8.8"PRIx64"\n",hb->seq);
+   printf("  - Uptime   : 0x%8.8"PRIx64"\n",hb->uptime);
    printf("  - UUID     : %s\n",m_uuid_to_str(hb->uuid,uuid_str));
 
    printf("\n");

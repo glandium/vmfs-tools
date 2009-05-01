@@ -21,7 +21,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <uuid/uuid.h>
-#include <stdint.h>
+#include <inttypes.h>
 
 /* Max and min macro */
 #define m_max(a,b) (((a) > (b)) ? (a) : (b))

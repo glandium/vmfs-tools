@@ -74,14 +74,14 @@ void vmfs_inode_show(const vmfs_inode_t *inode)
    char tbuf[64];
 
    printf("  - Group ID    : 0x%8.8x\n",inode->group_id);
-   printf("  - Position    : 0x%llx\n",inode->position);
-   printf("  - HB Position : 0x%llx\n",inode->hb_pos);
+   printf("  - Position    : 0x%"PRIx64"\n",inode->position);
+   printf("  - HB Position : 0x%"PRIx64"\n",inode->hb_pos);
    printf("  - HB Lock     : %d (%s)\n",
           inode->hb_lock,(inode->hb_lock > 0) ? "LOCKED":"UNLOCKED");
    printf("  - ID          : 0x%8.8x\n",inode->id);
    printf("  - ID2         : 0x%8.8x\n",inode->id2);
    printf("  - Type        : 0x%8.8x\n",inode->type);
-   printf("  - Size        : 0x%8.8llx\n",inode->size);
+   printf("  - Size        : 0x%8.8"PRIx64"\n",inode->size);
    printf("  - UID/GID     : %d/%d\n",inode->uid,inode->gid);
    printf("  - Mode        : 0%o (%s)\n",
           inode->mode,m_fmode_to_str(inode->mode,tbuf));

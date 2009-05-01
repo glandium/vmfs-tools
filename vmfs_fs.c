@@ -82,7 +82,7 @@ void vmfs_fs_show(const vmfs_fs_t *fs)
    printf("  - Version      : %d\n",fs->fs_info.version);
    printf("  - Label        : %s\n",fs->fs_info.label);
    printf("  - UUID         : %s\n",m_uuid_to_str(fs->fs_info.uuid,uuid_str));
-   printf("  - Block size   : %llu (0x%llx)\n",
+   printf("  - Block size   : %"PRIu64" (0x%"PRIx64")\n",
           fs->fs_info.block_size,fs->fs_info.block_size);
 
    printf("\n");
@@ -204,8 +204,8 @@ static int vmfs_read_fdc_base(vmfs_fs_t *fs)
    len = fs->fs_info.block_size - (inode_pos - fs->fdc_base);
 
    if (fs->debug_level > 0) {
-      printf("Inodes at @0x%llx\n",(uint64_t)inode_pos);
-      printf("Length: 0x%8.8llx\n",len);
+      printf("Inodes at @0x%"PRIx64"\n",(uint64_t)inode_pos);
+      printf("Length: 0x%8.8"PRIx64"\n",len);
    }
 
    /* Read the root directory */
@@ -265,7 +265,7 @@ int vmfs_fs_open(vmfs_fs_t *fs)
                         vmfs_fs_get_blocksize(fs));
 
    if (fs->debug_level > 0)
-      printf("FDC base = @0x%llx\n",(uint64_t)fs->fdc_base);
+      printf("FDC base = @0x%"PRIx64"\n",(uint64_t)fs->fdc_base);
 
    /* Read FDC base information */
    if (vmfs_read_fdc_base(fs) == -1) {
