@@ -48,12 +48,14 @@ struct vmfs_fsinfo_raw {
 #define VMFS_FSINFO_OFS_BLKSIZE  offsetof(struct vmfs_fsinfo_raw, blocksize)
 #define VMFS_FSINFO_OFS_LVM_UUID offsetof(struct vmfs_fsinfo_raw, lvm_uuid)
 
+#define VMFS_FSINFO_OFS_LABEL_SIZE sizeof(((struct vmfs_fsinfo_raw *)(0))->label)
+
 struct vmfs_fsinfo {
    uint32_t magic;
    uint32_t vol_version;
    uint32_t version;
    uuid_t uuid;
-   char label[128];
+   char *label;
 
    uint64_t block_size;
    uuid_t lvm_uuid;

@@ -19,6 +19,7 @@
  * VMFS filesystem..
  */
 
+#define _GNU_SOURCE
 #include <string.h>
 #include <stdlib.h>
 #include "vmfs.h"
@@ -64,8 +65,8 @@ static int vmfs_fsinfo_read(vmfs_fs_t *fs)
    fs->fs_info.block_size  = read_le32(buf,VMFS_FSINFO_OFS_BLKSIZE);
 
    read_uuid(buf,VMFS_FSINFO_OFS_UUID,&fs->fs_info.uuid);
-   memcpy(fs->fs_info.label,buf+VMFS_FSINFO_OFS_LABEL,
-          sizeof(fs->fs_info.label));
+   fs->fs_info.label = strndup((char *)buf+VMFS_FSINFO_OFS_LABEL,
+                               VMFS_FSINFO_OFS_LABEL_SIZE);
    read_uuid(buf,VMFS_FSINFO_OFS_LVM_UUID,&fs->fs_info.lvm_uuid);
 
    return(0);
