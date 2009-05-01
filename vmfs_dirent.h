@@ -18,12 +18,21 @@
 #ifndef VMFS_DIRENT_H
 #define VMFS_DIRENT_H
 
+#include <stddef.h>
+
 #define VMFS_DIRENT_SIZE    0x8c
 
-#define VMFS_DIRENT_OFS_TYPE    0x0000
-#define VMFS_DIRENT_OFS_BLK_ID  0x0004
-#define VMFS_DIRENT_OFS_REC_ID  0x0008
-#define VMFS_DIRENT_OFS_NAME    0x000c
+struct vmfs_dirent_raw {
+   m_u32_t type;
+   m_u32_t block_id;
+   m_u32_t record_id;
+   char name[128];
+} __attribute__((packed));
+
+#define VMFS_DIRENT_OFS_TYPE    offsetof(struct vmfs_dirent_raw, type)
+#define VMFS_DIRENT_OFS_BLK_ID  offsetof(struct vmfs_dirent_raw, block_id)
+#define VMFS_DIRENT_OFS_REC_ID  offsetof(struct vmfs_dirent_raw, record_id)
+#define VMFS_DIRENT_OFS_NAME    offsetof(struct vmfs_dirent_raw, name)
 
 struct vmfs_dirent {
    m_u32_t type;
