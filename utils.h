@@ -21,6 +21,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <uuid/uuid.h>
+#include <stdint.h>
 
 /* Max and min macro */
 #define m_max(a,b) (((a) > (b)) ? (a) : (b))
@@ -28,10 +29,10 @@
 
 #define M_UUID_BUFLEN  36
 
-typedef unsigned char m_u8_t;
-typedef unsigned short m_u16_t;
-typedef unsigned int m_u32_t;
-typedef unsigned long long m_u64_t;
+typedef uint8_t m_u8_t;
+typedef uint16_t m_u16_t;
+typedef uint32_t m_u32_t;
+typedef uint64_t m_u64_t;
 
 #if defined(__amd64__) || defined(__i386__)
 #define LE_AND_NO_ALIGN 1
