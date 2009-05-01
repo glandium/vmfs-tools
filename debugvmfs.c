@@ -431,10 +431,10 @@ static int cmd_shell(vmfs_fs_t *fs,int argc,char *argv[])
          return(0);
       aargc = 0;
       aargv[0] = buf;
-      while((aargv[++aargc] = strchr(aargv[aargc - 1], ' '))) {
+      do {
          while (*(aargv[aargc]) == ' ')
             *(aargv[aargc]++) = 0;
-      }
+      } while((aargv[++aargc] = strchr(aargv[aargc - 1], ' ')));
       cmd = cmd_find(aargv[0]);
       if (!cmd) {
         int i;
