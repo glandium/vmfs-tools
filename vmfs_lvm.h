@@ -65,4 +65,7 @@ int vmfs_lvm_add_extent(vmfs_lvm_t *lvm, const char *filename);
 /* Open an LVM */
 int vmfs_lvm_open(vmfs_lvm_t *lvm);
 
+/* Close an LVM */
+void vmfs_lvm_close(vmfs_lvm_t *lvm);
+
 #endif

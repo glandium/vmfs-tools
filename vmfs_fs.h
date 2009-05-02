@@ -100,7 +100,10 @@ int vmfs_fs_dump_bitmaps(const vmfs_fs_t *vol);
 /* Create a FS structure */
 vmfs_fs_t *vmfs_fs_create(vmfs_lvm_t *lvm);
 
-/* Open a VMFS volume */
+/* Open a FS */
 int vmfs_fs_open(vmfs_fs_t *fs);
+
+/* Close a FS */
+void vmfs_fs_close(vmfs_fs_t *fs);
 
 #endif

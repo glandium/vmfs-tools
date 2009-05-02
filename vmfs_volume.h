@@ -140,4 +140,7 @@ vmfs_volume_t *vmfs_vol_create(const char *filename,vmfs_flags_t flags);
 /* Open a VMFS volume */
 int vmfs_vol_open(vmfs_volume_t *vol);
 
+/* Close a VMFS volume */
+void vmfs_vol_close(vmfs_volume_t *vol);
+
 #endif

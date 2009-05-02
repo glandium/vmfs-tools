@@ -179,3 +179,14 @@ int vmfs_lvm_open(vmfs_lvm_t *lvm)
    }
    return(0);
 }
+
+/* Close an LVM */
+void vmfs_lvm_close(vmfs_lvm_t *lvm)
+{
+   if (!lvm)
+      return;
+   while(lvm->loaded_extents--)
+      vmfs_vol_close(lvm->extents[lvm->loaded_extents]);
+
+   free(lvm);
+}

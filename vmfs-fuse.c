@@ -143,6 +143,7 @@ int main(int argc, char *argv[])
    err = fuse_main(args.argc, args.argv, &vmfs_oper, fs);
 
 cleanup:
+   vmfs_fs_close(fs);
    fuse_opt_free_args(&args);
 
    return err ? 1 : 0;

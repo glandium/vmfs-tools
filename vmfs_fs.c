@@ -278,3 +278,19 @@ int vmfs_fs_open(vmfs_fs_t *fs)
       printf("VMFS: filesystem opened successfully\n");
    return(0);
 }
+
+/* Close a FS */
+void vmfs_fs_close(vmfs_fs_t *fs)
+{
+   if (!fs)
+      return;
+   vmfs_file_close(fs->fbb);
+   vmfs_file_close(fs->fdc);
+   vmfs_file_close(fs->pbc);
+   vmfs_file_close(fs->sbc);
+   vmfs_file_close(fs->vh);
+   vmfs_file_close(fs->root_dir);
+   vmfs_lvm_close(fs->lvm);
+   free(fs->fs_info.label);
+   free(fs);
+}

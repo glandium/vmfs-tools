@@ -457,7 +457,7 @@ int main(int argc,char *argv[])
    vmfs_lvm_t *lvm;
    vmfs_fs_t *fs;
    struct cmd *cmd = NULL;
-   int arg, i;
+   int arg, i, ret;
 
    if (argc < 3) {
       show_usage(argv[0]);
@@ -497,5 +497,7 @@ int main(int argc,char *argv[])
       exit(EXIT_FAILURE);
    }
 
-   return(cmd->fn(fs,argc-arg-1,&argv[arg+1]));
+   ret = cmd->fn(fs,argc-arg-1,&argv[arg+1]);
+   vmfs_fs_close(fs);
+   return(ret);
 }

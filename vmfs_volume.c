@@ -225,3 +225,14 @@ int vmfs_vol_open(vmfs_volume_t *vol)
    }
    return(0);
 }
+
+/* Close a VMFS volume */
+void vmfs_vol_close(vmfs_volume_t *vol)
+{
+   if (!vol)
+      return;
+   close(vol->fd);
+   free(vol->filename);
+   free(vol->vol_info.name);
+   free(vol);
+}
