@@ -172,10 +172,49 @@ int vmfs_bitmap_get_item_status(const vmfs_bitmap_header_t *bmh,
    return((entry->bitmap[array_idx] & bit_mask) ? 0 : 1);
 }
 
+/* Find a bitmap entry with at least "num_items" free in the specified area */
+int vmfs_bitmap_area_find_free_items(vmfs_file_t *f,
+                                     const vmfs_bitmap_header_t *bmh,
+                                     u_int area,u_int num_items,
+                                     vmfs_bitmap_entry_t *entry)
+{
+   u_char buf[VMFS_BITMAP_ENTRY_SIZE];
+   int i;
+
+   vmfs_file_seek(f,vmfs_bitmap_get_area_addr(bmh,area),SEEK_SET);
+
+   for(i=0;i<bmh->bmp_entries_per_area;i++) {
+      if (vmfs_file_read(f,buf,sizeof(buf)) != sizeof(buf))
+         break;
+
+      vmfs_bme_read(entry,buf,1);
+
+      if (entry->free >= num_items)
+         return(0);
+   }
+
+   return(-1);
+}
+
+/* Find a bitmap entry with at least "num_items" free (scan all areas) */
+int vmfs_bitmap_find_free_items(vmfs_file_t *f,
+                                const vmfs_bitmap_header_t *bmh,
+                                u_int area,u_int num_items,
+                                vmfs_bitmap_entry_t *entry)
+{
+   u_int i;
+
+   for(i=0;i<bmh->area_count;i++)
+      if (!vmfs_bitmap_area_find_free_items(f,bmh,i,num_items,entry))
+         return(0);
+
+   return(-1);
+}
+
 /* Count the total number of allocated items in a bitmap area */
 uint32_t vmfs_bitmap_area_allocated_items(vmfs_file_t *f,
-                                         const vmfs_bitmap_header_t *bmh,
-                                         u_int area)
+                                          const vmfs_bitmap_header_t *bmh,
+                                          u_int area)
 
 {
    u_char buf[VMFS_BITMAP_ENTRY_SIZE];

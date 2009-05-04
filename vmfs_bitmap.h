@@ -94,6 +94,18 @@ int vmfs_bitmap_set_item_status(const vmfs_bitmap_header_t *bmh,
 int vmfs_bitmap_get_item_status(const vmfs_bitmap_header_t *bmh,
                                 vmfs_bitmap_entry_t *entry,u_int blk);
 
+/* Find a bitmap entry with at least "num_items" free in the specified area */
+int vmfs_bitmap_area_find_free_items(vmfs_file_t *f,
+                                     const vmfs_bitmap_header_t *bmh,
+                                     u_int area,u_int num_items,
+                                     vmfs_bitmap_entry_t *entry);
+
+/* Find a bitmap entry with at least "num_items" free (scan all areas) */
+int vmfs_bitmap_find_free_items(vmfs_file_t *f,
+                                const vmfs_bitmap_header_t *bmh,
+                                u_int area,u_int num_items,
+                                vmfs_bitmap_entry_t *entry);
+
 /* Count the total number of allocated items in a bitmap area */
 uint32_t vmfs_bitmap_area_allocated_items(vmfs_file_t *f,
                                          const vmfs_bitmap_header_t *bmh,
