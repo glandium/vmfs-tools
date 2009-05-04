@@ -30,8 +30,8 @@ int vmfs_dirent_read(vmfs_dirent_t *entry,const u_char *buf)
    entry->type      = read_le32(buf,VMFS_DIRENT_OFS_TYPE);
    entry->block_id  = read_le32(buf,VMFS_DIRENT_OFS_BLK_ID);
    entry->record_id = read_le32(buf,VMFS_DIRENT_OFS_REC_ID);
-   entry->name = strndup((char *)buf+VMFS_DIRENT_OFS_NAME,
-                         VMFS_DIRENT_OFS_NAME_SIZE);
+   entry->name      = strndup((char *)buf+VMFS_DIRENT_OFS_NAME,
+                              VMFS_DIRENT_OFS_NAME_SIZE);
    return(0);
 }
 
@@ -45,7 +45,8 @@ void vmfs_dirent_show(const vmfs_dirent_t *entry)
 }
 
 /* Search for an entry into a directory */
-int vmfs_dirent_search(vmfs_file_t *dir_entry,const char *name,vmfs_dirent_t *rec)
+int vmfs_dirent_search(vmfs_file_t *dir_entry,const char *name,
+                       vmfs_dirent_t *rec)
 {
    u_char buf[VMFS_DIRENT_SIZE];
    int dir_count;
@@ -194,7 +195,8 @@ void vmfs_dirent_free_dlist(int count,vmfs_dirent_t ***dlist)
 }
 
 /* Read a directory */
-int vmfs_dirent_readdir(const vmfs_fs_t *fs,const char *dir,vmfs_dirent_t ***dlist)
+int vmfs_dirent_readdir(const vmfs_fs_t *fs,const char *dir,
+                        vmfs_dirent_t ***dlist)
 {
    u_char buf[VMFS_DIRENT_SIZE];
    vmfs_dirent_t *entry;

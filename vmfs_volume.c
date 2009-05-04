@@ -39,7 +39,8 @@ static ssize_t vmfs_vol_read_data(const vmfs_volume_t *vol,off_t pos,
 }
 
 /* Read a raw block of data on logical volume */
-ssize_t vmfs_vol_read(const vmfs_volume_t *vol,off_t pos,u_char *buf,size_t len)
+ssize_t vmfs_vol_read(const vmfs_volume_t *vol,off_t pos,
+                      u_char *buf,size_t len)
 {
    pos += vol->vmfs_base + 0x1000000;
 
@@ -57,8 +58,8 @@ static ssize_t vmfs_vol_write_data(const vmfs_volume_t *vol,off_t pos,
 }
 
 /* Write a raw block of data on logical volume */
-ssize_t vmfs_vol_write(const vmfs_volume_t *vol,off_t pos,const u_char *buf,
-                       size_t len)
+ssize_t vmfs_vol_write(const vmfs_volume_t *vol,off_t pos,
+                       const u_char *buf,size_t len)
 {
    pos += vol->vmfs_base + 0x1000000;
 
@@ -142,14 +143,19 @@ static int vmfs_volinfo_read(vmfs_volinfo_t *vol,int fd)
    vol->num_extents = read_le32(buf,VMFS_LVMINFO_OFS_NUM_EXTENTS);
 
    read_uuid(buf,VMFS_LVMINFO_OFS_UUID,&vol->lvm_uuid);
+
 #ifdef VMFS_CHECK
    {
       /* The LVM UUID also appears as a string, so we can check whether our
          formatting function is correct. */
       char uuidstr1[M_UUID_BUFLEN], uuidstr2[M_UUID_BUFLEN];
+
       memcpy(uuidstr1,buf+VMFS_LVMINFO_OFS_UUID_STR,M_UUID_BUFLEN-1);
       uuidstr1[M_UUID_BUFLEN-1] = 0;
-      if (memcmp(m_uuid_to_str(vol->lvm_uuid,uuidstr2),uuidstr1,M_UUID_BUFLEN-1)) {
+
+      if (memcmp(m_uuid_to_str(vol->lvm_uuid,uuidstr2),uuidstr1,
+                 M_UUID_BUFLEN-1)) 
+      {
          fprintf(stderr, "uuid mismatch:\n%s\n%s\n",uuidstr1,uuidstr2);
          return(-1);
       }

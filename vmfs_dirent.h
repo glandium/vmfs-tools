@@ -62,6 +62,7 @@ int vmfs_dirent_resolve_path(const vmfs_fs_t *fs, vmfs_file_t *base_dir,
 void vmfs_dirent_free_dlist(int count,vmfs_dirent_t ***dlist);
 
 /* Read a directory */
-int vmfs_dirent_readdir(const vmfs_fs_t *fs,const char *dir,vmfs_dirent_t ***dlist);
+int vmfs_dirent_readdir(const vmfs_fs_t *fs,const char *dir,
+                        vmfs_dirent_t ***dlist);
 
 #endif

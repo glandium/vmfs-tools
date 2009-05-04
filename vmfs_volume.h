@@ -46,7 +46,8 @@ struct vmfs_volinfo_raw {
 #define VMFS_VOLINFO_OFS_NAME  offsetof(struct vmfs_volinfo_raw, name)
 #define VMFS_VOLINFO_OFS_UUID  offsetof(struct vmfs_volinfo_raw, uuid)
 
-#define VMFS_VOLINFO_OFS_NAME_SIZE     sizeof(((struct vmfs_volinfo_raw *)(0))->name)
+#define VMFS_VOLINFO_OFS_NAME_SIZE \
+   sizeof(((struct vmfs_volinfo_raw *)(0))->name)
 
 /* === LVM Info === */
 #define VMFS_LVMINFO_OFFSET            0x0200
@@ -71,7 +72,9 @@ struct vmfs_lvminfo_raw {
    uint32_t num_extents;
 } __attribute__((packed));
 
-#define VMFS_LVMINFO(field) (VMFS_LVMINFO_OFFSET + offsetof(struct vmfs_lvminfo_raw, field))
+#define VMFS_LVMINFO(field) \
+  (VMFS_LVMINFO_OFFSET + offsetof(struct vmfs_lvminfo_raw, field))
+
 #define VMFS_LVMINFO_OFS_SIZE          VMFS_LVMINFO(size)
 #define VMFS_LVMINFO_OFS_BLKS          VMFS_LVMINFO(blocks)
 #define VMFS_LVMINFO_OFS_UUID_STR      VMFS_LVMINFO(uuid_str)
@@ -81,9 +84,16 @@ struct vmfs_lvminfo_raw {
 #define VMFS_LVMINFO_OFS_LAST_SEGMENT  VMFS_LVMINFO(last_segment)
 #define VMFS_LVMINFO_OFS_NUM_EXTENTS   VMFS_LVMINFO(num_extents)
 
-/* Segment information are at 0x80600 + i * 0x80 for i between 0 and VMFS_LVMINFO_OFS_NUM_SEGMENTS */
-/* At 0x10 (64-bits) or 0x14 (32-bits) within a segment info, it seems like something related to the absolute segment number in the logical volume (looks like absolute segment number << 4 on 32-bits) */
-/* Other segment information seem relative to the extent (always the same pattern on all extents) */
+/* 
+ * Segment information are at 0x80600 + i * 0x80 for i between 0 and 
+ * VMFS_LVMINFO_OFS_NUM_SEGMENTS 
+ * 
+ * At 0x10 (64-bits) or 0x14 (32-bits) within a segment info, it seems like 
+ * something related to the absolute segment number in the logical volume 
+ * (looks like absolute segment number << 4 on 32-bits).
+ * Other segment information seem relative to the extent (always the same 
+ * pattern on all extents) 
+ */
 
 struct vmfs_volinfo {
    uint32_t magic;
@@ -117,10 +127,12 @@ struct vmfs_volume {
 };
 
 /* Read a raw block of data on logical volume */
-ssize_t vmfs_vol_read(const vmfs_volume_t *vol,off_t pos,u_char *buf,size_t len);
+ssize_t vmfs_vol_read(const vmfs_volume_t *vol,off_t pos,
+                      u_char *buf,size_t len);
 
 /* Write a raw block of data on logical volume */
-ssize_t vmfs_vol_write(const vmfs_volume_t *vol,off_t pos,const u_char *buf,size_t len);
+ssize_t vmfs_vol_write(const vmfs_volume_t *vol,off_t pos,
+                       const u_char *buf,size_t len);
 
 /* Volume reservation */
 int vmfs_vol_reserve(const vmfs_volume_t *vol);
