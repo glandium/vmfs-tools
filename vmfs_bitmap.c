@@ -61,17 +61,20 @@ void vmfs_bmh_show(const vmfs_bitmap_header_t *bmh)
 /* Read a bitmap entry */
 int vmfs_bme_read(vmfs_bitmap_entry_t *bme,const u_char *buf,int copy_bitmap)
 {
-   bme->magic    = read_le32(buf,0x0);
-   bme->position = read_le64(buf,0x4);
-   bme->id       = read_le32(buf,0x200);
-   bme->total    = read_le32(buf,0x204);
-   bme->free     = read_le32(buf,0x208);
-   bme->alloc    = read_le32(buf,0x20c);
+   bme->magic    = read_le32(buf,VMFS_BME_OFS_MAGIC);
+   bme->pos      = read_le64(buf,VMFS_BME_OFS_POS);
+   bme->hb_pos   = read_le64(buf,VMFS_BME_OFS_HB_POS);
+   bme->hb_lock  = read_le32(buf,VMFS_BME_OFS_HB_LOCK);
+   bme->id       = read_le32(buf,VMFS_BME_OFS_ID);
+   bme->total    = read_le32(buf,VMFS_BME_OFS_TOTAL);
+   bme->free     = read_le32(buf,VMFS_BME_OFS_FREE);
+   bme->ffree    = read_le32(buf,VMFS_BME_OFS_FFREE);
 
    if (copy_bitmap) {
       memcpy(bme->bitmap,&buf[VMFS_BME_OFS_BITMAP],(bme->total+7)/8);
    }
 
+   read_uuid(buf,VMFS_BME_OFS_HB_UUID,&bme->hb_uuid);
    return(0);
 }
 
@@ -153,7 +156,7 @@ int vmfs_bitmap_set_item_status(const vmfs_bitmap_header_t *bmh,
          return(-1);
       
       entry->bitmap[array_idx] &= ~bit_mask;
-      entry->alloc++;
+      entry->free--;
    }
 
    return(0);
@@ -312,7 +315,7 @@ int vmfs_bitmap_check(vmfs_file_t *f,const vmfs_bitmap_header_t *bmh)
          if (bmap_count != entry.free) {
             printf("Entry 0x%x has an incorrect bitmap array "
                    "(bmap_count=0x%x instead of 0x%x)\n",
-                   entry_id,bmap_count,entry.alloc);
+                   entry_id,bmap_count,entry.free);
             errors++;
          }
 

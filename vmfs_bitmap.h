@@ -30,17 +30,46 @@ struct vmfs_bitmap_header {
 };
 
 /* === Bitmap entry === */
-#define VMFS_BITMAP_ENTRY_SIZE  0x400
+#define VMFS_BITMAP_ENTRY_SIZE    0x400
 
-#define VMFS_BME_OFS_BITMAP     0x210
+#define VMFS_BITMAP_BMP_MAX_SIZE  0x1f0
+
+struct vmfs_bitmap_entry_raw {
+   uint32_t magic;            /* Magic number */
+   uint64_t pos;              /* Position in the volume */
+   uint64_t hb_pos;           /* Heartbeat position */
+   u_char _unknown0[16];
+   uint32_t hb_lock;          /* Heartbeat lock flag */
+   uuid_t hb_uuid;            /* UUID of locking server */
+   u_char _unknown1[0x1c8];
+   uint32_t id;               /* Bitmap ID */
+   uint32_t total;            /* Total number of items in this entry */
+   uint32_t free;             /* Free items */
+   uint32_t ffree;            /* First free item */
+   uint8_t bitmap[VMFS_BITMAP_BMP_MAX_SIZE];
+} __attribute__((packed));
+
+#define VMFS_BME_OFS_MAGIC    offsetof(struct vmfs_bitmap_entry_raw, magic)
+#define VMFS_BME_OFS_POS      offsetof(struct vmfs_bitmap_entry_raw, pos)
+#define VMFS_BME_OFS_HB_POS   offsetof(struct vmfs_bitmap_entry_raw, hb_pos)
+#define VMFS_BME_OFS_HB_LOCK  offsetof(struct vmfs_bitmap_entry_raw, hb_lock)
+#define VMFS_BME_OFS_HB_UUID  offsetof(struct vmfs_bitmap_entry_raw, hb_uuid)
+#define VMFS_BME_OFS_ID       offsetof(struct vmfs_bitmap_entry_raw, id)
+#define VMFS_BME_OFS_TOTAL    offsetof(struct vmfs_bitmap_entry_raw, total)
+#define VMFS_BME_OFS_FREE     offsetof(struct vmfs_bitmap_entry_raw, free)
+#define VMFS_BME_OFS_FFREE    offsetof(struct vmfs_bitmap_entry_raw, ffree)
+#define VMFS_BME_OFS_BITMAP   offsetof(struct vmfs_bitmap_entry_raw, bitmap)
 
 struct vmfs_bitmap_entry {
    uint32_t magic;
-   uint64_t position;
+   uint64_t pos;
+   uint64_t hb_pos;
+   uint32_t hb_lock;
+   uuid_t hb_uuid;
    uint32_t id;
    uint32_t total;
    uint32_t free;
-   uint32_t alloc;
+   uint32_t ffree;
    uint8_t bitmap[0];
 };
 
