@@ -25,6 +25,8 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include <sys/stat.h>
+#include <assert.h>
+
 #include "vmfs.h"
 #include "scsi.h"
 
@@ -111,12 +113,12 @@ int vmfs_vol_check_reservation(vmfs_volume_t *vol)
 /* Read volume information */
 static int vmfs_volinfo_read(vmfs_volinfo_t *vol,int fd)
 {
-   u_char buf[1024];
+   DECL_ALIGNED_BUFFER(buf,1024);
 
    if (lseek(fd,VMFS_VOLINFO_BASE,SEEK_SET) == -1)
       return(-1);
 
-   if (read(fd,buf,sizeof(buf)) != sizeof(buf))
+   if (read(fd,buf,buf_len) != buf_len)
       return(-1);
 
    vol->magic = read_le32(buf,VMFS_VOLINFO_OFS_MAGIC);
@@ -187,6 +189,7 @@ vmfs_volume_t *vmfs_vol_create(const char *filename,vmfs_flags_t flags)
 {
    vmfs_volume_t *vol;
    struct stat st;
+   int file_flags;
 
    if (!(vol = calloc(1,sizeof(*vol))))
       return NULL;
@@ -194,7 +197,10 @@ vmfs_volume_t *vmfs_vol_create(const char *filename,vmfs_flags_t flags)
    if (!(vol->filename = strdup(filename)))
       goto err_filename;
 
-   if ((vol->fd = open(vol->filename, flags.read_write?O_RDWR:O_RDONLY)) < 0) {
+   file_flags = (flags.read_write) ? O_RDWR : O_RDONLY;
+   file_flags |= O_DIRECT;
+
+   if ((vol->fd = open(vol->filename,file_flags)) < 0) {
       perror("open");
       goto err_open;
    }

@@ -46,9 +46,9 @@ ssize_t vmfs_fs_read(const vmfs_fs_t *fs,uint32_t blk,off_t offset,
 /* Read filesystem information */
 static int vmfs_fsinfo_read(vmfs_fs_t *fs)
 {
-   u_char buf[512];
+   DECL_ALIGNED_BUFFER(buf,512);
 
-   if (vmfs_lvm_read(fs->lvm,VMFS_FSINFO_BASE,buf,sizeof(buf)) != sizeof(buf))
+   if (vmfs_lvm_read(fs->lvm,VMFS_FSINFO_BASE,buf,buf_len) != buf_len)
       return(-1);
 
    fs->fs_info.magic = read_le32(buf,VMFS_FSINFO_OFS_MAGIC);
@@ -106,11 +106,11 @@ static int vmfs_read_rootdir(vmfs_fs_t *fs,u_char *inode_buf)
 /* Read bitmap header */
 static int vmfs_read_bitmap_header(vmfs_file_t *f,vmfs_bitmap_header_t *bmh)
 {
-   u_char buf[512];
+   DECL_ALIGNED_BUFFER(buf,512);
 
    vmfs_file_seek(f,0,SEEK_SET);
 
-   if (vmfs_file_read(f,buf,sizeof(buf)) != sizeof(buf))
+   if (vmfs_file_read(f,buf,buf_len) != buf_len)
       return(-1);
 
    return(vmfs_bmh_read(bmh,buf));
@@ -120,7 +120,7 @@ static int vmfs_read_bitmap_header(vmfs_file_t *f,vmfs_bitmap_header_t *bmh)
 static vmfs_file_t *vmfs_open_meta_file(vmfs_fs_t *fs,char *name,
                                         vmfs_bitmap_header_t *bmh)
 {
-   u_char buf[VMFS_INODE_SIZE];
+   DECL_ALIGNED_BUFFER(buf,VMFS_INODE_SIZE);
    vmfs_dirent_t rec;
    vmfs_file_t *f;
    off_t inode_addr;
@@ -136,7 +136,7 @@ static vmfs_file_t *vmfs_open_meta_file(vmfs_fs_t *fs,char *name,
    inode_addr = vmfs_inode_get_offset(fs,rec.block_id);
    inode_addr += fs->fdc_base;
 
-   if (vmfs_lvm_read(fs->lvm,inode_addr,buf,sizeof(buf)) != sizeof(buf))
+   if (vmfs_lvm_read(fs->lvm,inode_addr,buf,buf_len) != buf_len)
       return NULL;
 
    /* Bind the associated inode */
@@ -183,13 +183,13 @@ int vmfs_fs_dump_bitmaps(const vmfs_fs_t *fs)
 /* Read FDC base information */
 static int vmfs_read_fdc_base(vmfs_fs_t *fs)
 {
-   u_char buf[VMFS_INODE_SIZE];
+   DECL_ALIGNED_BUFFER(buf,VMFS_INODE_SIZE);
    vmfs_inode_t inode;
    off_t inode_pos;
    uint64_t len;
 
    /* Read the header */
-   if (vmfs_lvm_read(fs->lvm,fs->fdc_base,buf,sizeof(buf)) < sizeof(buf))
+   if (vmfs_lvm_read(fs->lvm,fs->fdc_base,buf,buf_len) != buf_len)
       return(-1);
 
    vmfs_bmh_read(&fs->fdc_bmh,buf);

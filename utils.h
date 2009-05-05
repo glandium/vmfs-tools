@@ -114,6 +114,21 @@ static inline void write_uuid(u_char *buf,int offset,const uuid_t *uuid)
    memcpy(buf+offset,uuid,sizeof(uuid_t));
 }
 
+#define M_SECTOR_SIZE  512
+#define M_BLK_SIZE     4096
+
+#define ALIGN_NUM(val, mult) (((val) + ((mult) - 1)) & ~(((mult) - 1)))
+#define ALIGN_PTR(ptr, mult) (void *)ALIGN_NUM((uintptr_t)(ptr), mult)
+
+#define DECL_ALIGNED_BUFFER(name, size) \
+   u_char __##name[(size) + M_SECTOR_SIZE]; \
+   u_char *name = (u_char *)ALIGN_PTR(__##name,M_SECTOR_SIZE); \
+   size_t name##_len = (size)
+
+#define DECL_ALIGNED_BUFFER_WOL(name, size) \
+   u_char __##name[(size) + M_SECTOR_SIZE]; \
+   u_char *name = (u_char *)ALIGN_PTR(__##name,M_SECTOR_SIZE); \
+
 /* Convert an UUID into a string */
 char *m_uuid_to_str(const uuid_t uuid,char *str);
 

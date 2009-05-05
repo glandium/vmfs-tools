@@ -133,7 +133,7 @@ int vmfs_inode_get(const vmfs_fs_t *fs,const vmfs_dirent_t *rec,u_char *buf)
 /* Resolve pointer blocks */
 static int vmfs_inode_resolve_pb(vmfs_file_t *f,u_int base_pos,uint32_t blk_id)
 {
-   u_char buf[4096];
+   DECL_ALIGNED_BUFFER(buf,4096);
    const vmfs_bitmap_header_t *pbc_bmh;
    vmfs_file_t *pbc;
    uint32_t pbc_blk,dblk;
@@ -157,9 +157,9 @@ static int vmfs_inode_resolve_pb(vmfs_file_t *f,u_int base_pos,uint32_t blk_id)
    vmfs_file_seek(pbc,addr,SEEK_SET);
 
    while(len > 0) {
-      res = vmfs_file_read(pbc,buf,sizeof(buf));
+      res = vmfs_file_read(pbc,buf,buf_len);
 
-      if (res != sizeof(buf))
+      if (res != buf_len)
          return(-1);
 
       for(i=0;i<res/4;i++) {

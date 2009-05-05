@@ -49,16 +49,16 @@ int vmfs_dirent_search(vmfs_file_t *dir_entry,const char *name,
                        vmfs_dirent_t *rec)
 {
    u_char buf[VMFS_DIRENT_SIZE];
-   int dir_count;
+   int i,dir_count;
    ssize_t len;
 
    dir_count = vmfs_file_get_size(dir_entry) / VMFS_DIRENT_SIZE;
    vmfs_file_seek(dir_entry,0,SEEK_SET);
-   
-   while(dir_count > 0) {
-      len = vmfs_file_read(dir_entry,buf,sizeof(buf));
 
-      if (len != VMFS_DIRENT_SIZE)
+   for(i=0;i<dir_count;i++) {
+      len = vmfs_file_read(dir_entry,buf,sizeof(buf));
+      
+      if (len != sizeof(buf))
          return(-1);
 
       vmfs_dirent_read(rec,buf);

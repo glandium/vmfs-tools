@@ -18,7 +18,7 @@
 /* 
  * VMFS file abstraction.
  */
-
+#define _GNU_SOURCE
 #include <stdlib.h>
 #include <string.h>
 #include <sys/stat.h>
@@ -39,7 +39,7 @@ vmfs_file_t *vmfs_file_create_struct(const vmfs_fs_t *fs)
 /* Open a file based on a directory entry */
 vmfs_file_t *vmfs_file_open_rec(const vmfs_fs_t *fs,const vmfs_dirent_t *rec)
 {
-   u_char buf[VMFS_INODE_SIZE];
+   DECL_ALIGNED_BUFFER_WOL(buf,VMFS_INODE_SIZE);
    vmfs_file_t *f;
 
    if (!(f = vmfs_file_create_struct(fs)))
@@ -129,6 +129,8 @@ ssize_t vmfs_file_read(vmfs_file_t *f,u_char *buf,size_t len)
    ssize_t res,rlen = 0;
    size_t clen,exp_len;
 
+   DECL_ALIGNED_BUFFER(tbuf,M_BLK_SIZE);
+
    blk_size = vmfs_fs_get_blocksize(f->fs);
    file_size = vmfs_file_get_size(f);
 
@@ -159,20 +161,24 @@ ssize_t vmfs_file_read(vmfs_file_t *f,u_char *buf,size_t len)
             break;
 
          /* Full-Block */
-         case VMFS_BLK_TYPE_FB:
+         case VMFS_BLK_TYPE_FB: {
+            off_t sub_page,sub_offset;
+
             offset = f->pos % blk_size;
-            blk_len = blk_size - offset;
-            exp_len = m_min(blk_len,len);
+
+            exp_len = m_min(tbuf_len,len);
             clen = m_min(exp_len,file_size - f->pos);
 
-#if 0
-            printf("vmfs_file_read: f->pos=0x%llx, offset=0x%8.8llx\n",
-                   (uint64_t)f->pos,offset);
-#endif
+            sub_page   = offset & ~((off_t)tbuf_len - 1);
+            sub_offset = offset & (tbuf_len - 1);
 
-            res = vmfs_fs_read(f->fs,VMFS_BLK_FB_NUMBER(blk_id),offset,
-                                buf,clen);
+            vmfs_fs_read(f->fs,VMFS_BLK_FB_NUMBER(blk_id),sub_page,
+                         tbuf,tbuf_len);
+
+            memcpy(buf,tbuf+sub_offset,clen);
+            res = clen;
             break;
+         }
 
          /* Sub-Block */
          case VMFS_BLK_TYPE_SB: {
@@ -272,7 +278,7 @@ static int vmfs_file_stat_internal(const vmfs_fs_t *fs,const char *path,
                                    int follow_symlink,
                                    struct stat *buf)
 {
-   u_char inode_buf[VMFS_INODE_SIZE];
+   DECL_ALIGNED_BUFFER_WOL(inode_buf,VMFS_INODE_SIZE);
    vmfs_dirent_t entry;
    vmfs_inode_t inode;
 
