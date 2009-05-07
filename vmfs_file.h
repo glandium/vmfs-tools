@@ -24,6 +24,8 @@
 #define VMFS_FILE_TYPE_DIR      0x02
 #define VMFS_FILE_TYPE_FILE     0x03
 #define VMFS_FILE_TYPE_SYMLINK  0x04
+#define VMFS_FILE_TYPE_META     0x05
+#define VMFS_FILE_TYPE_RDM      0x06
 
 /* === VMFS file abstraction === */
 struct vmfs_file {
