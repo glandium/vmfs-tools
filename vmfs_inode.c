@@ -26,7 +26,7 @@
 /* Read an inode */
 int vmfs_inode_read(vmfs_inode_t *inode,const u_char *buf)
 {
-   inode->group_id = read_le32(buf,VMFS_INODE_OFS_GRP_ID);
+   inode->magic    = read_le32(buf,VMFS_INODE_OFS_MAGIC);
    inode->position = read_le64(buf,VMFS_INODE_OFS_POS);
    inode->hb_pos   = read_le64(buf,VMFS_INODE_OFS_HB_POS);
    inode->hb_lock  = read_le32(buf,VMFS_INODE_OFS_HB_LOCK);
@@ -51,7 +51,7 @@ int vmfs_inode_read(vmfs_inode_t *inode,const u_char *buf)
 /* Write an inode */
 int vmfs_inode_write(const vmfs_inode_t *inode,u_char *buf)
 {
-   write_le32(buf,VMFS_INODE_OFS_GRP_ID,inode->group_id);
+   write_le32(buf,VMFS_INODE_OFS_MAGIC,inode->magic);
    write_le64(buf,VMFS_INODE_OFS_POS,inode->position);
    write_le64(buf,VMFS_INODE_OFS_HB_POS,inode->hb_pos);
    write_le32(buf,VMFS_INODE_OFS_HB_LOCK,inode->hb_lock);
@@ -73,7 +73,7 @@ void vmfs_inode_show(const vmfs_inode_t *inode)
 {
    char tbuf[64];
 
-   printf("  - Group ID    : 0x%8.8x\n",inode->group_id);
+   printf("  - Magic       : 0x%8.8x\n",inode->magic);
    printf("  - Position    : 0x%"PRIx64"\n",inode->position);
    printf("  - HB Position : 0x%"PRIx64"\n",inode->hb_pos);
    printf("  - HB Lock     : %d (%s)\n",

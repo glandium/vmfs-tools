@@ -25,7 +25,7 @@
 #define VMFS_INODE_BLK_COUNT      0x100
 
 struct vmfs_inode_raw {
-   uint32_t group_id;
+   uint32_t magic;
    uint64_t pos;
    uint64_t hb_pos;
    u_char _unknown0[16];
@@ -49,7 +49,7 @@ struct vmfs_inode_raw {
    uint32_t blocks[VMFS_INODE_BLK_COUNT];
 } __attribute__((packed));
 
-#define VMFS_INODE_OFS_GRP_ID     offsetof(struct vmfs_inode_raw, group_id)
+#define VMFS_INODE_OFS_MAGIC      offsetof(struct vmfs_inode_raw, magic)
 #define VMFS_INODE_OFS_POS        offsetof(struct vmfs_inode_raw, pos)
 #define VMFS_INODE_OFS_HB_POS     offsetof(struct vmfs_inode_raw, hb_pos)
 #define VMFS_INODE_OFS_HB_LOCK    offsetof(struct vmfs_inode_raw, hb_lock)
@@ -68,7 +68,7 @@ struct vmfs_inode_raw {
 #define VMFS_INODE_OFS_BLK_ARRAY  offsetof(struct vmfs_inode_raw, blocks)
 
 struct vmfs_inode {
-   uint32_t group_id;
+   uint32_t magic;
    uint64_t position;
    uint64_t hb_pos;
    uint32_t hb_lock;
