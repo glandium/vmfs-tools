@@ -61,8 +61,7 @@ static int vmfs_fuse_read(const char *path, char *buf, size_t size,
                           off_t offset, struct fuse_file_info *fi)
 {
    vmfs_file_t *file = (vmfs_file_t *)(unsigned long)fi->fh;
-   vmfs_file_seek(file, offset, SEEK_SET); /* This is not thread-safe */
-   return vmfs_file_read(file, (u_char *)buf, size);
+   return vmfs_file_readat(file, &offset, (u_char *)buf, size);
 }
 
 static int vmfs_fuse_release(const char *path, struct fuse_file_info *fi)

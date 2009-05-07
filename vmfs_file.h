@@ -69,6 +69,9 @@ int vmfs_file_close(vmfs_file_t *f);
 /* Set position */
 int vmfs_file_seek(vmfs_file_t *f,off_t pos,int whence);
 
+/* Read data from a file at the specified position */
+ssize_t vmfs_file_readat(vmfs_file_t *f,off_t *pos,u_char *buf,size_t len);
+
 /* Read data from a file */
 ssize_t vmfs_file_read(vmfs_file_t *f,u_char *buf,size_t len);
 
