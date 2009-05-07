@@ -46,7 +46,10 @@ struct vmfs_inode_raw {
    uint32_t gid;
    uint32_t mode;
    u_char _unknown5[444];
-   uint32_t blocks[VMFS_INODE_BLK_COUNT];
+   union {
+      uint32_t blocks[VMFS_INODE_BLK_COUNT];
+      uint32_t rdm_id;
+   };
 } __attribute__((packed));
 
 #define VMFS_INODE_OFS_MAGIC      offsetof(struct vmfs_inode_raw, magic)
@@ -66,6 +69,7 @@ struct vmfs_inode_raw {
 #define VMFS_INODE_OFS_MODE       offsetof(struct vmfs_inode_raw, mode)
 
 #define VMFS_INODE_OFS_BLK_ARRAY  offsetof(struct vmfs_inode_raw, blocks)
+#define VMFS_INODE_OFS_RDM_ID     offsetof(struct vmfs_inode_raw, rdm_id)
 
 struct vmfs_inode {
    uint32_t magic;
@@ -79,6 +83,7 @@ struct vmfs_inode {
    time_t  mtime,ctime,atime;
    uint32_t uid,gid;
    uint32_t mode,cmode;
+   uint32_t rdm_id;
 };
 
 /* Read an inode */

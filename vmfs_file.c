@@ -131,6 +131,10 @@ ssize_t vmfs_file_readat(vmfs_file_t *f,off_t *pos,u_char *buf,size_t len)
 
    DECL_ALIGNED_BUFFER(tbuf,M_BLK_SIZE);
 
+   /* We don't handle RDM files */
+   if (f->inode.type == VMFS_FILE_TYPE_RDM)
+      return(-1);
+
    blk_size = vmfs_fs_get_blocksize(f->fs);
    file_size = vmfs_file_get_size(f);
 

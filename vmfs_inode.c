@@ -45,6 +45,11 @@ int vmfs_inode_read(vmfs_inode_t *inode,const u_char *buf)
    inode->cmode    = inode->mode | vmfs_file_type2mode(inode->type);
 
    read_uuid(buf,VMFS_INODE_OFS_HB_UUID,&inode->hb_uuid);
+
+   if (inode->type == VMFS_FILE_TYPE_RDM) {
+      inode->rdm_id = read_le32(buf,VMFS_INODE_OFS_RDM_ID);
+   }
+
    return(0);
 }
 
@@ -91,6 +96,10 @@ void vmfs_inode_show(const vmfs_inode_t *inode)
    printf("  - Access Time : %s\n",m_ctime(&inode->atime,tbuf,sizeof(tbuf)));
    printf("  - Modify Time : %s\n",m_ctime(&inode->mtime,tbuf,sizeof(tbuf)));
    printf("  - Change Time : %s\n",m_ctime(&inode->ctime,tbuf,sizeof(tbuf)));
+
+   if (inode->type == VMFS_FILE_TYPE_RDM) {
+      printf("  - RDM ID      : 0x%8.8x\n",inode->rdm_id);
+   }
 }
 
 /* Get the offset corresponding to an inode in the FDC file */
@@ -184,6 +193,10 @@ int vmfs_inode_bind(vmfs_file_t *f,const u_char *inode_buf)
    int i;
 
    vmfs_inode_read(&f->inode,inode_buf);
+
+   /* We don't have a block list for RDM files */
+   if (f->inode.type == VMFS_FILE_TYPE_RDM)
+      return(0);
 
    blk_size = vmfs_fs_get_blocksize(f->fs);
    exp_blks = (f->inode.size + blk_size - 1) / blk_size;
