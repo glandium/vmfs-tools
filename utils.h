@@ -117,6 +117,14 @@ static inline void write_uuid(u_char *buf,int offset,const uuid_t *uuid)
 #define M_SECTOR_SIZE  512
 #define M_BLK_SIZE     4096
 
+/* 
+ * Block size/alignment required for direct I/O : 
+ *    4k bytes on Linux 2.4,
+ *    512 bytes on Linux 2.6
+ */
+#define M_DIO_BLK_SIZE  4096
+
+#define ALIGN_CHECK(val, mult)  (((val) & ((mult) - 1)) == 0)
 #define ALIGN_NUM(val, mult) (((val) + ((mult) - 1)) & ~(((mult) - 1)))
 #define ALIGN_PTR(ptr, mult) (void *)ALIGN_NUM((uintptr_t)(ptr), mult)
 

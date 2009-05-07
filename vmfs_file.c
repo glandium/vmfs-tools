@@ -172,10 +172,22 @@ ssize_t vmfs_file_read(vmfs_file_t *f,u_char *buf,size_t len)
             sub_page   = offset & ~((off_t)tbuf_len - 1);
             sub_offset = offset & (tbuf_len - 1);
 
-            vmfs_fs_read(f->fs,VMFS_BLK_FB_NUMBER(blk_id),sub_page,
-                         tbuf,tbuf_len);
+            /* 
+             * If the user provided an aligned buffer acceptable for 
+             * direct I/O, avoid a useless mem copy.
+             */
+            if (ALIGN_CHECK(sub_offset,M_DIO_BLK_SIZE) &&
+                ALIGN_CHECK((uintptr_t)buf,M_DIO_BLK_SIZE) &&
+                ALIGN_CHECK(clen,M_DIO_BLK_SIZE))
+            {
+               vmfs_fs_read(f->fs,VMFS_BLK_FB_NUMBER(blk_id),
+                            sub_page+sub_offset,buf,clen);
+            } else {
+               vmfs_fs_read(f->fs,VMFS_BLK_FB_NUMBER(blk_id),sub_page,
+                            tbuf,tbuf_len);
+               memcpy(buf,tbuf+sub_offset,clen);
+            }
 
-            memcpy(buf,tbuf+sub_offset,clen);
             res = clen;
             break;
          }
@@ -238,7 +250,7 @@ int vmfs_file_dump(vmfs_file_t *f,off_t pos,size_t len,FILE *fd_out)
 
    buf_len = 0x100000;
 
-   if (!(buf = malloc(buf_len)))
+   if (posix_memalign((void **)&buf,M_DIO_BLK_SIZE,buf_len) != 0)
       return(-1);
 
    vmfs_file_seek(f,pos,SEEK_SET);
@@ -281,6 +293,8 @@ static int vmfs_file_stat_internal(const vmfs_fs_t *fs,const char *path,
    DECL_ALIGNED_BUFFER_WOL(inode_buf,VMFS_INODE_SIZE);
    vmfs_dirent_t entry;
    vmfs_inode_t inode;
+
+   vmfs_inode_update_mem(fs->root_dir);
 
    if (vmfs_dirent_resolve_path(fs,fs->root_dir,path,follow_symlink,
                                 &entry) != 1)

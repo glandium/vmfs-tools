@@ -235,6 +235,16 @@ int vmfs_inode_bind(vmfs_file_t *f,const u_char *inode_buf)
    return(0);
 }
 
+/* Update inode info stored in memory */
+int vmfs_inode_update_mem(vmfs_file_t *f)
+{
+   DECL_ALIGNED_BUFFER_WOL(inode_buf,VMFS_INODE_SIZE);
+
+   vmfs_lvm_read(f->fs->lvm,f->inode.position,inode_buf,VMFS_INODE_SIZE);
+   vmfs_inode_bind(f,inode_buf);
+   return(0);
+}
+
 /* Get inode status */
 int vmfs_inode_stat(const vmfs_inode_t *inode,struct stat *buf)
 {
