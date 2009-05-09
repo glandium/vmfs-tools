@@ -135,7 +135,7 @@ ssize_t vmfs_file_readat(vmfs_file_t *f,off_t *pos,u_char *buf,size_t len)
    uint32_t blk_id,blk_type;
    uint64_t blk_size,blk_len;
    uint64_t file_size,offset;
-   ssize_t res,rlen = 0;
+   ssize_t res=0,rlen = 0;
    size_t clen,exp_len;
 
    DECL_ALIGNED_BUFFER(tbuf,M_BLK_SIZE);
@@ -204,31 +204,21 @@ ssize_t vmfs_file_readat(vmfs_file_t *f,off_t *pos,u_char *buf,size_t len)
 
          /* Sub-Block */
          case VMFS_BLK_TYPE_SB: {
-            const vmfs_bitmap_header_t *sbc_bmh;
-            vmfs_file_t *sbc;
-            uint32_t sbc_entry,sbc_item,sbc_blk;
-            off_t sbc_addr;
+            uint32_t sbc_entry,sbc_item;
+            DECL_ALIGNED_BUFFER(tmpbuf,f->fs->sbc->bmh.data_size);
 
-            sbc = f->fs->sbc->f;
-            sbc_bmh = &f->fs->sbc->bmh;
-
-            offset = *pos % sbc_bmh->data_size;
-            blk_len = sbc_bmh->data_size - offset;
+            offset = *pos % f->fs->sbc->bmh.data_size;
+            blk_len = f->fs->sbc->bmh.data_size - offset;
             exp_len = m_min(blk_len,len);
             clen = m_min(exp_len,file_size - *pos);
 
             sbc_entry = VMFS_BLK_SB_ENTRY(blk_id);
             sbc_item  = VMFS_BLK_SB_ITEM(blk_id);
 
-            sbc_blk = sbc_entry * sbc_bmh->items_per_bitmap_entry;
-            sbc_blk += sbc_item;
-
-            sbc_addr = vmfs_bitmap_get_block_addr(sbc_bmh,sbc_blk);
-            sbc_addr += offset;
-
-            vmfs_file_seek(sbc,sbc_addr,SEEK_SET);
-            res = vmfs_file_read(sbc,buf,clen);
-
+            if (vmfs_bitmap_get_item(f->fs->sbc,sbc_entry,sbc_item,tmpbuf)) {
+               memcpy(buf,tmpbuf+offset,clen);
+               res = clen;
+            }
             break;
          }
 
