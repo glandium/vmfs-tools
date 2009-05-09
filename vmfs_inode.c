@@ -159,7 +159,7 @@ static int vmfs_inode_resolve_pb(vmfs_file_t *f,u_int base_pos,uint32_t blk_id)
    number   = VMFS_BLK_PB_NUMBER(blk_id);
 
    /* Compute the address of the indirect pointers block in the PBC file */
-   pbc_blk = (number * pbc_bmh->items_per_bitmap_entry) + subgroup;
+   pbc_blk = (subgroup * pbc_bmh->items_per_bitmap_entry) + number;
    addr = vmfs_bitmap_get_block_addr(pbc_bmh,pbc_blk);
    len  = pbc_bmh->data_size;
 

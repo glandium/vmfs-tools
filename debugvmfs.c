@@ -342,8 +342,8 @@ static int cmd_read_block(vmfs_fs_t *fs,int argc,char *argv[])
          sbc_subgroup = VMFS_BLK_SB_SUBGROUP(blk_id);
          sbc_number   = VMFS_BLK_SB_NUMBER(blk_id);
 
-         sbc_blk = sbc_number * fs->sbc_bmh.items_per_bitmap_entry;
-         sbc_blk += sbc_subgroup;
+         sbc_blk = sbc_subgroup * fs->sbc_bmh.items_per_bitmap_entry;
+         sbc_blk += sbc_number;
          
          sbc_addr = vmfs_bitmap_get_block_addr(&fs->sbc_bmh,sbc_blk);
 

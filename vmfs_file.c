@@ -209,8 +209,8 @@ ssize_t vmfs_file_readat(vmfs_file_t *f,off_t *pos,u_char *buf,size_t len)
             sbc_subgroup = VMFS_BLK_SB_SUBGROUP(blk_id);
             sbc_number   = VMFS_BLK_SB_NUMBER(blk_id);
 
-            sbc_blk = sbc_number * sbc_bmh->items_per_bitmap_entry;
-            sbc_blk += sbc_subgroup;
+            sbc_blk = sbc_subgroup * sbc_bmh->items_per_bitmap_entry;
+            sbc_blk += sbc_number;
 
             sbc_addr = vmfs_bitmap_get_block_addr(sbc_bmh,sbc_blk);
             sbc_addr += offset;
