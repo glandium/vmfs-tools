@@ -18,6 +18,8 @@
 #ifndef VMFS_BITMAP_H
 #define VMFS_BITMAP_H
 
+#include <stdbool.h>
+
 /* === Bitmap header === */
 struct vmfs_bitmap_header {
    uint32_t items_per_bitmap_entry;
@@ -119,6 +121,10 @@ off_t vmfs_bitmap_get_block_addr(const vmfs_bitmap_header_t *bmh,uint32_t blk);
 /* Read a bitmap entry given a block id */
 int vmfs_bitmap_get_entry(vmfs_file_t *f,const vmfs_bitmap_header_t *bmh,
                           u_int blk,vmfs_bitmap_entry_t *entry);
+
+/* Read a bitmap item from its entry and item numbers */
+bool vmfs_bitmap_get_item(vmfs_bitmap_t *b, uint32_t entry, uint32_t item,
+                          u_char *buf);
 
 /* Mark an item as free or allocated */
 int vmfs_bitmap_set_item_status(const vmfs_bitmap_header_t *bmh,

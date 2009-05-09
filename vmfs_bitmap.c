@@ -120,6 +120,17 @@ int vmfs_bitmap_get_entry(vmfs_file_t *f,const vmfs_bitmap_header_t *bmh,
    return(0);
 }
 
+/* Read a bitmap item from its entry and item numbers */
+bool vmfs_bitmap_get_item(vmfs_bitmap_t *b, uint32_t entry, uint32_t item,
+                          u_char *buf)
+{
+   uint32_t addr = vmfs_bitmap_get_block_addr(&b->bmh,
+                                 entry * b->bmh.items_per_bitmap_entry + item);
+   vmfs_file_seek(b->f,addr,SEEK_SET);
+   return (vmfs_file_read(b->f,buf,b->bmh.data_size) == b->bmh.data_size);
+}
+
+
 /* Get offset of an item in a bitmap entry */
 static void 
 vmfs_bitmap_get_item_offset(const vmfs_bitmap_header_t *bmh,u_int blk,
