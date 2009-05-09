@@ -105,17 +105,17 @@ void vmfs_inode_show(const vmfs_inode_t *inode)
 /* Get the offset corresponding to an inode in the FDC file */
 off_t vmfs_inode_get_offset(const vmfs_fs_t *fs,uint32_t blk_id)
 {
-   uint32_t subgroup,number;
+   uint32_t entry,item;
    off_t inode_addr;
    uint32_t fdc_blk;
 
-   subgroup = VMFS_BLK_FD_SUBGROUP(blk_id);
-   number   = VMFS_BLK_FD_NUMBER(blk_id);
+   entry = VMFS_BLK_FD_ENTRY(blk_id);
+   item  = VMFS_BLK_FD_ITEM(blk_id);
 
    /* Compute the address of the file meta-info in the FDC file */
-   fdc_blk = subgroup * fs->fdc_bmh.items_per_bitmap_entry;
+   fdc_blk = entry * fs->fdc_bmh.items_per_bitmap_entry;
    inode_addr  = vmfs_bitmap_get_block_addr(&fs->fdc_bmh,fdc_blk);
-   inode_addr += number * fs->fdc_bmh.data_size;
+   inode_addr += item * fs->fdc_bmh.data_size;
 
    return(inode_addr);
 }
@@ -146,7 +146,7 @@ static int vmfs_inode_resolve_pb(vmfs_file_t *f,u_int base_pos,uint32_t blk_id)
    const vmfs_bitmap_header_t *pbc_bmh;
    vmfs_file_t *pbc;
    uint32_t pbc_blk,dblk;
-   uint32_t subgroup,number;
+   uint32_t entry,item;
    size_t len;
    ssize_t res;
    off_t addr;
@@ -155,11 +155,11 @@ static int vmfs_inode_resolve_pb(vmfs_file_t *f,u_int base_pos,uint32_t blk_id)
    pbc = f->fs->pbc;
    pbc_bmh = &f->fs->pbc_bmh;
 
-   subgroup = VMFS_BLK_PB_SUBGROUP(blk_id);
-   number   = VMFS_BLK_PB_NUMBER(blk_id);
+   entry = VMFS_BLK_PB_ENTRY(blk_id);
+   item  = VMFS_BLK_PB_ITEM(blk_id);
 
    /* Compute the address of the indirect pointers block in the PBC file */
-   pbc_blk = (subgroup * pbc_bmh->items_per_bitmap_entry) + number;
+   pbc_blk = (entry * pbc_bmh->items_per_bitmap_entry) + item;
    addr = vmfs_bitmap_get_block_addr(pbc_bmh,pbc_blk);
    len  = pbc_bmh->data_size;
 

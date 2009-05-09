@@ -280,22 +280,22 @@ static int cmd_convert_block_id(vmfs_fs_t *fs,int argc,char *argv[])
       
       switch(blk_type) {
          case VMFS_BLK_TYPE_FB:
-            printf("Full-Block, Number=0x%8.8x\n",VMFS_BLK_FB_NUMBER(blk_id));
+            printf("Full-Block, Number=0x%8.8x\n",VMFS_BLK_FB_ITEM(blk_id));
             break;
 
          case VMFS_BLK_TYPE_SB:
             printf("Sub-Block, Number=0x%8.8x, Subgroup=0x%2.2x\n",
-                   VMFS_BLK_SB_NUMBER(blk_id),VMFS_BLK_SB_SUBGROUP(blk_id));
+                   VMFS_BLK_SB_ITEM(blk_id),VMFS_BLK_SB_ENTRY(blk_id));
             break;
 
          case VMFS_BLK_TYPE_PB:
             printf("Pointer-Block, Number=0x%8.8x, Subgroup=0x%2.2x\n",
-                   VMFS_BLK_PB_NUMBER(blk_id),VMFS_BLK_PB_SUBGROUP(blk_id));
+                   VMFS_BLK_PB_ITEM(blk_id),VMFS_BLK_PB_ENTRY(blk_id));
             break;
 
          case VMFS_BLK_TYPE_FD:
             printf("File Descriptor, Number=0x%8.8x, Subgroup=0x%2.2x\n",
-                   VMFS_BLK_FD_NUMBER(blk_id),VMFS_BLK_FD_SUBGROUP(blk_id));
+                   VMFS_BLK_FD_ITEM(blk_id),VMFS_BLK_FD_ENTRY(blk_id));
             break;
 
          default:
@@ -309,7 +309,7 @@ static int cmd_convert_block_id(vmfs_fs_t *fs,int argc,char *argv[])
 /* Read a block */
 static int cmd_read_block(vmfs_fs_t *fs,int argc,char *argv[])
 {    
-   uint32_t sbc_subgroup,sbc_number,sbc_blk;
+   uint32_t sbc_entry,sbc_item,sbc_blk;
    uint32_t blk_id,blk_type;
    uint64_t blk_size;
    off_t sbc_addr;
@@ -331,7 +331,7 @@ static int cmd_read_block(vmfs_fs_t *fs,int argc,char *argv[])
    switch(blk_type) {
       /* Full Block */
       case VMFS_BLK_TYPE_FB:
-         vmfs_fs_read(fs,VMFS_BLK_FB_NUMBER(blk_id),0,buf,blk_size);
+         vmfs_fs_read(fs,VMFS_BLK_FB_ITEM(blk_id),0,buf,blk_size);
          mem_dump(stdout,buf,blk_size);
          break;
 
@@ -339,11 +339,11 @@ static int cmd_read_block(vmfs_fs_t *fs,int argc,char *argv[])
       case VMFS_BLK_TYPE_SB:
          blk_size = fs->sbc_bmh.data_size;
 
-         sbc_subgroup = VMFS_BLK_SB_SUBGROUP(blk_id);
-         sbc_number   = VMFS_BLK_SB_NUMBER(blk_id);
+         sbc_entry = VMFS_BLK_SB_ENTRY(blk_id);
+         sbc_item  = VMFS_BLK_SB_ITEM(blk_id);
 
-         sbc_blk = sbc_subgroup * fs->sbc_bmh.items_per_bitmap_entry;
-         sbc_blk += sbc_number;
+         sbc_blk = sbc_entry * fs->sbc_bmh.items_per_bitmap_entry;
+         sbc_blk += sbc_item;
          
          sbc_addr = vmfs_bitmap_get_block_addr(&fs->sbc_bmh,sbc_blk);
 

@@ -184,10 +184,10 @@ ssize_t vmfs_file_readat(vmfs_file_t *f,off_t *pos,u_char *buf,size_t len)
                 ALIGN_CHECK((uintptr_t)buf,M_DIO_BLK_SIZE) &&
                 ALIGN_CHECK(clen,M_DIO_BLK_SIZE))
             {
-               vmfs_fs_read(f->fs,VMFS_BLK_FB_NUMBER(blk_id),
+               vmfs_fs_read(f->fs,VMFS_BLK_FB_ITEM(blk_id),
                             sub_page+sub_offset,buf,clen);
             } else {
-               vmfs_fs_read(f->fs,VMFS_BLK_FB_NUMBER(blk_id),sub_page,
+               vmfs_fs_read(f->fs,VMFS_BLK_FB_ITEM(blk_id),sub_page,
                             tbuf,tbuf_len);
                memcpy(buf,tbuf+sub_offset,clen);
             }
@@ -198,7 +198,7 @@ ssize_t vmfs_file_readat(vmfs_file_t *f,off_t *pos,u_char *buf,size_t len)
 
          /* Sub-Block */
          case VMFS_BLK_TYPE_SB: {
-            uint32_t sbc_subgroup,sbc_number,sbc_blk;
+            uint32_t sbc_entry,sbc_item,sbc_blk;
             off_t sbc_addr;
 
             offset = *pos % sbc_bmh->data_size;
@@ -206,11 +206,11 @@ ssize_t vmfs_file_readat(vmfs_file_t *f,off_t *pos,u_char *buf,size_t len)
             exp_len = m_min(blk_len,len);
             clen = m_min(exp_len,file_size - *pos);
 
-            sbc_subgroup = VMFS_BLK_SB_SUBGROUP(blk_id);
-            sbc_number   = VMFS_BLK_SB_NUMBER(blk_id);
+            sbc_entry = VMFS_BLK_SB_ENTRY(blk_id);
+            sbc_item  = VMFS_BLK_SB_ITEM(blk_id);
 
-            sbc_blk = sbc_subgroup * sbc_bmh->items_per_bitmap_entry;
-            sbc_blk += sbc_number;
+            sbc_blk = sbc_entry * sbc_bmh->items_per_bitmap_entry;
+            sbc_blk += sbc_item;
 
             sbc_addr = vmfs_bitmap_get_block_addr(sbc_bmh,sbc_blk);
             sbc_addr += offset;

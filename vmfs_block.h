@@ -32,19 +32,19 @@ enum {
 #define VMFS_BLK_TYPE(blk_id)  ((blk_id) & 0x07)
 
 /* Full-Block */
-#define VMFS_BLK_FB_NUMBER(blk_id)   ((blk_id) >> 6)
+#define VMFS_BLK_FB_ITEM(blk_id)   ((blk_id) >> 6)
 
 /* Sub-Block */
-#define VMFS_BLK_SB_NUMBER(blk_id)   (((blk_id) >> 28) & 0x0f)
-#define VMFS_BLK_SB_SUBGROUP(blk_id) (((blk_id) & 0xfffffff) >> 6)
+#define VMFS_BLK_SB_ITEM(blk_id)   (((blk_id) >> 28) & 0x0f)
+#define VMFS_BLK_SB_ENTRY(blk_id)  (((blk_id) & 0xfffffff) >> 6)
 
 /* Pointer-Block */
-#define VMFS_BLK_PB_NUMBER(blk_id)   (((blk_id) >> 28) & 0x0f)
-#define VMFS_BLK_PB_SUBGROUP(blk_id) (((blk_id) & 0xfffffff) >> 6)
+#define VMFS_BLK_PB_ITEM(blk_id)   (((blk_id) >> 28) & 0x0f)
+#define VMFS_BLK_PB_ENTRY(blk_id)  (((blk_id) & 0xfffffff) >> 6)
 
 /* File Descriptor */
-#define VMFS_BLK_FD_SUBGROUP(blk_id) (((blk_id) >> 6)  & 0x7fff)
-#define VMFS_BLK_FD_NUMBER(blk_id)   (((blk_id) >> 22) & 0x3ff)
+#define VMFS_BLK_FD_ITEM(blk_id)   (((blk_id) >> 22) & 0x3ff)
+#define VMFS_BLK_FD_ENTRY(blk_id)  (((blk_id) >> 6)  & 0x7fff)
 
 /* === VMFS block list === */
 struct vmfs_blk_list {
