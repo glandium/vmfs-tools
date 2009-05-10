@@ -25,6 +25,7 @@ typedef struct vmfs_lvminfo vmfs_lvminfo_t;
 typedef struct vmfs_heartbeat vmfs_heartbeat_t;
 typedef struct vmfs_bitmap_header vmfs_bitmap_header_t;
 typedef struct vmfs_bitmap_entry  vmfs_bitmap_entry_t;
+typedef struct vmfs_bitmap vmfs_bitmap_t;
 typedef struct vmfs_inode vmfs_inode_t;
 typedef struct vmfs_dirent vmfs_dirent_t;
 typedef struct vmfs_blk_array vmfs_blk_array_t;

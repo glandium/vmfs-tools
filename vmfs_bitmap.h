@@ -73,6 +73,12 @@ struct vmfs_bitmap_entry {
    uint8_t bitmap[0];
 };
 
+/* A bitmap file instance */
+struct vmfs_bitmap {
+   vmfs_file_t *f;
+   vmfs_bitmap_header_t bmh;
+};
+
 /* Get number of items per area */
 static inline u_int 
 vmfs_bitmap_get_items_per_area(const vmfs_bitmap_header_t *bmh,u_int id)
@@ -146,5 +152,15 @@ uint32_t vmfs_bitmap_allocated_items(vmfs_file_t *f,
 
 /* Check coherency of a bitmap file */
 int vmfs_bitmap_check(vmfs_file_t *f,const vmfs_bitmap_header_t *bmh);
+
+/* Open a bitmap file */
+vmfs_bitmap_t *vmfs_bitmap_open_from_path(const vmfs_fs_t *fs,
+                                          const char *path);
+
+vmfs_bitmap_t *vmfs_bitmap_open_from_inode(const vmfs_fs_t *fs,
+                                           const u_char *inode_buf);
+
+/* Close a bitmap file */
+void vmfs_bitmap_close(vmfs_bitmap_t *b);
 
 #endif

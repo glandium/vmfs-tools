@@ -333,3 +333,47 @@ int vmfs_bitmap_check(vmfs_file_t *f,const vmfs_bitmap_header_t *bmh)
 
    return(errors);
 }
+
+/* Open a bitmap file */
+static inline vmfs_bitmap_t *vmfs_bitmap_open_from_file(vmfs_file_t *f)
+{
+   DECL_ALIGNED_BUFFER(buf,512);
+   vmfs_bitmap_t *b;
+
+   if (!f)
+      return NULL;
+
+   if (vmfs_file_read(f,buf,buf_len) != buf_len) {
+      vmfs_file_close(f);
+      return NULL;
+   }
+
+   if (!(b = calloc(1, sizeof(vmfs_bitmap_t)))) {
+      vmfs_file_close(f);
+      return NULL;
+   }
+
+   vmfs_bmh_read(&b->bmh, buf);
+   b->f = f;
+   return b;
+}
+
+vmfs_bitmap_t *vmfs_bitmap_open_from_path(const vmfs_fs_t *fs,
+                                          const char *path)
+{
+   return vmfs_bitmap_open_from_file(vmfs_file_open_from_path(fs, path));
+}
+
+vmfs_bitmap_t *vmfs_bitmap_open_from_inode(const vmfs_fs_t *fs,
+                                           const u_char *inode_buf)
+{
+   return vmfs_bitmap_open_from_file(vmfs_file_open_from_inode(fs, inode_buf));
+}
+
+
+/* Close a bitmap file */
+void vmfs_bitmap_close(vmfs_bitmap_t *b)
+{
+   vmfs_file_close(b->f);
+   free(b);
+}
