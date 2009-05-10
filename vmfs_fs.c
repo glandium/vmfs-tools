@@ -29,7 +29,6 @@
 #define VMFS_FDC_FILENAME  ".fdc.sf"
 #define VMFS_PBC_FILENAME  ".pbc.sf"
 #define VMFS_SBC_FILENAME  ".sbc.sf"
-#define VMFS_VH_FILENAME   ".vh.sf"
 
 /* Read a block from the filesystem */
 ssize_t vmfs_fs_read(const vmfs_fs_t *fs,uint32_t blk,off_t offset,
@@ -157,7 +156,6 @@ static int vmfs_open_all_meta_files(vmfs_fs_t *fs)
    fs->fdc = vmfs_open_meta_file(fs,VMFS_FDC_FILENAME,&fs->fdc_bmh);
    fs->pbc = vmfs_open_meta_file(fs,VMFS_PBC_FILENAME,&fs->pbc_bmh);
    fs->sbc = vmfs_open_meta_file(fs,VMFS_SBC_FILENAME,&fs->sbc_bmh);
-   fs->vh  = vmfs_open_meta_file(fs,VMFS_VH_FILENAME,NULL);
 
    return(0);
 }
@@ -288,7 +286,6 @@ void vmfs_fs_close(vmfs_fs_t *fs)
    vmfs_file_close(fs->fdc);
    vmfs_file_close(fs->pbc);
    vmfs_file_close(fs->sbc);
-   vmfs_file_close(fs->vh);
    vmfs_file_close(fs->root_dir);
    vmfs_lvm_close(fs->lvm);
    free(fs->fs_info.label);

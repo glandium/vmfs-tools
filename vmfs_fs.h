@@ -75,7 +75,7 @@ struct vmfs_fs {
    vmfs_lvm_t *lvm;
 
    /* Meta-files containing file system structures */
-   vmfs_file_t *fbb,*fdc,*pbc,*sbc,*vh,*root_dir;
+   vmfs_file_t *fbb,*fdc,*pbc,*sbc,*root_dir;
 
    /* Bitmap headers of meta-files */
    vmfs_bitmap_header_t fbb_bmh,fdc_bmh,pbc_bmh,sbc_bmh;
