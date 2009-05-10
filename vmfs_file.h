@@ -63,7 +63,7 @@ vmfs_file_t *vmfs_file_create_struct(const vmfs_fs_t *fs);
 vmfs_file_t *vmfs_file_open_rec(const vmfs_fs_t *fs,const vmfs_dirent_t *rec);
 
 /* Open a file */
-vmfs_file_t *vmfs_file_open(const vmfs_fs_t *fs,const char *filename);
+vmfs_file_t *vmfs_file_open_from_path(const vmfs_fs_t *fs,const char *path);
 
 /* Close a file */
 int vmfs_file_close(vmfs_file_t *f);

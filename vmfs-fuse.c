@@ -49,7 +49,7 @@ static int vmfs_fuse_readdir(const char *path, void *buf,
 
 static int vmfs_fuse_open(const char *path, struct fuse_file_info *fi)
 {
-   vmfs_file_t *file = vmfs_file_open(fs, path);
+   vmfs_file_t *file = vmfs_file_open_from_path(fs, path);
    if (!file)
       return -ENOENT;
 

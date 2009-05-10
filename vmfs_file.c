@@ -60,13 +60,13 @@ vmfs_file_t *vmfs_file_open_rec(const vmfs_fs_t *fs,const vmfs_dirent_t *rec)
 }
 
 /* Open a file */
-vmfs_file_t *vmfs_file_open(const vmfs_fs_t *fs,const char *filename)
+vmfs_file_t *vmfs_file_open_from_path(const vmfs_fs_t *fs,const char *path)
 {
    vmfs_dirent_t rec;
    char *tmp_name;
    int res;
 
-   if (!(tmp_name = strdup(filename)))
+   if (!(tmp_name = strdup(path)))
       return NULL;
 
    res = vmfs_dirent_resolve_path(fs,fs->root_dir,tmp_name,1,&rec);

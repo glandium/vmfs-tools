@@ -37,7 +37,7 @@ static int cmd_cat(vmfs_fs_t *fs,int argc,char *argv[])
    }
 
    for(i=0;i<argc;i++) {
-      if (!(f = vmfs_file_open(fs,argv[i]))) {
+      if (!(f = vmfs_file_open_from_path(fs,argv[i]))) {
          fprintf(stderr,"Unable to open file %s\n",argv[i]);
          return(-1);
       }
@@ -184,7 +184,7 @@ static int cmd_show_inode(vmfs_fs_t *fs,int argc,char *argv[])
       return(-1);
    }
 
-   if (!(f = vmfs_file_open(fs,argv[0]))) {
+   if (!(f = vmfs_file_open_from_path(fs,argv[0]))) {
       fprintf(stderr,"Unable to open file '%s'\n",argv[0]);
       return(-1);
    }
@@ -204,7 +204,7 @@ static int cmd_show_file_blocks(vmfs_fs_t *fs,int argc,char *argv[])
       return(-1);
    }
 
-   if (!(f = vmfs_file_open(fs,argv[0]))) {
+   if (!(f = vmfs_file_open_from_path(fs,argv[0]))) {
       fprintf(stderr,"Unable to open file '%s'\n",argv[0]);
       return(-1);
    }
