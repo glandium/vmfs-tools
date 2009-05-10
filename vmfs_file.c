@@ -209,8 +209,8 @@ ssize_t vmfs_file_readat(vmfs_file_t *f,off_t *pos,u_char *buf,size_t len)
             uint32_t sbc_entry,sbc_item,sbc_blk;
             off_t sbc_addr;
 
-            sbc = f->fs->sbc;
-            sbc_bmh = &f->fs->sbc_bmh;
+            sbc = f->fs->sbc->f;
+            sbc_bmh = &f->fs->sbc->bmh;
 
             offset = *pos % sbc_bmh->data_size;
             blk_len = sbc_bmh->data_size - offset;

@@ -134,12 +134,12 @@ static vmfs_file_t *vmfs_open_meta_file(vmfs_fs_t *fs,char *name,
 /* Open all the VMFS meta files */
 static int vmfs_open_all_meta_files(vmfs_fs_t *fs)
 {
-   vmfs_file_t *fdc = fs->fdc;
-   fs->fbb = vmfs_open_meta_file(fs,VMFS_FBB_FILENAME,&fs->fbb_bmh);
-   fs->fdc = vmfs_open_meta_file(fs,VMFS_FDC_FILENAME,&fs->fdc_bmh);
-   fs->pbc = vmfs_open_meta_file(fs,VMFS_PBC_FILENAME,&fs->pbc_bmh);
-   fs->sbc = vmfs_open_meta_file(fs,VMFS_SBC_FILENAME,&fs->sbc_bmh);
-   vmfs_file_close(fdc);
+   vmfs_bitmap_t *fdc = fs->fdc;
+   fs->fbb = vmfs_bitmap_open_from_path(fs,VMFS_FBB_FILENAME);
+   fs->fdc = vmfs_bitmap_open_from_path(fs,VMFS_FDC_FILENAME);
+   fs->pbc = vmfs_bitmap_open_from_path(fs,VMFS_PBC_FILENAME);
+   fs->sbc = vmfs_bitmap_open_from_path(fs,VMFS_SBC_FILENAME);
+   vmfs_bitmap_close(fdc);
 
    return(0);
 }
@@ -148,16 +148,16 @@ static int vmfs_open_all_meta_files(vmfs_fs_t *fs)
 int vmfs_fs_dump_bitmaps(const vmfs_fs_t *fs)
 {
    printf("FBB bitmap:\n");
-   vmfs_bmh_show(&fs->fbb_bmh);
+   vmfs_bmh_show(&fs->fbb->bmh);
 
    printf("\nFDC bitmap:\n");
-   vmfs_bmh_show(&fs->fdc_bmh);
+   vmfs_bmh_show(&fs->fdc->bmh);
 
    printf("\nPBC bitmap:\n");
-   vmfs_bmh_show(&fs->pbc_bmh);
+   vmfs_bmh_show(&fs->pbc->bmh);
 
    printf("\nSBC bitmap:\n");
-   vmfs_bmh_show(&fs->sbc_bmh);
+   vmfs_bmh_show(&fs->sbc->bmh);
 
    return(0);
 }
@@ -186,21 +186,15 @@ static int vmfs_read_fdc_base(vmfs_fs_t *fs)
    tmp = VMFS_BLK_TYPE_FB + ((fdc_base / fs->fs_info.block_size) << 6);
    inode.blocks[0] = read_le32((u_char *)&tmp,0);
 
-   fs->fdc = vmfs_file_open_from_inode(fs,(u_char *)&inode);
-
-   /* Read the header */
-   if (vmfs_file_read(fs->fdc,buf,buf_len) != buf_len)
-      return(-1);
-
-   vmfs_bmh_read(&fs->fdc_bmh,buf);
+   fs->fdc = vmfs_bitmap_open_from_inode(fs,(u_char *)&inode);
 
    if (fs->debug_level > 0) {
       printf("FDC bitmap:\n");
-      vmfs_bmh_show(&fs->fdc_bmh);
+      vmfs_bmh_show(&fs->fdc->bmh);
    }
 
    /* Read the first inode part */
-   inode_pos = vmfs_bitmap_get_area_data_addr(&fs->fdc_bmh,0);
+   inode_pos = vmfs_bitmap_get_area_data_addr(&fs->fdc->bmh,0);
 
    if (fs->debug_level > 0) {
       uint64_t len = fs->fs_info.block_size - inode_pos;
@@ -209,9 +203,9 @@ static int vmfs_read_fdc_base(vmfs_fs_t *fs)
    }
 
    /* Read the root directory */
-   vmfs_file_seek(fs->fdc,inode_pos,SEEK_SET);
-   if (vmfs_file_read(fs->fdc,buf,fs->fdc_bmh.data_size)
-       != fs->fdc_bmh.data_size)
+   vmfs_file_seek(fs->fdc->f,inode_pos,SEEK_SET);
+   if (vmfs_file_read(fs->fdc->f,buf,fs->fdc->bmh.data_size)
+       != fs->fdc->bmh.data_size)
       return(-1);
 
    vmfs_read_rootdir(fs,buf);
@@ -275,10 +269,10 @@ void vmfs_fs_close(vmfs_fs_t *fs)
 {
    if (!fs)
       return;
-   vmfs_file_close(fs->fbb);
-   vmfs_file_close(fs->fdc);
-   vmfs_file_close(fs->pbc);
-   vmfs_file_close(fs->sbc);
+   vmfs_bitmap_close(fs->fbb);
+   vmfs_bitmap_close(fs->fdc);
+   vmfs_bitmap_close(fs->pbc);
+   vmfs_bitmap_close(fs->sbc);
    vmfs_file_close(fs->root_dir);
    vmfs_lvm_close(fs->lvm);
    free(fs->fs_info.label);

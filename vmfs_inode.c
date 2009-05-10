@@ -113,9 +113,9 @@ off_t vmfs_inode_get_offset(const vmfs_fs_t *fs,uint32_t blk_id)
    item  = VMFS_BLK_FD_ITEM(blk_id);
 
    /* Compute the address of the file meta-info in the FDC file */
-   fdc_blk = entry * fs->fdc_bmh.items_per_bitmap_entry;
-   inode_addr  = vmfs_bitmap_get_block_addr(&fs->fdc_bmh,fdc_blk);
-   inode_addr += item * fs->fdc_bmh.data_size;
+   fdc_blk = entry * fs->fdc->bmh.items_per_bitmap_entry;
+   inode_addr  = vmfs_bitmap_get_block_addr(&fs->fdc->bmh,fdc_blk);
+   inode_addr += item * fs->fdc->bmh.data_size;
 
    return(inode_addr);
 }
@@ -132,11 +132,11 @@ int vmfs_inode_get(const vmfs_fs_t *fs,const vmfs_dirent_t *rec,u_char *buf)
 
    inode_addr = vmfs_inode_get_offset(fs,blk_id);
 
-   if (vmfs_file_seek(fs->fdc,inode_addr,SEEK_SET) == -1)
+   if (vmfs_file_seek(fs->fdc->f,inode_addr,SEEK_SET) == -1)
       return(-1);
    
-   len = vmfs_file_read(fs->fdc,buf,fs->fdc_bmh.data_size);
-   return((len == fs->fdc_bmh.data_size) ? 0 : -1);
+   len = vmfs_file_read(fs->fdc->f,buf,fs->fdc->bmh.data_size);
+   return((len == fs->fdc->bmh.data_size) ? 0 : -1);
 }
 
 /* Resolve pointer blocks */
@@ -152,8 +152,8 @@ static int vmfs_inode_resolve_pb(vmfs_file_t *f,u_int base_pos,uint32_t blk_id)
    off_t addr;
    int i;
 
-   pbc = f->fs->pbc;
-   pbc_bmh = &f->fs->pbc_bmh;
+   pbc = f->fs->pbc->f;
+   pbc_bmh = &f->fs->pbc->bmh;
 
    entry = VMFS_BLK_PB_ENTRY(blk_id);
    item  = VMFS_BLK_PB_ITEM(blk_id);
@@ -224,7 +224,7 @@ int vmfs_inode_bind(vmfs_file_t *f,const u_char *inode_buf)
          /* Pointer-block: resolve links */
          case VMFS_BLK_TYPE_PB:
             /* Indirect block count (in pointer blocks) */
-            icount = f->fs->pbc_bmh.data_size / sizeof(uint32_t);
+            icount = f->fs->pbc->bmh.data_size / sizeof(uint32_t);
             if (vmfs_inode_resolve_pb(f,i*icount,blk_id) == -1) {
                fprintf(stderr,"VMFS: unable to resolve blocks\n");
                return(-1);

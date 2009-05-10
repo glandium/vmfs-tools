@@ -135,8 +135,8 @@ static int cmd_df(vmfs_fs_t *fs,int argc,char *argv[])
 {
    uint32_t alloc,total;
 
-   total = fs->fbb_bmh.total_items;
-   alloc = vmfs_bitmap_allocated_items(fs->fbb,&fs->fbb_bmh);
+   total = fs->fbb->bmh.total_items;
+   alloc = vmfs_bitmap_allocated_items(fs->fbb->f,&fs->fbb->bmh);
 
    printf("Block size       : %"PRIu64" bytes\n",vmfs_fs_get_blocksize(fs));
 
@@ -240,16 +240,16 @@ static int cmd_check_vol_bitmaps(vmfs_fs_t *fs,int argc,char *argv[])
    int errors = 0;
 
    printf("Checking FBB bitmaps...\n");
-   errors += vmfs_bitmap_check(fs->fbb,&fs->fbb_bmh);
+   errors += vmfs_bitmap_check(fs->fbb->f,&fs->fbb->bmh);
 
    printf("Checking FDC bitmaps...\n");
-   errors += vmfs_bitmap_check(fs->fdc,&fs->fdc_bmh);
+   errors += vmfs_bitmap_check(fs->fdc->f,&fs->fdc->bmh);
 
    printf("Checking PBC bitmaps...\n");
-   errors += vmfs_bitmap_check(fs->pbc,&fs->pbc_bmh);
+   errors += vmfs_bitmap_check(fs->pbc->f,&fs->pbc->bmh);
 
    printf("Checking SBC bitmaps...\n");   
-   errors += vmfs_bitmap_check(fs->sbc,&fs->sbc_bmh);
+   errors += vmfs_bitmap_check(fs->sbc->f,&fs->sbc->bmh);
 
    printf("Total errors: %d\n",errors);
    return(errors);
@@ -337,18 +337,18 @@ static int cmd_read_block(vmfs_fs_t *fs,int argc,char *argv[])
 
       /* Sub-Block */
       case VMFS_BLK_TYPE_SB:
-         blk_size = fs->sbc_bmh.data_size;
+         blk_size = fs->sbc->bmh.data_size;
 
          sbc_entry = VMFS_BLK_SB_ENTRY(blk_id);
          sbc_item  = VMFS_BLK_SB_ITEM(blk_id);
 
-         sbc_blk = sbc_entry * fs->sbc_bmh.items_per_bitmap_entry;
+         sbc_blk = sbc_entry * fs->sbc->bmh.items_per_bitmap_entry;
          sbc_blk += sbc_item;
          
-         sbc_addr = vmfs_bitmap_get_block_addr(&fs->sbc_bmh,sbc_blk);
+         sbc_addr = vmfs_bitmap_get_block_addr(&fs->sbc->bmh,sbc_blk);
 
-         vmfs_file_seek(fs->sbc,sbc_addr,SEEK_SET);
-         vmfs_file_read(fs->sbc,buf,blk_size);
+         vmfs_file_seek(fs->sbc->f,sbc_addr,SEEK_SET);
+         vmfs_file_read(fs->sbc->f,buf,blk_size);
          mem_dump(stdout,buf,blk_size);
          break;
 
