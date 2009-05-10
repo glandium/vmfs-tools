@@ -37,7 +37,8 @@ vmfs_file_t *vmfs_file_create_struct(const vmfs_fs_t *fs)
 }
 
 /* Open a file based on a directory entry */
-vmfs_file_t *vmfs_file_open_rec(const vmfs_fs_t *fs,const vmfs_dirent_t *rec)
+vmfs_file_t *vmfs_file_open_from_rec(const vmfs_fs_t *fs,
+                                     const vmfs_dirent_t *rec)
 {
    DECL_ALIGNED_BUFFER_WOL(buf,VMFS_INODE_SIZE);
    vmfs_file_t *f;
@@ -75,7 +76,7 @@ vmfs_file_t *vmfs_file_open_from_path(const vmfs_fs_t *fs,const char *path)
    if (res != 1)
       return NULL;
 
-   return(vmfs_file_open_rec(fs,&rec));
+   return(vmfs_file_open_from_rec(fs,&rec));
 }
 
 /* Close a file */

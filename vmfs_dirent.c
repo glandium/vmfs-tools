@@ -80,7 +80,7 @@ static char *vmfs_dirent_read_symlink(const vmfs_fs_t *fs,vmfs_dirent_t *entry)
    if (entry->type != VMFS_FILE_TYPE_SYMLINK)
       return NULL;
 
-   if (!(f = vmfs_file_open_rec(fs,entry)))
+   if (!(f = vmfs_file_open_from_rec(fs,entry)))
       return NULL;
 
    str_len = f->inode.size;
@@ -159,7 +159,7 @@ int vmfs_dirent_resolve_path(const vmfs_fs_t *fs,vmfs_file_t *base_dir,
 
       /* we must have a directory here */
       if ((rec->type != VMFS_FILE_TYPE_DIR) ||
-          !(sub_dir = vmfs_file_open_rec(fs,rec)))
+          !(sub_dir = vmfs_file_open_from_rec(fs,rec)))
       {
          res = -1;
          break;
