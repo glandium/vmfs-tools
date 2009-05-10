@@ -120,8 +120,6 @@ int vmfs_file_seek(vmfs_file_t *f,off_t pos,int whence)
 /* Read data from a file at the specified position */
 ssize_t vmfs_file_readat(vmfs_file_t *f,off_t *pos,u_char *buf,size_t len)
 {
-   const vmfs_bitmap_header_t *sbc_bmh;
-   vmfs_file_t *sbc;
    u_int blk_pos;
    uint32_t blk_id,blk_type;
    uint64_t blk_size,blk_len;
@@ -137,9 +135,6 @@ ssize_t vmfs_file_readat(vmfs_file_t *f,off_t *pos,u_char *buf,size_t len)
 
    blk_size = vmfs_fs_get_blocksize(f->fs);
    file_size = vmfs_file_get_size(f);
-
-   sbc = f->fs->sbc;
-   sbc_bmh = &f->fs->sbc_bmh;
 
    while(len > 0) {
       blk_pos = *pos / blk_size;
@@ -198,8 +193,13 @@ ssize_t vmfs_file_readat(vmfs_file_t *f,off_t *pos,u_char *buf,size_t len)
 
          /* Sub-Block */
          case VMFS_BLK_TYPE_SB: {
+            const vmfs_bitmap_header_t *sbc_bmh;
+            vmfs_file_t *sbc;
             uint32_t sbc_entry,sbc_item,sbc_blk;
             off_t sbc_addr;
+
+            sbc = f->fs->sbc;
+            sbc_bmh = &f->fs->sbc_bmh;
 
             offset = *pos % sbc_bmh->data_size;
             blk_len = sbc_bmh->data_size - offset;
