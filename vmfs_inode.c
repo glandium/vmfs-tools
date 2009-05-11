@@ -124,19 +124,12 @@ off_t vmfs_inode_get_offset(const vmfs_fs_t *fs,uint32_t blk_id)
 int vmfs_inode_get(const vmfs_fs_t *fs,const vmfs_dirent_t *rec,u_char *buf)
 {
    uint32_t blk_id = rec->block_id;
-   off_t inode_addr;
-   ssize_t len;
 
    if (VMFS_BLK_TYPE(blk_id) != VMFS_BLK_TYPE_FD)
       return(-1);
 
-   inode_addr = vmfs_inode_get_offset(fs,blk_id);
-
-   if (vmfs_file_seek(fs->fdc->f,inode_addr,SEEK_SET) == -1)
-      return(-1);
-   
-   len = vmfs_file_read(fs->fdc->f,buf,fs->fdc->bmh.data_size);
-   return((len == fs->fdc->bmh.data_size) ? 0 : -1);
+   return(vmfs_bitmap_get_item(fs->fdc, VMFS_BLK_FD_ENTRY(blk_id),
+                               VMFS_BLK_FD_ITEM(blk_id), buf) ? 0 : -1);
 }
 
 /* Resolve pointer blocks */
