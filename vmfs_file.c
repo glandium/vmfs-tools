@@ -305,8 +305,6 @@ static int vmfs_file_stat_internal(const vmfs_fs_t *fs,const char *path,
    vmfs_dirent_t entry;
    vmfs_inode_t inode;
 
-   vmfs_inode_update_mem(fs->root_dir);
-
    if (vmfs_dirent_resolve_path(fs,fs->root_dir,path,follow_symlink,
                                 &entry) != 1)
       return(-1);
