@@ -124,7 +124,7 @@ static int vmfs_read_fdc_base(vmfs_fs_t *fs)
 {
    DECL_ALIGNED_BUFFER(buf,VMFS_INODE_SIZE);
    struct vmfs_inode_raw inode = { 0, };
-   off_t inode_pos, fdc_base;
+   off_t fdc_base;
    uint32_t tmp;
 
    /* Compute position of FDC base: it is located at the first
@@ -150,20 +150,11 @@ static int vmfs_read_fdc_base(vmfs_fs_t *fs)
       vmfs_bmh_show(&fs->fdc->bmh);
    }
 
-   /* Read the first inode part */
-   inode_pos = vmfs_bitmap_get_area_data_addr(&fs->fdc->bmh,0);
-
-   if (fs->debug_level > 0) {
-      uint64_t len = fs->fs_info.block_size - inode_pos;
-      printf("Inodes at @0x%"PRIx64"\n",(uint64_t)inode_pos);
-      printf("Length: 0x%8.8"PRIx64"\n",len);
-   }
-
-   /* Read the root directory */
-   vmfs_file_seek(fs->fdc->f,inode_pos,SEEK_SET);
-   if (vmfs_file_read(fs->fdc->f,buf,fs->fdc->bmh.data_size)
-       != fs->fdc->bmh.data_size)
+   /* Read the first inode */
+   if (!vmfs_bitmap_get_item(fs->fdc,0,0,buf)) {
+      fprintf(stderr,"VMFS: couldn't read root directory inode\n");
       return(-1);
+   }
 
    if (!(fs->root_dir = vmfs_file_open_from_inode(fs,buf))) {
       fprintf(stderr,"VMFS: unable to bind inode to root directory\n");
