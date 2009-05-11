@@ -102,35 +102,6 @@ static int vmfs_read_rootdir(vmfs_fs_t *fs,u_char *inode_buf)
    return(0);
 }
 
-/* Read bitmap header */
-static int vmfs_read_bitmap_header(vmfs_file_t *f,vmfs_bitmap_header_t *bmh)
-{
-   DECL_ALIGNED_BUFFER(buf,512);
-
-   vmfs_file_seek(f,0,SEEK_SET);
-
-   if (vmfs_file_read(f,buf,buf_len) != buf_len)
-      return(-1);
-
-   return(vmfs_bmh_read(bmh,buf));
-}
-
-/* Open a meta-file */
-static vmfs_file_t *vmfs_open_meta_file(vmfs_fs_t *fs,char *name,
-                                        vmfs_bitmap_header_t *bmh)
-{
-   vmfs_file_t *f;
-
-   if (!(f = vmfs_file_open_from_path(fs,name)))
-      return NULL;
-
-   /* Read the bitmap header */
-   if ((bmh != NULL) && (vmfs_read_bitmap_header(f,bmh) == -1))
-      return NULL;
-   
-   return f;
-}
-
 /* Open all the VMFS meta files */
 static int vmfs_open_all_meta_files(vmfs_fs_t *fs)
 {
