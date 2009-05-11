@@ -309,10 +309,8 @@ static int cmd_convert_block_id(vmfs_fs_t *fs,int argc,char *argv[])
 /* Read a block */
 static int cmd_read_block(vmfs_fs_t *fs,int argc,char *argv[])
 {    
-   uint32_t sbc_entry,sbc_item,sbc_blk;
    uint32_t blk_id,blk_type;
    uint64_t blk_size;
-   off_t sbc_addr;
    u_char *buf;
 
    if (argc == 0) {
@@ -337,19 +335,9 @@ static int cmd_read_block(vmfs_fs_t *fs,int argc,char *argv[])
 
       /* Sub-Block */
       case VMFS_BLK_TYPE_SB:
-         blk_size = fs->sbc->bmh.data_size;
-
-         sbc_entry = VMFS_BLK_SB_ENTRY(blk_id);
-         sbc_item  = VMFS_BLK_SB_ITEM(blk_id);
-
-         sbc_blk = sbc_entry * fs->sbc->bmh.items_per_bitmap_entry;
-         sbc_blk += sbc_item;
-         
-         sbc_addr = vmfs_bitmap_get_block_addr(&fs->sbc->bmh,sbc_blk);
-
-         vmfs_file_seek(fs->sbc->f,sbc_addr,SEEK_SET);
-         vmfs_file_read(fs->sbc->f,buf,blk_size);
-         mem_dump(stdout,buf,blk_size);
+         vmfs_bitmap_get_item(fs->sbc,VMFS_BLK_SB_ENTRY(blk_id),
+                              VMFS_BLK_SB_ITEM(blk_id),buf);
+         mem_dump(stdout,buf,fs->sbc->bmh.data_size);
          break;
 
       default:
