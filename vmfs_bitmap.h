@@ -81,31 +81,6 @@ struct vmfs_bitmap {
    vmfs_bitmap_header_t bmh;
 };
 
-/* Get number of items per area */
-static inline u_int 
-vmfs_bitmap_get_items_per_area(const vmfs_bitmap_header_t *bmh,u_int id)
-{
-   return(bmh->bmp_entries_per_area * bmh->items_per_bitmap_entry);
-}
-
-/* Get address of a given area (pointing to bitmap array) */
-static inline off_t 
-vmfs_bitmap_get_area_addr(const vmfs_bitmap_header_t *bmh,u_int area)
-{
-   return(bmh->hdr_size + (area * bmh->area_size));
-}
-
-/* Get data address of a given area (after the bitmap array) */
-static inline off_t
-vmfs_bitmap_get_area_data_addr(const vmfs_bitmap_header_t *bmh,u_int area)
-{
-   off_t addr;
-
-   addr  = vmfs_bitmap_get_area_addr(bmh,area);
-   addr += bmh->bmp_entries_per_area * VMFS_BITMAP_ENTRY_SIZE;
-   return(addr);
-}
-
 /* Read a bitmap header */
 int vmfs_bmh_read(vmfs_bitmap_header_t *bmh,const u_char *buf);
 
