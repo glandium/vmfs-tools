@@ -81,17 +81,11 @@ struct vmfs_bitmap {
    vmfs_bitmap_header_t bmh;
 };
 
-/* Read a bitmap header */
-int vmfs_bmh_read(vmfs_bitmap_header_t *bmh,const u_char *buf);
-
 /* Show bitmap information */
 void vmfs_bmh_show(const vmfs_bitmap_header_t *bmh);
 
 /* Read a bitmap entry */
 int vmfs_bme_read(vmfs_bitmap_entry_t *bme,const u_char *buf,int copy_bitmap);
-
-/* Get address of a block */
-off_t vmfs_bitmap_get_block_addr(const vmfs_bitmap_header_t *bmh,uint32_t blk);
 
 /* Read a bitmap entry given a block id */
 int vmfs_bitmap_get_entry(vmfs_file_t *f,const vmfs_bitmap_header_t *bmh,
