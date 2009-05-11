@@ -119,27 +119,9 @@ static int vmfs_read_bitmap_header(vmfs_file_t *f,vmfs_bitmap_header_t *bmh)
 static vmfs_file_t *vmfs_open_meta_file(vmfs_fs_t *fs,char *name,
                                         vmfs_bitmap_header_t *bmh)
 {
-   DECL_ALIGNED_BUFFER(buf,VMFS_INODE_SIZE);
-   vmfs_dirent_t rec;
    vmfs_file_t *f;
-   off_t inode_addr;
 
-   if (!(f = vmfs_file_create_struct(fs)))
-      return NULL;
-
-   /* Search the file name in root directory */
-   if (vmfs_dirent_search(fs->root_dir,name,&rec) != 1)
-      return NULL;
-   
-   /* Read the inode info */
-   inode_addr = vmfs_inode_get_offset(fs,rec.block_id);
-   inode_addr += fs->fdc_base;
-
-   if (vmfs_lvm_read(fs->lvm,inode_addr,buf,buf_len) != buf_len)
-      return NULL;
-
-   /* Bind the associated inode */
-   if (vmfs_inode_bind(f,buf) == -1)
+   if (!(f = vmfs_file_open_from_path(fs,name)))
       return NULL;
 
    /* Read the bitmap header */
