@@ -59,11 +59,7 @@ vmfs_file_t *vmfs_file_open_from_rec(const vmfs_fs_t *fs,
                                      const vmfs_dirent_t *rec)
 {
    DECL_ALIGNED_BUFFER_WOL(buf,VMFS_INODE_SIZE);
-   vmfs_file_t *f;
 
-   if (!(f = vmfs_file_create_struct(fs)))
-      return NULL;
-   
    /* Read the inode */
    if (vmfs_inode_get(fs,rec,buf) == -1) {
       fprintf(stderr,"VMFS: Unable to get inode info for dir entry '%s'\n",
@@ -71,11 +67,7 @@ vmfs_file_t *vmfs_file_open_from_rec(const vmfs_fs_t *fs,
       return NULL;
    }
 
-   /* Bind the associated inode */
-   if (vmfs_inode_bind(f,buf) == -1)
-      return NULL;
-
-   return f;
+   return(vmfs_file_open_from_inode(fs,buf));
 }
 
 /* Open a file */
