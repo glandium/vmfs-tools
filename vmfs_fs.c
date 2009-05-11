@@ -183,7 +183,6 @@ static int vmfs_read_fdc_base(vmfs_fs_t *fs)
 {
    DECL_ALIGNED_BUFFER(buf,VMFS_INODE_SIZE);
    off_t inode_pos;
-   uint64_t len;
 
    /* Read the header */
    if (vmfs_lvm_read(fs->lvm,fs->fdc_base,buf,buf_len) != buf_len)
@@ -199,9 +198,8 @@ static int vmfs_read_fdc_base(vmfs_fs_t *fs)
    /* Read the first inode part */
    inode_pos = fs->fdc_base + vmfs_bitmap_get_area_data_addr(&fs->fdc_bmh,0);
 
-   len = fs->fs_info.block_size - (inode_pos - fs->fdc_base);
-
    if (fs->debug_level > 0) {
+      uint64_t len = fs->fs_info.block_size - (inode_pos - fs->fdc_base);
       printf("Inodes at @0x%"PRIx64"\n",(uint64_t)inode_pos);
       printf("Length: 0x%8.8"PRIx64"\n",len);
    }
