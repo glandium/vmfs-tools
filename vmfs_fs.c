@@ -182,7 +182,6 @@ int vmfs_fs_dump_bitmaps(const vmfs_fs_t *fs)
 static int vmfs_read_fdc_base(vmfs_fs_t *fs)
 {
    DECL_ALIGNED_BUFFER(buf,VMFS_INODE_SIZE);
-   vmfs_inode_t inode;
    off_t inode_pos;
    uint64_t len;
 
@@ -212,7 +211,6 @@ static int vmfs_read_fdc_base(vmfs_fs_t *fs)
        != fs->fdc_bmh.data_size)
       return(-1);
 
-   vmfs_inode_read(&inode,buf);
    vmfs_read_rootdir(fs,buf);
 
    /* Read the meta files */
