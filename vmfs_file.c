@@ -36,6 +36,24 @@ vmfs_file_t *vmfs_file_create_struct(const vmfs_fs_t *fs)
    return f;
 }
 
+/* Open a file based on an inode buffer */
+vmfs_file_t *vmfs_file_open_from_inode(const vmfs_fs_t *fs,
+                                       const u_char *inode_buf)
+{
+   vmfs_file_t *f;
+
+   if (!(f = vmfs_file_create_struct(fs)))
+      return NULL;
+
+   /* Bind the associated inode */
+   if (vmfs_inode_bind(f,inode_buf) == -1) {
+      vmfs_file_close(f);
+      return NULL;
+   }
+
+   return f;
+}
+
 /* Open a file based on a directory entry */
 vmfs_file_t *vmfs_file_open_from_rec(const vmfs_fs_t *fs,
                                      const vmfs_dirent_t *rec)
