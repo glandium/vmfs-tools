@@ -167,15 +167,23 @@ static int vmfs_read_fdc_base(vmfs_fs_t *fs)
 {
    DECL_ALIGNED_BUFFER(buf,VMFS_INODE_SIZE);
    struct vmfs_inode_raw inode = { 0, };
-   off_t inode_pos;
+   off_t inode_pos, fdc_base;
    uint32_t tmp;
+
+   /* Compute position of FDC base: it is located at the first
+      block start after heartbeat information */
+   fdc_base = m_max(VMFS_HB_BASE + VMFS_HB_NUM * VMFS_HB_SIZE,
+                    vmfs_fs_get_blocksize(fs));
+
+   if (fs->debug_level > 0)
+      printf("FDC base = @0x%"PRIx64"\n",(uint64_t)fdc_base);
 
    /* read_le{32|64} is used as a mean to get little endian raw inode
     * data even on big endian platforms */
    inode.size = read_le64((u_char *)&fs->fs_info.block_size,0);
    tmp = VMFS_FILE_TYPE_META;
    inode.type = read_le32((u_char *)&tmp,0);
-   tmp = VMFS_BLK_TYPE_FB + ((fs->fdc_base / fs->fs_info.block_size) << 6);
+   tmp = VMFS_BLK_TYPE_FB + ((fdc_base / fs->fs_info.block_size) << 6);
    inode.blocks[0] = read_le32((u_char *)&tmp,0);
 
    fs->fdc = vmfs_file_open_from_inode(fs,(u_char *)&inode);
@@ -250,14 +258,6 @@ int vmfs_fs_open(vmfs_fs_t *fs)
 
    if (fs->debug_level > 0)
       vmfs_fs_show(fs);
-
-   /* Compute position of FDC base: it is located at the first
-      block start after heartbeat information */
-   fs->fdc_base = m_max(VMFS_HB_BASE + VMFS_HB_NUM * VMFS_HB_SIZE,
-                        vmfs_fs_get_blocksize(fs));
-
-   if (fs->debug_level > 0)
-      printf("FDC base = @0x%"PRIx64"\n",(uint64_t)fs->fdc_base);
 
    /* Read FDC base information */
    if (vmfs_read_fdc_base(fs) == -1) {

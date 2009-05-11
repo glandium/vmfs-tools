@@ -65,9 +65,6 @@ struct vmfs_fsinfo {
 struct vmfs_fs {
    int debug_level;
 
-   /* FDC base */
-   off_t fdc_base;
-
    /* FS information */
    vmfs_fsinfo_t fs_info;
 
