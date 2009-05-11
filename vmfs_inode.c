@@ -135,41 +135,17 @@ int vmfs_inode_get(const vmfs_fs_t *fs,const vmfs_dirent_t *rec,u_char *buf)
 /* Resolve pointer blocks */
 static int vmfs_inode_resolve_pb(vmfs_file_t *f,u_int base_pos,uint32_t blk_id)
 {
-   DECL_ALIGNED_BUFFER(buf,4096);
-   const vmfs_bitmap_header_t *pbc_bmh;
-   vmfs_file_t *pbc;
-   uint32_t pbc_blk,dblk;
-   uint32_t entry,item;
-   size_t len;
-   ssize_t res;
-   off_t addr;
+   DECL_ALIGNED_BUFFER(buf,f->fs->pbc->bmh.data_size);
+   uint32_t dblk;
    int i;
 
-   pbc = f->fs->pbc->f;
-   pbc_bmh = &f->fs->pbc->bmh;
+   if (!vmfs_bitmap_get_item(f->fs->pbc,VMFS_BLK_PB_ENTRY(blk_id),
+                             VMFS_BLK_PB_ITEM(blk_id),buf))
+      return(-1);
 
-   entry = VMFS_BLK_PB_ENTRY(blk_id);
-   item  = VMFS_BLK_PB_ITEM(blk_id);
-
-   /* Compute the address of the indirect pointers block in the PBC file */
-   pbc_blk = (entry * pbc_bmh->items_per_bitmap_entry) + item;
-   addr = vmfs_bitmap_get_block_addr(pbc_bmh,pbc_blk);
-   len  = pbc_bmh->data_size;
-
-   vmfs_file_seek(pbc,addr,SEEK_SET);
-
-   while(len > 0) {
-      res = vmfs_file_read(pbc,buf,buf_len);
-
-      if (res != buf_len)
-         return(-1);
-
-      for(i=0;i<res/4;i++) {
-         dblk = read_le32(buf,i*4);
-         vmfs_blk_list_add_block(&f->blk_list,base_pos++,dblk);
-      }
-
-      len -= res;
+   for(i=0;i<buf_len/sizeof(uint32_t);i++) {
+      dblk = read_le32(buf,i*sizeof(uint32_t));
+      vmfs_blk_list_add_block(&f->blk_list,base_pos++,dblk);
    }
 
    return(0);
