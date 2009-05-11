@@ -152,10 +152,12 @@ static vmfs_file_t *vmfs_open_meta_file(vmfs_fs_t *fs,char *name,
 /* Open all the VMFS meta files */
 static int vmfs_open_all_meta_files(vmfs_fs_t *fs)
 {
+   vmfs_file_t *fdc = fs->fdc;
    fs->fbb = vmfs_open_meta_file(fs,VMFS_FBB_FILENAME,&fs->fbb_bmh);
    fs->fdc = vmfs_open_meta_file(fs,VMFS_FDC_FILENAME,&fs->fdc_bmh);
    fs->pbc = vmfs_open_meta_file(fs,VMFS_PBC_FILENAME,&fs->pbc_bmh);
    fs->sbc = vmfs_open_meta_file(fs,VMFS_SBC_FILENAME,&fs->sbc_bmh);
+   vmfs_file_close(fdc);
 
    return(0);
 }
@@ -182,10 +184,22 @@ int vmfs_fs_dump_bitmaps(const vmfs_fs_t *fs)
 static int vmfs_read_fdc_base(vmfs_fs_t *fs)
 {
    DECL_ALIGNED_BUFFER(buf,VMFS_INODE_SIZE);
+   struct vmfs_inode_raw inode = { 0, };
    off_t inode_pos;
+   uint32_t tmp;
+
+   /* read_le{32|64} is used as a mean to get little endian raw inode
+    * data even on big endian platforms */
+   inode.size = read_le64((u_char *)&fs->fs_info.block_size,0);
+   tmp = VMFS_FILE_TYPE_META;
+   inode.type = read_le32((u_char *)&tmp,0);
+   tmp = VMFS_BLK_TYPE_FB + ((fs->fdc_base / fs->fs_info.block_size) << 6);
+   inode.blocks[0] = read_le32((u_char *)&tmp,0);
+
+   fs->fdc = vmfs_file_open_from_inode(fs,(u_char *)&inode);
 
    /* Read the header */
-   if (vmfs_lvm_read(fs->lvm,fs->fdc_base,buf,buf_len) != buf_len)
+   if (vmfs_file_read(fs->fdc,buf,buf_len) != buf_len)
       return(-1);
 
    vmfs_bmh_read(&fs->fdc_bmh,buf);
@@ -196,16 +210,17 @@ static int vmfs_read_fdc_base(vmfs_fs_t *fs)
    }
 
    /* Read the first inode part */
-   inode_pos = fs->fdc_base + vmfs_bitmap_get_area_data_addr(&fs->fdc_bmh,0);
+   inode_pos = vmfs_bitmap_get_area_data_addr(&fs->fdc_bmh,0);
 
    if (fs->debug_level > 0) {
-      uint64_t len = fs->fs_info.block_size - (inode_pos - fs->fdc_base);
+      uint64_t len = fs->fs_info.block_size - inode_pos;
       printf("Inodes at @0x%"PRIx64"\n",(uint64_t)inode_pos);
       printf("Length: 0x%8.8"PRIx64"\n",len);
    }
 
    /* Read the root directory */
-   if (vmfs_lvm_read(fs->lvm,inode_pos,buf,fs->fdc_bmh.data_size)
+   vmfs_file_seek(fs->fdc,inode_pos,SEEK_SET);
+   if (vmfs_file_read(fs->fdc,buf,fs->fdc_bmh.data_size)
        != fs->fdc_bmh.data_size)
       return(-1);
 
