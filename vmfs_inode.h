@@ -95,9 +95,6 @@ int vmfs_inode_write(const vmfs_inode_t *inode,u_char *buf);
 /* Show an inode */
 void vmfs_inode_show(const vmfs_inode_t *inode);
 
-/* Get the offset corresponding to an inode in the FDC file */
-off_t vmfs_inode_get_offset(const vmfs_fs_t *fs,uint32_t blk_id);
-
 /* Get inode associated to a directory entry */
 int vmfs_inode_get(const vmfs_fs_t *fs,const vmfs_dirent_t *rec,u_char *buf);
 

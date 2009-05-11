@@ -102,24 +102,6 @@ void vmfs_inode_show(const vmfs_inode_t *inode)
    }
 }
 
-/* Get the offset corresponding to an inode in the FDC file */
-off_t vmfs_inode_get_offset(const vmfs_fs_t *fs,uint32_t blk_id)
-{
-   uint32_t entry,item;
-   off_t inode_addr;
-   uint32_t fdc_blk;
-
-   entry = VMFS_BLK_FD_ENTRY(blk_id);
-   item  = VMFS_BLK_FD_ITEM(blk_id);
-
-   /* Compute the address of the file meta-info in the FDC file */
-   fdc_blk = entry * fs->fdc->bmh.items_per_bitmap_entry;
-   inode_addr  = vmfs_bitmap_get_block_addr(&fs->fdc->bmh,fdc_blk);
-   inode_addr += item * fs->fdc->bmh.data_size;
-
-   return(inode_addr);
-}
-
 /* Get inode associated to a directory entry */
 int vmfs_inode_get(const vmfs_fs_t *fs,const vmfs_dirent_t *rec,u_char *buf)
 {
