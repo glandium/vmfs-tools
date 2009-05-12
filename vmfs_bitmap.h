@@ -126,7 +126,7 @@ uint32_t vmfs_bitmap_allocated_items(vmfs_file_t *f,
                                     const vmfs_bitmap_header_t *bmh);
 
 /* Check coherency of a bitmap file */
-int vmfs_bitmap_check(vmfs_file_t *f,const vmfs_bitmap_header_t *bmh);
+int vmfs_bitmap_check(vmfs_bitmap_t *b);
 
 /* Open a bitmap file */
 vmfs_bitmap_t *vmfs_bitmap_open_from_path(const vmfs_fs_t *fs,

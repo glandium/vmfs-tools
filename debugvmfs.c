@@ -240,16 +240,16 @@ static int cmd_check_vol_bitmaps(vmfs_fs_t *fs,int argc,char *argv[])
    int errors = 0;
 
    printf("Checking FBB bitmaps...\n");
-   errors += vmfs_bitmap_check(fs->fbb->f,&fs->fbb->bmh);
+   errors += vmfs_bitmap_check(fs->fbb);
 
    printf("Checking FDC bitmaps...\n");
-   errors += vmfs_bitmap_check(fs->fdc->f,&fs->fdc->bmh);
+   errors += vmfs_bitmap_check(fs->fdc);
 
    printf("Checking PBC bitmaps...\n");
-   errors += vmfs_bitmap_check(fs->pbc->f,&fs->pbc->bmh);
+   errors += vmfs_bitmap_check(fs->pbc);
 
    printf("Checking SBC bitmaps...\n");   
-   errors += vmfs_bitmap_check(fs->sbc->f,&fs->sbc->bmh);
+   errors += vmfs_bitmap_check(fs->sbc);
 
    printf("Total errors: %d\n",errors);
    return(errors);

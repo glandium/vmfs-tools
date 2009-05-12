@@ -288,7 +288,7 @@ uint32_t vmfs_bitmap_allocated_items(vmfs_file_t *f,
 }
 
 /* Check coherency of a bitmap file */
-int vmfs_bitmap_check(vmfs_file_t *f,const vmfs_bitmap_header_t *bmh)
+int vmfs_bitmap_check(vmfs_bitmap_t *b)
 {  
    u_char buf[VMFS_BITMAP_ENTRY_SIZE];
    vmfs_bitmap_entry_t entry;
@@ -304,11 +304,11 @@ int vmfs_bitmap_check(vmfs_file_t *f,const vmfs_bitmap_header_t *bmh)
    magic       = 0;
    entry_id    = 0;
 
-   for(i=0;i<bmh->area_count;i++) {
-      vmfs_file_seek(f,vmfs_bitmap_get_area_addr(bmh,i),SEEK_SET);
+   for(i=0;i<b->bmh.area_count;i++) {
+      vmfs_file_seek(b->f,vmfs_bitmap_get_area_addr(&b->bmh,i),SEEK_SET);
 
-      for(j=0;j<bmh->bmp_entries_per_area;j++) {
-         if (vmfs_file_read(f,buf,sizeof(buf)) != sizeof(buf))
+      for(j=0;j<b->bmh.bmp_entries_per_area;j++) {
+         if (vmfs_file_read(b->f,buf,sizeof(buf)) != sizeof(buf))
             break;
 
          vmfs_bme_read(&entry,buf,0);
@@ -334,7 +334,7 @@ int vmfs_bitmap_check(vmfs_file_t *f,const vmfs_bitmap_header_t *bmh)
          }
          
          /* check the number of items */
-         if (entry.total > bmh->items_per_bitmap_entry) {
+         if (entry.total > b->bmh.items_per_bitmap_entry) {
             printf("Entry 0x%x has an incorrect total of 0x%2.2x items\n",
                    entry_id,entry.total);
             errors++;
@@ -361,9 +361,9 @@ int vmfs_bitmap_check(vmfs_file_t *f,const vmfs_bitmap_header_t *bmh)
    }
 
  done:
-   if (total_items != bmh->total_items) {
+   if (total_items != b->bmh.total_items) {
       printf("Total number of items (0x%x) doesn't match header info (0x%x)\n",
-             total_items,bmh->total_items);
+             total_items,b->bmh.total_items);
       errors++;
    }
 
