@@ -34,7 +34,7 @@ struct vmfs_inode_raw {
    u_char _unknown1[456];
    uint32_t id;
    uint32_t id2;              /* seems to be VMFS_BLK_FD_ITEM(id) + 1 */
-   uint32_t subdirs;          /* Number of subdirs, including . and .. */
+   uint32_t nlink;
    uint32_t type;
    uint32_t _unknown3;
    uint64_t size;
@@ -60,7 +60,7 @@ struct vmfs_inode_raw {
 #define VMFS_INODE_OFS_HB_UUID    offsetof(struct vmfs_inode_raw, hb_uuid)
 #define VMFS_INODE_OFS_ID         offsetof(struct vmfs_inode_raw, id)
 #define VMFS_INODE_OFS_ID2        offsetof(struct vmfs_inode_raw, id2)
-#define VMFS_INODE_OFS_SUBDIRS    offsetof(struct vmfs_inode_raw, subdirs)
+#define VMFS_INODE_OFS_NLINK      offsetof(struct vmfs_inode_raw, nlink)
 #define VMFS_INODE_OFS_TYPE       offsetof(struct vmfs_inode_raw, type)
 #define VMFS_INODE_OFS_SIZE       offsetof(struct vmfs_inode_raw, size)
 #define VMFS_INODE_OFS_BLK_SIZE   offsetof(struct vmfs_inode_raw, blk_size)
@@ -82,7 +82,7 @@ struct vmfs_inode {
    uint32_t hb_lock;
    uuid_t  hb_uuid;
    uint32_t id,id2;
-   uint32_t subdirs;
+   uint32_t nlink;
    uint32_t type;
    uint64_t size;
    uint64_t blk_size;
