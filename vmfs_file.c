@@ -195,7 +195,7 @@ ssize_t vmfs_file_pread(vmfs_file_t *f,u_char *buf,size_t len,off_t pos)
          /* Sub-Block */
          case VMFS_BLK_TYPE_SB: {
             uint32_t sbc_entry,sbc_item;
-            DECL_ALIGNED_BUFFER(tmpbuf,f->fs->sbc->bmh.data_size);
+            DECL_ALIGNED_BUFFER_WOL(tmpbuf,f->fs->sbc->bmh.data_size);
 
             offset = pos % f->fs->sbc->bmh.data_size;
             blk_len = f->fs->sbc->bmh.data_size - offset;
