@@ -119,7 +119,7 @@ int vmfs_file_seek(vmfs_file_t *f,off_t pos,int whence)
 }
 
 /* Read data from a file at the specified position */
-ssize_t vmfs_file_readat(vmfs_file_t *f,off_t *pos,u_char *buf,size_t len)
+ssize_t vmfs_file_pread(vmfs_file_t *f,u_char *buf,size_t len,off_t pos)
 {
    u_int blk_pos;
    uint32_t blk_id,blk_type;
@@ -138,7 +138,7 @@ ssize_t vmfs_file_readat(vmfs_file_t *f,off_t *pos,u_char *buf,size_t len)
    file_size = vmfs_file_get_size(f);
 
    while(len > 0) {
-      blk_pos = *pos / blk_size;
+      blk_pos = pos / blk_size;
 
       if (vmfs_blk_list_get_block(&f->blk_list,blk_pos,&blk_id) == -1)
          break;
@@ -153,10 +153,10 @@ ssize_t vmfs_file_readat(vmfs_file_t *f,off_t *pos,u_char *buf,size_t len)
       switch(blk_type) {
          /* Copy-On-Write block */
          case VMFS_BLK_TYPE_COW:
-            offset = *pos % blk_size;
+            offset = pos % blk_size;
             blk_len = blk_size - offset;
             exp_len = m_min(blk_len,len);
-            res = m_min(exp_len,file_size - *pos);
+            res = m_min(exp_len,file_size - pos);
             memset(buf,0,res);
             break;
 
@@ -164,10 +164,10 @@ ssize_t vmfs_file_readat(vmfs_file_t *f,off_t *pos,u_char *buf,size_t len)
          case VMFS_BLK_TYPE_FB: {
             off_t sub_page,sub_offset;
 
-            offset = *pos % blk_size;
+            offset = pos % blk_size;
 
             exp_len = m_min(tbuf_len,len);
-            clen = m_min(exp_len,file_size - *pos);
+            clen = m_min(exp_len,file_size - pos);
 
             sub_page   = offset & ~((off_t)tbuf_len - 1);
             sub_offset = offset & (tbuf_len - 1);
@@ -197,10 +197,10 @@ ssize_t vmfs_file_readat(vmfs_file_t *f,off_t *pos,u_char *buf,size_t len)
             uint32_t sbc_entry,sbc_item;
             DECL_ALIGNED_BUFFER(tmpbuf,f->fs->sbc->bmh.data_size);
 
-            offset = *pos % f->fs->sbc->bmh.data_size;
+            offset = pos % f->fs->sbc->bmh.data_size;
             blk_len = f->fs->sbc->bmh.data_size - offset;
             exp_len = m_min(blk_len,len);
-            clen = m_min(exp_len,file_size - *pos);
+            clen = m_min(exp_len,file_size - pos);
 
             sbc_entry = VMFS_BLK_SB_ENTRY(blk_id);
             sbc_item  = VMFS_BLK_SB_ITEM(blk_id);
@@ -217,8 +217,12 @@ ssize_t vmfs_file_readat(vmfs_file_t *f,off_t *pos,u_char *buf,size_t len)
             return(-1);
       }
 
+      /* Error while reading block, abort immediately */
+      if (res < 0)
+         break;
+
       /* Move file position and keep track of bytes currently read */
-      *pos += res;
+      pos += res;
       rlen += res;
 
       /* Move buffer position */
@@ -236,7 +240,14 @@ ssize_t vmfs_file_readat(vmfs_file_t *f,off_t *pos,u_char *buf,size_t len)
 /* Read data from a file */
 ssize_t vmfs_file_read(vmfs_file_t *f,u_char *buf,size_t len)
 {
-   return(vmfs_file_readat(f,&f->pos,buf,len));
+   ssize_t res;
+
+   res = vmfs_file_pread(f,buf,len,f->pos);
+
+   if (res > 0)
+      f->pos += res;
+
+   return(res);
 }
 
 /* Dump a file */
