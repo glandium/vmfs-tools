@@ -26,21 +26,23 @@
 /* Read an inode */
 int vmfs_inode_read(vmfs_inode_t *inode,const u_char *buf)
 {
-   inode->magic    = read_le32(buf,VMFS_INODE_OFS_MAGIC);
-   inode->position = read_le64(buf,VMFS_INODE_OFS_POS);
-   inode->hb_pos   = read_le64(buf,VMFS_INODE_OFS_HB_POS);
-   inode->hb_lock  = read_le32(buf,VMFS_INODE_OFS_HB_LOCK);
-   inode->id       = read_le32(buf,VMFS_INODE_OFS_ID);
-   inode->id2      = read_le32(buf,VMFS_INODE_OFS_ID2);
-   inode->subdirs  = read_le32(buf,VMFS_INODE_OFS_SUBDIRS);
-   inode->type     = read_le32(buf,VMFS_INODE_OFS_TYPE);
-   inode->size     = read_le64(buf,VMFS_INODE_OFS_SIZE);
-   inode->mtime    = read_le32(buf,VMFS_INODE_OFS_MTIME);
-   inode->ctime    = read_le32(buf,VMFS_INODE_OFS_CTIME);
-   inode->atime    = read_le32(buf,VMFS_INODE_OFS_ATIME);
-   inode->uid      = read_le32(buf,VMFS_INODE_OFS_UID);
-   inode->gid      = read_le32(buf,VMFS_INODE_OFS_GID);
-   inode->mode     = read_le32(buf,VMFS_INODE_OFS_MODE);
+   inode->magic     = read_le32(buf,VMFS_INODE_OFS_MAGIC);
+   inode->position  = read_le64(buf,VMFS_INODE_OFS_POS);
+   inode->hb_pos    = read_le64(buf,VMFS_INODE_OFS_HB_POS);
+   inode->hb_lock   = read_le32(buf,VMFS_INODE_OFS_HB_LOCK);
+   inode->id        = read_le32(buf,VMFS_INODE_OFS_ID);
+   inode->id2       = read_le32(buf,VMFS_INODE_OFS_ID2);
+   inode->subdirs   = read_le32(buf,VMFS_INODE_OFS_SUBDIRS);
+   inode->type      = read_le32(buf,VMFS_INODE_OFS_TYPE);
+   inode->size      = read_le64(buf,VMFS_INODE_OFS_SIZE);
+   inode->blk_size  = read_le64(buf,VMFS_INODE_OFS_BLK_SIZE);
+   inode->blk_count = read_le64(buf,VMFS_INODE_OFS_BLK_COUNT);
+   inode->mtime     = read_le32(buf,VMFS_INODE_OFS_MTIME);
+   inode->ctime     = read_le32(buf,VMFS_INODE_OFS_CTIME);
+   inode->atime     = read_le32(buf,VMFS_INODE_OFS_ATIME);
+   inode->uid       = read_le32(buf,VMFS_INODE_OFS_UID);
+   inode->gid       = read_le32(buf,VMFS_INODE_OFS_GID);
+   inode->mode      = read_le32(buf,VMFS_INODE_OFS_MODE);
 
    /* "corrected" mode */
    inode->cmode    = inode->mode | vmfs_file_type2mode(inode->type);
@@ -66,6 +68,8 @@ int vmfs_inode_write(const vmfs_inode_t *inode,u_char *buf)
    write_le32(buf,VMFS_INODE_OFS_SUBDIRS,inode->subdirs);
    write_le32(buf,VMFS_INODE_OFS_TYPE,inode->type);
    write_le64(buf,VMFS_INODE_OFS_SIZE,inode->size);
+   write_le64(buf,VMFS_INODE_OFS_BLK_SIZE,inode->blk_size);
+   write_le64(buf,VMFS_INODE_OFS_BLK_COUNT,inode->blk_count);
    write_le32(buf,VMFS_INODE_OFS_MTIME,inode->mtime);
    write_le32(buf,VMFS_INODE_OFS_CTIME,inode->ctime);
    write_le32(buf,VMFS_INODE_OFS_ATIME,inode->atime);
@@ -90,6 +94,8 @@ void vmfs_inode_show(const vmfs_inode_t *inode)
    printf("  - Subdirs     : %u\n",inode->subdirs);
    printf("  - Type        : 0x%8.8x\n",inode->type);
    printf("  - Size        : 0x%8.8"PRIx64"\n",inode->size);
+   printf("  - Block size  : 0x%"PRIx64"\n",inode->blk_size);
+   printf("  - Block count : 0x%"PRIx64"\n",inode->blk_count);
    printf("  - UID/GID     : %d/%d\n",inode->uid,inode->gid);
    printf("  - Mode        : 0%o (%s)\n",
           inode->mode,m_fmode_to_str(inode->mode,tbuf));

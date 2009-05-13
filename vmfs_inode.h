@@ -38,7 +38,8 @@ struct vmfs_inode_raw {
    uint32_t type;
    uint32_t _unknown3;
    uint64_t size;
-   u_char _unknown4[16];
+   uint64_t blk_size;
+   uint64_t blk_count;
    uint32_t mtime;
    uint32_t ctime;
    uint32_t atime;
@@ -62,6 +63,8 @@ struct vmfs_inode_raw {
 #define VMFS_INODE_OFS_SUBDIRS    offsetof(struct vmfs_inode_raw, subdirs)
 #define VMFS_INODE_OFS_TYPE       offsetof(struct vmfs_inode_raw, type)
 #define VMFS_INODE_OFS_SIZE       offsetof(struct vmfs_inode_raw, size)
+#define VMFS_INODE_OFS_BLK_SIZE   offsetof(struct vmfs_inode_raw, blk_size)
+#define VMFS_INODE_OFS_BLK_COUNT  offsetof(struct vmfs_inode_raw, blk_count)
 #define VMFS_INODE_OFS_MTIME      offsetof(struct vmfs_inode_raw, mtime)
 #define VMFS_INODE_OFS_CTIME      offsetof(struct vmfs_inode_raw, ctime)
 #define VMFS_INODE_OFS_ATIME      offsetof(struct vmfs_inode_raw, atime)
@@ -82,6 +85,8 @@ struct vmfs_inode {
    uint32_t subdirs;
    uint32_t type;
    uint64_t size;
+   uint64_t blk_size;
+   uint64_t blk_count;
    time_t  mtime,ctime,atime;
    uint32_t uid,gid;
    uint32_t mode,cmode;
