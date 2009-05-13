@@ -320,7 +320,7 @@ static int cmd_read_block(vmfs_fs_t *fs,int argc,char *argv[])
 
    blk_size = vmfs_fs_get_blocksize(fs);
 
-   if (!(buf = malloc(blk_size)))
+   if (posix_memalign((void **)&buf,M_SECTOR_SIZE,blk_size))
       return(-1);
 
    blk_id = (uint32_t)strtoul(argv[0],NULL,16);
