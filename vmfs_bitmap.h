@@ -88,8 +88,8 @@ void vmfs_bmh_show(const vmfs_bitmap_header_t *bmh);
 int vmfs_bme_read(vmfs_bitmap_entry_t *bme,const u_char *buf,int copy_bitmap);
 
 /* Read a bitmap entry given a block id */
-int vmfs_bitmap_get_entry(vmfs_file_t *f,const vmfs_bitmap_header_t *bmh,
-                          u_int blk,vmfs_bitmap_entry_t *entry);
+int vmfs_bitmap_get_entry(vmfs_bitmap_t *b,u_int blk,
+                          vmfs_bitmap_entry_t *entry);
 
 /* Read a bitmap item from its entry and item numbers */
 bool vmfs_bitmap_get_item(vmfs_bitmap_t *b, uint32_t entry, uint32_t item,
@@ -105,25 +105,20 @@ int vmfs_bitmap_get_item_status(const vmfs_bitmap_header_t *bmh,
                                 vmfs_bitmap_entry_t *entry,u_int blk);
 
 /* Find a bitmap entry with at least "num_items" free in the specified area */
-int vmfs_bitmap_area_find_free_items(vmfs_file_t *f,
-                                     const vmfs_bitmap_header_t *bmh,
+int vmfs_bitmap_area_find_free_items(vmfs_bitmap_t *b,
                                      u_int area,u_int num_items,
                                      vmfs_bitmap_entry_t *entry);
 
 /* Find a bitmap entry with at least "num_items" free (scan all areas) */
-int vmfs_bitmap_find_free_items(vmfs_file_t *f,
-                                const vmfs_bitmap_header_t *bmh,
+int vmfs_bitmap_find_free_items(vmfs_bitmap_t *b,
                                 u_int area,u_int num_items,
                                 vmfs_bitmap_entry_t *entry);
 
 /* Count the total number of allocated items in a bitmap area */
-uint32_t vmfs_bitmap_area_allocated_items(vmfs_file_t *f,
-                                         const vmfs_bitmap_header_t *bmh,
-                                         u_int area);
+uint32_t vmfs_bitmap_area_allocated_items(vmfs_bitmap_t *b,u_int area);
 
 /* Count the total number of allocated items in a bitmap */
-uint32_t vmfs_bitmap_allocated_items(vmfs_file_t *f,
-                                    const vmfs_bitmap_header_t *bmh);
+uint32_t vmfs_bitmap_allocated_items(vmfs_bitmap_t *b);
 
 /* Check coherency of a bitmap file */
 int vmfs_bitmap_check(vmfs_bitmap_t *b);

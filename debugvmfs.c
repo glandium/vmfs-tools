@@ -136,7 +136,7 @@ static int cmd_df(vmfs_fs_t *fs,int argc,char *argv[])
    uint32_t alloc,total;
 
    total = fs->fbb->bmh.total_items;
-   alloc = vmfs_bitmap_allocated_items(fs->fbb->f,&fs->fbb->bmh);
+   alloc = vmfs_bitmap_allocated_items(fs->fbb);
 
    printf("Block size       : %"PRIu64" bytes\n",vmfs_fs_get_blocksize(fs));
 

@@ -120,23 +120,23 @@ off_t vmfs_bitmap_get_block_addr(const vmfs_bitmap_header_t *bmh,uint32_t blk)
 }
 
 /* Read a bitmap entry given a block id */
-int vmfs_bitmap_get_entry(vmfs_file_t *f,const vmfs_bitmap_header_t *bmh,
-                          u_int blk,vmfs_bitmap_entry_t *entry)
+int vmfs_bitmap_get_entry(vmfs_bitmap_t *b,u_int blk,
+                          vmfs_bitmap_entry_t *entry)
 {   
    u_char buf[VMFS_BITMAP_ENTRY_SIZE];
    uint32_t items_per_area;
    u_int entry_idx,area;
    off_t addr;
 
-   items_per_area = vmfs_bitmap_get_items_per_area(bmh,blk);
+   items_per_area = vmfs_bitmap_get_items_per_area(&b->bmh,blk);
    area = blk / items_per_area;
 
-   entry_idx = (blk % items_per_area) / bmh->items_per_bitmap_entry;
+   entry_idx = (blk % items_per_area) / b->bmh.items_per_bitmap_entry;
 
-   addr = vmfs_bitmap_get_area_addr(bmh,area);
+   addr = vmfs_bitmap_get_area_addr(&b->bmh,area);
    addr += entry_idx * VMFS_BITMAP_ENTRY_SIZE;
 
-   if (vmfs_file_pread(f,buf,sizeof(buf),addr) != sizeof(buf))
+   if (vmfs_file_pread(b->f,buf,sizeof(buf),addr) != sizeof(buf))
       return(-1);
 
    vmfs_bme_read(entry,buf,1);
@@ -212,8 +212,7 @@ int vmfs_bitmap_get_item_status(const vmfs_bitmap_header_t *bmh,
 }
 
 /* Find a bitmap entry with at least "num_items" free in the specified area */
-int vmfs_bitmap_area_find_free_items(vmfs_file_t *f,
-                                     const vmfs_bitmap_header_t *bmh,
+int vmfs_bitmap_area_find_free_items(vmfs_bitmap_t *b,
                                      u_int area,u_int num_items,
                                      vmfs_bitmap_entry_t *entry)
 {
@@ -221,10 +220,10 @@ int vmfs_bitmap_area_find_free_items(vmfs_file_t *f,
    off_t pos;
    int i;
 
-   pos = vmfs_bitmap_get_area_addr(bmh,area);
+   pos = vmfs_bitmap_get_area_addr(&b->bmh,area);
 
-   for(i=0;i<bmh->bmp_entries_per_area;i++) {
-      if (vmfs_file_pread(f,buf,sizeof(buf),pos) != sizeof(buf))
+   for(i=0;i<b->bmh.bmp_entries_per_area;i++) {
+      if (vmfs_file_pread(b->f,buf,sizeof(buf),pos) != sizeof(buf))
          break;
 
       vmfs_bme_read(entry,buf,1);
@@ -239,25 +238,21 @@ int vmfs_bitmap_area_find_free_items(vmfs_file_t *f,
 }
 
 /* Find a bitmap entry with at least "num_items" free (scan all areas) */
-int vmfs_bitmap_find_free_items(vmfs_file_t *f,
-                                const vmfs_bitmap_header_t *bmh,
+int vmfs_bitmap_find_free_items(vmfs_bitmap_t *b,
                                 u_int area,u_int num_items,
                                 vmfs_bitmap_entry_t *entry)
 {
    u_int i;
 
-   for(i=0;i<bmh->area_count;i++)
-      if (!vmfs_bitmap_area_find_free_items(f,bmh,i,num_items,entry))
+   for(i=0;i<b->bmh.area_count;i++)
+      if (!vmfs_bitmap_area_find_free_items(b,i,num_items,entry))
          return(0);
 
    return(-1);
 }
 
 /* Count the total number of allocated items in a bitmap area */
-uint32_t vmfs_bitmap_area_allocated_items(vmfs_file_t *f,
-                                          const vmfs_bitmap_header_t *bmh,
-                                          u_int area)
-
+uint32_t vmfs_bitmap_area_allocated_items(vmfs_bitmap_t *b,u_int area)
 {
    u_char buf[VMFS_BITMAP_ENTRY_SIZE];
    vmfs_bitmap_entry_t entry;
@@ -265,10 +260,10 @@ uint32_t vmfs_bitmap_area_allocated_items(vmfs_file_t *f,
    off_t pos;
    int i;
 
-   pos = vmfs_bitmap_get_area_addr(bmh,area);
+   pos = vmfs_bitmap_get_area_addr(&b->bmh,area);
 
-   for(i=0,count=0;i<bmh->bmp_entries_per_area;i++) {
-      if (vmfs_file_pread(f,buf,sizeof(buf),pos) != sizeof(buf))
+   for(i=0,count=0;i<b->bmh.bmp_entries_per_area;i++) {
+      if (vmfs_file_pread(b->f,buf,sizeof(buf),pos) != sizeof(buf))
          break;
 
       vmfs_bme_read(&entry,buf,0);
@@ -280,14 +275,13 @@ uint32_t vmfs_bitmap_area_allocated_items(vmfs_file_t *f,
 }
 
 /* Count the total number of allocated items in a bitmap */
-uint32_t vmfs_bitmap_allocated_items(vmfs_file_t *f,
-                                    const vmfs_bitmap_header_t *bmh)
+uint32_t vmfs_bitmap_allocated_items(vmfs_bitmap_t *b)
 {
    uint32_t count;
    u_int i;
    
-   for(i=0,count=0;i<bmh->area_count;i++)
-      count += vmfs_bitmap_area_allocated_items(f,bmh,i);
+   for(i=0,count=0;i<b->bmh.area_count;i++)
+      count += vmfs_bitmap_area_allocated_items(b,i);
 
    return(count);
 }
