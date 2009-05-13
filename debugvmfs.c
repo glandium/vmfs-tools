@@ -348,6 +348,53 @@ static int cmd_read_block(vmfs_fs_t *fs,int argc,char *argv[])
    return(0);
 }
 
+/* Show a bitmap item */
+static int cmd_show_bitmap_item(vmfs_fs_t *fs,int argc,char *argv[])
+{   
+   uint32_t blk_id,blk_type;
+   uint32_t entry,item;
+   vmfs_bitmap_t *bmp;
+   u_char *buf;
+   size_t len;
+
+   if (argc == 0) {
+      printf("Usage: show_bitmap_item blk_id\n");
+      return(-1);
+   }
+
+   blk_id = (uint32_t)strtoul(argv[0],NULL,16);
+   blk_type = VMFS_BLK_TYPE(blk_id);
+
+   switch(blk_type) {
+      case VMFS_BLK_TYPE_PB:
+         bmp   = fs->pbc;
+         entry = VMFS_BLK_PB_ENTRY(blk_id);
+         item  = VMFS_BLK_PB_ITEM(blk_id);
+         break;
+      case VMFS_BLK_TYPE_SB:
+         bmp   = fs->sbc;
+         entry = VMFS_BLK_SB_ENTRY(blk_id);
+         item  = VMFS_BLK_SB_ITEM(blk_id);
+         break;
+      case VMFS_BLK_TYPE_FD:
+         bmp = fs->fdc;
+         entry = VMFS_BLK_FD_ENTRY(blk_id);
+         item  = VMFS_BLK_FD_ITEM(blk_id);
+         break;
+      default:
+         fprintf(stderr,"Unsupported block type 0x%2.2x\n",blk_type);
+         return(-1);
+   }
+
+   len = bmp->bmh.data_size;
+   buf = malloc(len);
+
+   vmfs_bitmap_get_item(bmp,entry,item,buf);
+   mem_dump(stdout,buf,len);
+   free(buf);
+   return(0);
+}
+
 struct cmd {
    char *name;
    char *description;
@@ -372,6 +419,7 @@ struct cmd cmd_array[] = {
    { "show_heartbeats", "Show active heartbeats", cmd_show_heartbeats },
    { "convert_block_id", "Convert block ID", cmd_convert_block_id },
    { "read_block", "Read a block", cmd_read_block },
+   { "show_bitmap_item", "Show a bitmap item", cmd_show_bitmap_item },
    { "shell", "Opens a shell", cmd_shell },
    { NULL, NULL },
 };
