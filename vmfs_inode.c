@@ -32,6 +32,7 @@ int vmfs_inode_read(vmfs_inode_t *inode,const u_char *buf)
    inode->hb_lock  = read_le32(buf,VMFS_INODE_OFS_HB_LOCK);
    inode->id       = read_le32(buf,VMFS_INODE_OFS_ID);
    inode->id2      = read_le32(buf,VMFS_INODE_OFS_ID2);
+   inode->subdirs  = read_le32(buf,VMFS_INODE_OFS_SUBDIRS);
    inode->type     = read_le32(buf,VMFS_INODE_OFS_TYPE);
    inode->size     = read_le64(buf,VMFS_INODE_OFS_SIZE);
    inode->mtime    = read_le32(buf,VMFS_INODE_OFS_MTIME);
@@ -62,6 +63,7 @@ int vmfs_inode_write(const vmfs_inode_t *inode,u_char *buf)
    write_le32(buf,VMFS_INODE_OFS_HB_LOCK,inode->hb_lock);
    write_le32(buf,VMFS_INODE_OFS_ID,inode->id);
    write_le32(buf,VMFS_INODE_OFS_ID2,inode->id2);
+   write_le32(buf,VMFS_INODE_OFS_SUBDIRS,inode->subdirs);
    write_le32(buf,VMFS_INODE_OFS_TYPE,inode->type);
    write_le64(buf,VMFS_INODE_OFS_SIZE,inode->size);
    write_le32(buf,VMFS_INODE_OFS_MTIME,inode->mtime);
@@ -85,6 +87,7 @@ void vmfs_inode_show(const vmfs_inode_t *inode)
           inode->hb_lock,(inode->hb_lock > 0) ? "LOCKED":"UNLOCKED");
    printf("  - ID          : 0x%8.8x\n",inode->id);
    printf("  - ID2         : 0x%8.8x\n",inode->id2);
+   printf("  - Subdirs     : %u\n",inode->subdirs);
    printf("  - Type        : 0x%8.8x\n",inode->type);
    printf("  - Size        : 0x%8.8"PRIx64"\n",inode->size);
    printf("  - UID/GID     : %d/%d\n",inode->uid,inode->gid);
