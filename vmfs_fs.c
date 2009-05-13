@@ -32,7 +32,7 @@
 
 /* Read a block from the filesystem */
 ssize_t vmfs_fs_read(const vmfs_fs_t *fs,uint32_t blk,off_t offset,
-                      u_char *buf,size_t len)
+                     u_char *buf,size_t len)
 {
    off_t pos;
 
@@ -40,6 +40,18 @@ ssize_t vmfs_fs_read(const vmfs_fs_t *fs,uint32_t blk,off_t offset,
    pos += offset;
 
    return(vmfs_lvm_read(fs->lvm,pos,buf,len));
+}
+
+/* Write a block to the filesystem */
+ssize_t vmfs_fs_write(const vmfs_fs_t *fs,uint32_t blk,off_t offset,
+                      const u_char *buf,size_t len)
+{
+   off_t pos;
+
+   pos  = (uint64_t)blk * vmfs_fs_get_blocksize(fs);
+   pos += offset;
+
+   return(vmfs_lvm_write(fs->lvm,pos,buf,len));
 }
 
 /* Read filesystem information */

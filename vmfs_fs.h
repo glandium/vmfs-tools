@@ -86,7 +86,11 @@ static inline uint64_t vmfs_fs_get_blocksize(const vmfs_fs_t *fs)
 
 /* Read a block from the filesystem */
 ssize_t vmfs_fs_read(const vmfs_fs_t *fs,uint32_t blk,off_t offset,
-                      u_char *buf,size_t len);
+                     u_char *buf,size_t len);
+
+/* Write a block to the filesystem */
+ssize_t vmfs_fs_write(const vmfs_fs_t *fs,uint32_t blk,off_t offset,
+                      const u_char *buf,size_t len);
 
 /* Show FS information */
 void vmfs_fs_show(const vmfs_fs_t *fs);
