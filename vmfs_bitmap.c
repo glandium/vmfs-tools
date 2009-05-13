@@ -136,9 +136,7 @@ int vmfs_bitmap_get_entry(vmfs_file_t *f,const vmfs_bitmap_header_t *bmh,
    addr = vmfs_bitmap_get_area_addr(bmh,area);
    addr += entry_idx * VMFS_BITMAP_ENTRY_SIZE;
 
-   vmfs_file_seek(f,addr,SEEK_SET);
-
-   if (vmfs_file_read(f,buf,VMFS_BITMAP_ENTRY_SIZE) != VMFS_BITMAP_ENTRY_SIZE)
+   if (vmfs_file_pread(f,buf,sizeof(buf),addr) != sizeof(buf))
       return(-1);
 
    vmfs_bme_read(entry,buf,1);
@@ -220,18 +218,21 @@ int vmfs_bitmap_area_find_free_items(vmfs_file_t *f,
                                      vmfs_bitmap_entry_t *entry)
 {
    u_char buf[VMFS_BITMAP_ENTRY_SIZE];
+   off_t pos;
    int i;
 
-   vmfs_file_seek(f,vmfs_bitmap_get_area_addr(bmh,area),SEEK_SET);
+   pos = vmfs_bitmap_get_area_addr(bmh,area);
 
    for(i=0;i<bmh->bmp_entries_per_area;i++) {
-      if (vmfs_file_read(f,buf,sizeof(buf)) != sizeof(buf))
+      if (vmfs_file_pread(f,buf,sizeof(buf),pos) != sizeof(buf))
          break;
 
       vmfs_bme_read(entry,buf,1);
 
       if (entry->free >= num_items)
          return(0);
+
+      pos += sizeof(buf);
    }
 
    return(-1);
@@ -261,16 +262,18 @@ uint32_t vmfs_bitmap_area_allocated_items(vmfs_file_t *f,
    u_char buf[VMFS_BITMAP_ENTRY_SIZE];
    vmfs_bitmap_entry_t entry;
    uint32_t count;
+   off_t pos;
    int i;
 
-   vmfs_file_seek(f,vmfs_bitmap_get_area_addr(bmh,area),SEEK_SET);
+   pos = vmfs_bitmap_get_area_addr(bmh,area);
 
    for(i=0,count=0;i<bmh->bmp_entries_per_area;i++) {
-      if (vmfs_file_read(f,buf,sizeof(buf)) != sizeof(buf))
+      if (vmfs_file_pread(f,buf,sizeof(buf),pos) != sizeof(buf))
          break;
 
       vmfs_bme_read(&entry,buf,0);
       count += entry.total - entry.free;
+      pos += sizeof(buf);
    }
 
    return count;
@@ -300,6 +303,7 @@ int vmfs_bitmap_check(vmfs_bitmap_t *b)
    int i,j,k,errors;
    int bmap_size;
    int bmap_count;
+   off_t pos;
 
    errors      = 0;
    total_items = 0;
@@ -307,10 +311,10 @@ int vmfs_bitmap_check(vmfs_bitmap_t *b)
    entry_id    = 0;
 
    for(i=0;i<b->bmh.area_count;i++) {
-      vmfs_file_seek(b->f,vmfs_bitmap_get_area_addr(&b->bmh,i),SEEK_SET);
+      pos = vmfs_bitmap_get_area_addr(&b->bmh,i);
 
       for(j=0;j<b->bmh.bmp_entries_per_area;j++) {
-         if (vmfs_file_read(b->f,buf,sizeof(buf)) != sizeof(buf))
+         if (vmfs_file_pread(b->f,buf,sizeof(buf),pos) != sizeof(buf))
             break;
 
          vmfs_bme_read(&entry,buf,0);
@@ -359,6 +363,7 @@ int vmfs_bitmap_check(vmfs_bitmap_t *b)
 
          total_items += entry.total;
          entry_id++;
+         pos += sizeof(buf);
       }
    }
 
