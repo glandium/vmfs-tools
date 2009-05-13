@@ -280,22 +280,22 @@ static int cmd_convert_block_id(vmfs_fs_t *fs,int argc,char *argv[])
       
       switch(blk_type) {
          case VMFS_BLK_TYPE_FB:
-            printf("Full-Block, Number=0x%8.8x\n",VMFS_BLK_FB_ITEM(blk_id));
+            printf("Full-Block, Item=0x%8.8x\n",VMFS_BLK_FB_ITEM(blk_id));
             break;
 
          case VMFS_BLK_TYPE_SB:
-            printf("Sub-Block, Number=0x%8.8x, Subgroup=0x%2.2x\n",
-                   VMFS_BLK_SB_ITEM(blk_id),VMFS_BLK_SB_ENTRY(blk_id));
+            printf("Sub-Block, Entry=0x%8.8x, Item=0x%2.2x\n",
+                   VMFS_BLK_SB_ENTRY(blk_id),VMFS_BLK_SB_ITEM(blk_id));
             break;
 
          case VMFS_BLK_TYPE_PB:
-            printf("Pointer-Block, Number=0x%8.8x, Subgroup=0x%2.2x\n",
-                   VMFS_BLK_PB_ITEM(blk_id),VMFS_BLK_PB_ENTRY(blk_id));
+            printf("Pointer-Block, Entry=0x%8.8x, Item=0x%2.2x\n",
+                   VMFS_BLK_PB_ENTRY(blk_id),VMFS_BLK_PB_ITEM(blk_id));
             break;
 
          case VMFS_BLK_TYPE_FD:
-            printf("File Descriptor, Number=0x%8.8x, Subgroup=0x%2.2x\n",
-                   VMFS_BLK_FD_ITEM(blk_id),VMFS_BLK_FD_ENTRY(blk_id));
+            printf("File Descriptor, Entry=0x%4.4x, Item=0x%3.3x\n",
+                   VMFS_BLK_FD_ENTRY(blk_id),VMFS_BLK_FD_ITEM(blk_id));
             break;
 
          default:
