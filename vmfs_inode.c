@@ -213,7 +213,7 @@ int vmfs_inode_stat(const vmfs_inode_t *inode,struct stat *buf)
 {
    memset(buf,0,sizeof(*buf));
    buf->st_mode  = inode->cmode;
-   buf->st_nlink = 1;
+   buf->st_nlink = inode->nlink;
    buf->st_uid   = inode->uid;
    buf->st_gid   = inode->gid;
    buf->st_size  = inode->size;
