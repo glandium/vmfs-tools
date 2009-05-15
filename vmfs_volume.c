@@ -109,10 +109,7 @@ static int vmfs_volinfo_read(vmfs_volinfo_t *vol,int fd)
 {
    DECL_ALIGNED_BUFFER(buf,1024);
 
-   if (lseek(fd,VMFS_VOLINFO_BASE,SEEK_SET) == -1)
-      return(-1);
-
-   if (read(fd,buf,buf_len) != buf_len)
+   if (pread(fd,buf,buf_len,VMFS_VOLINFO_BASE) != buf_len)
       return(-1);
 
    vol->magic = read_le32(buf,VMFS_VOLINFO_OFS_MAGIC);
