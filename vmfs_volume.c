@@ -34,10 +34,7 @@
 static ssize_t vmfs_vol_read_data(const vmfs_volume_t *vol,off_t pos,
                                   u_char *buf,size_t len)
 {
-   if (lseek(vol->fd,pos,SEEK_SET) == -1)
-      return(-1);
-
-   return(read(vol->fd,buf,len));
+   return(pread(vol->fd,buf,len,pos));
 }
 
 /* Read a raw block of data on logical volume */
@@ -53,10 +50,7 @@ ssize_t vmfs_vol_read(const vmfs_volume_t *vol,off_t pos,
 static ssize_t vmfs_vol_write_data(const vmfs_volume_t *vol,off_t pos,
                                    const u_char *buf,size_t len)
 {
-   if (lseek(vol->fd,pos,SEEK_SET) == -1)
-      return(-1);
-
-   return(write(vol->fd,buf,len));
+   return(pwrite(vol->fd,buf,len,pos));
 }
 
 /* Write a raw block of data on logical volume */
