@@ -31,9 +31,8 @@ struct vmfs_fsinfo_raw {
    uuid_t uuid;
    uint32_t _unknown0;
    char label[128];
-   uint32_t _unknown1;
-   uint32_t blocksize;
-   uint32_t _unknown2;
+   uint32_t dev_blocksize;
+   uint64_t blocksize;
    uint32_t ctime; /* ctime? in seconds */
    uint32_t _unknown3;
    uuid_t lvm_uuid;

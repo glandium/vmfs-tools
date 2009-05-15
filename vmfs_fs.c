@@ -73,7 +73,7 @@ static int vmfs_fsinfo_read(vmfs_fs_t *fs)
    fs->fs_info.vol_version = read_le32(buf,VMFS_FSINFO_OFS_VOLVER);
    fs->fs_info.version     = buf[VMFS_FSINFO_OFS_VER];
 
-   fs->fs_info.block_size  = read_le32(buf,VMFS_FSINFO_OFS_BLKSIZE);
+   fs->fs_info.block_size  = read_le64(buf,VMFS_FSINFO_OFS_BLKSIZE);
 
    read_uuid(buf,VMFS_FSINFO_OFS_UUID,&fs->fs_info.uuid);
    fs->fs_info.label = strndup((char *)buf+VMFS_FSINFO_OFS_LABEL,
