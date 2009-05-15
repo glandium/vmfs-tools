@@ -36,7 +36,8 @@ struct vmfs_fsinfo_raw {
    uint32_t ctime; /* ctime? in seconds */
    uint32_t _unknown3;
    uuid_t lvm_uuid;
-   u_char _unknown4[31];
+   u_char _unknown4[24];
+   uint32_t subblock_size;
 } __attribute__((packed));
 
 #define VMFS_FSINFO_OFS_MAGIC    offsetof(struct vmfs_fsinfo_raw, magic)
@@ -46,6 +47,7 @@ struct vmfs_fsinfo_raw {
 #define VMFS_FSINFO_OFS_LABEL    offsetof(struct vmfs_fsinfo_raw, label)
 #define VMFS_FSINFO_OFS_BLKSIZE  offsetof(struct vmfs_fsinfo_raw, blocksize)
 #define VMFS_FSINFO_OFS_LVM_UUID offsetof(struct vmfs_fsinfo_raw, lvm_uuid)
+#define VMFS_FSINFO_OFS_SBSIZE   offsetof(struct vmfs_fsinfo_raw, subblock_size)
 
 #define VMFS_FSINFO_OFS_LABEL_SIZE sizeof(((struct vmfs_fsinfo_raw *)(0))->label)
 
@@ -57,6 +59,7 @@ struct vmfs_fsinfo {
    char *label;
 
    uint64_t block_size;
+   uint32_t subblock_size;
    uuid_t lvm_uuid;
 };
 
