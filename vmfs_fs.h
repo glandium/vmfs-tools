@@ -36,7 +36,9 @@ struct vmfs_fsinfo_raw {
    uint32_t ctime; /* ctime? in seconds */
    uint32_t _unknown3;
    uuid_t lvm_uuid;
-   u_char _unknown4[24];
+   u_char _unknown4[16];
+   uint32_t fdc_header_size;
+   uint32_t fdc_bitmap_count;
    uint32_t subblock_size;
 } __attribute__((packed));
 
@@ -49,6 +51,12 @@ struct vmfs_fsinfo_raw {
 #define VMFS_FSINFO_OFS_LVM_UUID offsetof(struct vmfs_fsinfo_raw, lvm_uuid)
 #define VMFS_FSINFO_OFS_SBSIZE   offsetof(struct vmfs_fsinfo_raw, subblock_size)
 
+#define VMFS_FSINFO_OFS_FDC_HEADER_SIZE \
+   offsetof(struct vmfs_fsinfo_raw, fdc_header_size)
+
+#define VMFS_FSINFO_OFS_FDC_BITMAP_COUNT \
+   offsetof(struct vmfs_fsinfo_raw, fdc_bitmap_count)
+
 #define VMFS_FSINFO_OFS_LABEL_SIZE sizeof(((struct vmfs_fsinfo_raw *)(0))->label)
 
 struct vmfs_fsinfo {
@@ -60,6 +68,10 @@ struct vmfs_fsinfo {
 
    uint64_t block_size;
    uint32_t subblock_size;
+
+   uint32_t fdc_header_size;
+   uint32_t fdc_bitmap_count;
+
    uuid_t lvm_uuid;
 };
 
