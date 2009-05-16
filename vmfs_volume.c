@@ -219,6 +219,12 @@ int vmfs_vol_open(vmfs_volume_t *vol)
       return(-1);
    }
 
+   /* We support only VMFS3 */
+   if (vol->vol_info.version != 3) {
+      fprintf(stderr,"VMFS: Unsupported version %u\n",vol->vol_info.version);
+      return(-1);
+   }
+
    if (vol->is_blkdev && (scsi_get_lun(vol->fd) != vol->vol_info.lun))
       fprintf(stderr,"VMFS: Warning: Lun ID mismatch on %s\n", vol->filename);
 
