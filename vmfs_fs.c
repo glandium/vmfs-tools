@@ -58,34 +58,29 @@ ssize_t vmfs_fs_write(const vmfs_fs_t *fs,uint32_t blk,off_t offset,
 static int vmfs_fsinfo_read(vmfs_fs_t *fs)
 {
    DECL_ALIGNED_BUFFER(buf,512);
+   vmfs_fsinfo_t *fsi = &fs->fs_info;
 
    if (vmfs_lvm_read(fs->lvm,VMFS_FSINFO_BASE,buf,buf_len) != buf_len)
       return(-1);
 
-   fs->fs_info.magic = read_le32(buf,VMFS_FSINFO_OFS_MAGIC);
+   fsi->magic = read_le32(buf,VMFS_FSINFO_OFS_MAGIC);
 
-   if (fs->fs_info.magic != VMFS_FSINFO_MAGIC) {
-      fprintf(stderr,"VMFS FSInfo: invalid magic number 0x%8.8x\n",
-              fs->fs_info.magic);
+   if (fsi->magic != VMFS_FSINFO_MAGIC) {
+      fprintf(stderr,"VMFS FSInfo: invalid magic number 0x%8.8x\n",fsi->magic);
       return(-1);
    }
 
-   fs->fs_info.vol_version = read_le32(buf,VMFS_FSINFO_OFS_VOLVER);
-   fs->fs_info.version     = buf[VMFS_FSINFO_OFS_VER];
+   fsi->vol_version      = read_le32(buf,VMFS_FSINFO_OFS_VOLVER);
+   fsi->version          = buf[VMFS_FSINFO_OFS_VER];
+   fsi->block_size       = read_le64(buf,VMFS_FSINFO_OFS_BLKSIZE);
+   fsi->subblock_size    = read_le32(buf,VMFS_FSINFO_OFS_SBSIZE);
+   fsi->fdc_header_size  = read_le32(buf,VMFS_FSINFO_OFS_FDC_HEADER_SIZE);
+   fsi->fdc_bitmap_count = read_le32(buf,VMFS_FSINFO_OFS_FDC_BITMAP_COUNT);
 
-   fs->fs_info.block_size  = read_le64(buf,VMFS_FSINFO_OFS_BLKSIZE);
-   fs->fs_info.subblock_size = read_le32(buf,VMFS_FSINFO_OFS_SBSIZE);
-
-   fs->fs_info.fdc_header_size = 
-      read_le32(buf,VMFS_FSINFO_OFS_FDC_HEADER_SIZE);
-
-   fs->fs_info.fdc_bitmap_count = 
-      read_le32(buf,VMFS_FSINFO_OFS_FDC_BITMAP_COUNT);
-
-   read_uuid(buf,VMFS_FSINFO_OFS_UUID,&fs->fs_info.uuid);
-   fs->fs_info.label = strndup((char *)buf+VMFS_FSINFO_OFS_LABEL,
-                               VMFS_FSINFO_OFS_LABEL_SIZE);
-   read_uuid(buf,VMFS_FSINFO_OFS_LVM_UUID,&fs->fs_info.lvm_uuid);
+   read_uuid(buf,VMFS_FSINFO_OFS_UUID,&fsi->uuid);
+   fsi->label = strndup((char *)buf+VMFS_FSINFO_OFS_LABEL,
+                        VMFS_FSINFO_OFS_LABEL_SIZE);
+   read_uuid(buf,VMFS_FSINFO_OFS_LVM_UUID,&fsi->lvm_uuid);
 
    return(0);
 }
@@ -151,8 +146,12 @@ static int vmfs_read_fdc_base(vmfs_fs_t *fs)
    off_t fdc_base;
    uint32_t tmp;
 
-   /* Compute position of FDC base: it is located at the first
-      block start after heartbeat information */
+   /* 
+    * Compute position of FDC base: it is located at the first
+    * block after heartbeat information.
+    * When blocksize = 8 Mb, there is free space between heartbeats
+    * and FDC.
+    */
    fdc_base = m_max(VMFS_HB_BASE + VMFS_HB_NUM * VMFS_HB_SIZE,
                     vmfs_fs_get_blocksize(fs));
 
