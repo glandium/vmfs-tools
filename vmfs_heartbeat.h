@@ -47,7 +47,7 @@ struct vmfs_heartbeart_raw {
 
 struct vmfs_heartbeat {
    uint32_t magic;
-   uint64_t position;
+   uint64_t pos;
    uint64_t seq;          /* Sequence number */
    uint64_t uptime;       /* Uptime (in usec) of the locker */
    uuid_t uuid;          /* UUID of the server */
@@ -65,5 +65,14 @@ void vmfs_heartbeat_show(const vmfs_heartbeat_t *hb);
 
 /* Show the active locks */
 int vmfs_heartbeat_show_active(const vmfs_fs_t *fs);
+
+/* Lock an heartbeat given its ID */
+int vmfs_heartbeat_lock(vmfs_fs_t *fs,u_int id,vmfs_heartbeat_t *hb);
+
+/* Unlock an heartbeat */
+int vmfs_heartbeat_unlock(vmfs_fs_t *fs,vmfs_heartbeat_t *hb);
+
+/* Update an heartbeat */
+int vmfs_heartbeat_update(vmfs_fs_t *fs,vmfs_heartbeat_t *hb);
 
 #endif
