@@ -198,7 +198,8 @@ vmfs_volume_t *vmfs_vol_create(const char *filename,vmfs_flags_t flags)
 
    vol->flags = flags;
    fstat(vol->fd,&st);
-   vol->is_blkdev=S_ISBLK(st.st_mode);
+   vol->is_blkdev = S_ISBLK(st.st_mode);
+
    return vol;
 
  err_open:
@@ -228,10 +229,13 @@ int vmfs_vol_open(vmfs_volume_t *vol)
    if (vol->is_blkdev && (scsi_get_lun(vol->fd) != vol->vol_info.lun))
       fprintf(stderr,"VMFS: Warning: Lun ID mismatch on %s\n", vol->filename);
 
+   vmfs_vol_check_reservation(vol);
+
    if (vol->flags.debug_level > 0) {
       vmfs_vol_show(vol);
       printf("VMFS: volume opened successfully\n");
    }
+
    return(0);
 }
 
