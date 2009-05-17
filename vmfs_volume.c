@@ -66,7 +66,7 @@ ssize_t vmfs_vol_write(const vmfs_volume_t *vol,off_t pos,
 int vmfs_vol_reserve(const vmfs_volume_t *vol)
 {
    if (!vol->scsi_reservation)
-      return(-1);
+      return(0);
 
    return(scsi_reserve(vol->fd));
 }
@@ -75,7 +75,7 @@ int vmfs_vol_reserve(const vmfs_volume_t *vol)
 int vmfs_vol_release(const vmfs_volume_t *vol)
 {
    if (!vol->scsi_reservation)
-      return(-1);
+      return(0);
 
    return(scsi_release(vol->fd));
 }
