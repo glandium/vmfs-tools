@@ -149,6 +149,9 @@ int vmfs_heartbeat_unlock(vmfs_fs_t *fs,vmfs_heartbeat_t *hb)
 {
    DECL_ALIGNED_BUFFER(buf,VMFS_HB_SIZE);
 
+   if (hb->magic != VMFS_HB_MAGIC_ON)
+      return(-1);
+
    hb->magic = VMFS_HB_MAGIC_OFF;
    hb->uptime = 0;
    uuid_clear(hb->uuid);
@@ -161,6 +164,9 @@ int vmfs_heartbeat_unlock(vmfs_fs_t *fs,vmfs_heartbeat_t *hb)
 int vmfs_heartbeat_update(vmfs_fs_t *fs,vmfs_heartbeat_t *hb)
 {  
    DECL_ALIGNED_BUFFER(buf,VMFS_HB_SIZE);
+
+   if (hb->magic != VMFS_HB_MAGIC_ON)
+      return(-1);
 
    hb->uptime = vmfs_host_get_uptime();
    vmfs_heartbeat_write(hb,buf);
