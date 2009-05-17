@@ -238,8 +238,7 @@ int vmfs_bitmap_area_find_free_items(vmfs_bitmap_t *b,
 }
 
 /* Find a bitmap entry with at least "num_items" free (scan all areas) */
-int vmfs_bitmap_find_free_items(vmfs_bitmap_t *b,
-                                u_int area,u_int num_items,
+int vmfs_bitmap_find_free_items(vmfs_bitmap_t *b,u_int num_items,
                                 vmfs_bitmap_entry_t *entry)
 {
    u_int i;
