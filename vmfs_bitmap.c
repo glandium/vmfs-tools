@@ -64,6 +64,8 @@ int vmfs_bme_read(vmfs_bitmap_entry_t *bme,const u_char *buf,int copy_bitmap)
    bme->magic    = read_le32(buf,VMFS_BME_OFS_MAGIC);
    bme->pos      = read_le64(buf,VMFS_BME_OFS_POS);
    bme->hb_pos   = read_le64(buf,VMFS_BME_OFS_HB_POS);
+   bme->hb_seq   = read_le64(buf,VMFS_BME_OFS_HB_SEQ);
+   bme->obj_seq  = read_le64(buf,VMFS_BME_OFS_OBJ_SEQ);
    bme->hb_lock  = read_le32(buf,VMFS_BME_OFS_HB_LOCK);
    bme->id       = read_le32(buf,VMFS_BME_OFS_ID);
    bme->total    = read_le32(buf,VMFS_BME_OFS_TOTAL);

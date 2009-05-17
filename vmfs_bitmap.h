@@ -40,7 +40,8 @@ struct vmfs_bitmap_entry_raw {
    uint32_t magic;            /* Magic number */
    uint64_t pos;              /* Position in the volume */
    uint64_t hb_pos;           /* Heartbeat position */
-   u_char _unknown0[16];
+   uint64_t hb_seq;           /* Heartbeat sequence */
+   uint64_t obj_seq;          /* Object sequence */
    uint32_t hb_lock;          /* Heartbeat lock flag */
    uuid_t hb_uuid;            /* UUID of locking server */
    u_char _unknown1[0x1c8];
@@ -54,6 +55,8 @@ struct vmfs_bitmap_entry_raw {
 #define VMFS_BME_OFS_MAGIC    offsetof(struct vmfs_bitmap_entry_raw, magic)
 #define VMFS_BME_OFS_POS      offsetof(struct vmfs_bitmap_entry_raw, pos)
 #define VMFS_BME_OFS_HB_POS   offsetof(struct vmfs_bitmap_entry_raw, hb_pos)
+#define VMFS_BME_OFS_HB_SEQ   offsetof(struct vmfs_bitmap_entry_raw, hb_seq)
+#define VMFS_BME_OFS_OBJ_SEQ  offsetof(struct vmfs_bitmap_entry_raw, obj_seq)
 #define VMFS_BME_OFS_HB_LOCK  offsetof(struct vmfs_bitmap_entry_raw, hb_lock)
 #define VMFS_BME_OFS_HB_UUID  offsetof(struct vmfs_bitmap_entry_raw, hb_uuid)
 #define VMFS_BME_OFS_ID       offsetof(struct vmfs_bitmap_entry_raw, id)
@@ -66,6 +69,8 @@ struct vmfs_bitmap_entry {
    uint32_t magic;
    uint64_t pos;
    uint64_t hb_pos;
+   uint64_t hb_seq;
+   uint64_t obj_seq;
    uint32_t hb_lock;
    uuid_t hb_uuid;
    uint32_t id;

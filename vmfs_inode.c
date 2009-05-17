@@ -29,6 +29,8 @@ int vmfs_inode_read(vmfs_inode_t *inode,const u_char *buf)
    inode->magic     = read_le32(buf,VMFS_INODE_OFS_MAGIC);
    inode->position  = read_le64(buf,VMFS_INODE_OFS_POS);
    inode->hb_pos    = read_le64(buf,VMFS_INODE_OFS_HB_POS);
+   inode->hb_seq    = read_le64(buf,VMFS_INODE_OFS_HB_SEQ);
+   inode->obj_seq   = read_le64(buf,VMFS_INODE_OFS_OBJ_SEQ);
    inode->hb_lock   = read_le32(buf,VMFS_INODE_OFS_HB_LOCK);
    inode->id        = read_le32(buf,VMFS_INODE_OFS_ID);
    inode->id2       = read_le32(buf,VMFS_INODE_OFS_ID2);
@@ -84,30 +86,32 @@ void vmfs_inode_show(const vmfs_inode_t *inode)
 {
    char tbuf[64];
 
-   printf("  - Magic       : 0x%8.8x\n",inode->magic);
-   printf("  - Position    : 0x%"PRIx64"\n",inode->position);
-   printf("  - HB Position : 0x%"PRIx64"\n",inode->hb_pos);
-   printf("  - HB Lock     : %d (%s)\n",
+   printf("  - Magic        : 0x%8.8x\n",inode->magic);
+   printf("  - Position     : 0x%"PRIx64"\n",inode->position);
+   printf("  - HB Position  : 0x%"PRIx64"\n",inode->hb_pos);
+   printf("  - HB Lock      : %d (%s)\n",
           inode->hb_lock,(inode->hb_lock > 0) ? "LOCKED":"UNLOCKED");
-   printf("  - ID          : 0x%8.8x\n",inode->id);
-   printf("  - ID2         : 0x%8.8x\n",inode->id2);
-   printf("  - Links       : %u\n",inode->nlink);
-   printf("  - Type        : 0x%8.8x\n",inode->type);
-   printf("  - Size        : 0x%8.8"PRIx64"\n",inode->size);
-   printf("  - Block size  : 0x%"PRIx64"\n",inode->blk_size);
-   printf("  - Block count : 0x%"PRIx64"\n",inode->blk_count);
-   printf("  - UID/GID     : %d/%d\n",inode->uid,inode->gid);
-   printf("  - Mode        : 0%o (%s)\n",
+   printf("  - HB Sequence  : 0x%"PRIx64"\n",inode->hb_seq);
+   printf("  - Obj Sequence : 0x%"PRIx64"\n",inode->obj_seq);
+   printf("  - ID           : 0x%8.8x\n",inode->id);
+   printf("  - ID2          : 0x%8.8x\n",inode->id2);
+   printf("  - Links        : %u\n",inode->nlink);
+   printf("  - Type         : 0x%8.8x\n",inode->type);
+   printf("  - Size         : 0x%8.8"PRIx64"\n",inode->size);
+   printf("  - Block size   : 0x%"PRIx64"\n",inode->blk_size);
+   printf("  - Block count  : 0x%"PRIx64"\n",inode->blk_count);
+   printf("  - UID/GID      : %d/%d\n",inode->uid,inode->gid);
+   printf("  - Mode         : 0%o (%s)\n",
           inode->mode,m_fmode_to_str(inode->mode,tbuf));
-   printf("  - CMode       : 0%o (%s)\n",
+   printf("  - CMode        : 0%o (%s)\n",
           inode->cmode,m_fmode_to_str(inode->cmode,tbuf));
 
-   printf("  - Access Time : %s\n",m_ctime(&inode->atime,tbuf,sizeof(tbuf)));
-   printf("  - Modify Time : %s\n",m_ctime(&inode->mtime,tbuf,sizeof(tbuf)));
-   printf("  - Change Time : %s\n",m_ctime(&inode->ctime,tbuf,sizeof(tbuf)));
+   printf("  - Access Time  : %s\n",m_ctime(&inode->atime,tbuf,sizeof(tbuf)));
+   printf("  - Modify Time  : %s\n",m_ctime(&inode->mtime,tbuf,sizeof(tbuf)));
+   printf("  - Change Time  : %s\n",m_ctime(&inode->ctime,tbuf,sizeof(tbuf)));
 
    if (inode->type == VMFS_FILE_TYPE_RDM) {
-      printf("  - RDM ID      : 0x%8.8x\n",inode->rdm_id);
+      printf("  - RDM ID       : 0x%8.8x\n",inode->rdm_id);
    }
 }
 

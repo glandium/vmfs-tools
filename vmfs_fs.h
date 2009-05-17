@@ -94,6 +94,7 @@ struct vmfs_fs {
    /* Heartbeat used to lock meta-data */
    vmfs_heartbeat_t hb;
    u_int hb_id;
+   uint64_t hb_seq;
    u_int hb_refcount;
 };
 

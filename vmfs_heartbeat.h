@@ -50,7 +50,7 @@ struct vmfs_heartbeat {
    uint64_t pos;
    uint64_t seq;          /* Sequence number */
    uint64_t uptime;       /* Uptime (in usec) of the locker */
-   uuid_t uuid;          /* UUID of the server */
+   uuid_t uuid;           /* UUID of the server */
    uint32_t journal_blk;  /* Journal block */
 };
 
