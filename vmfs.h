@@ -55,5 +55,6 @@ typedef union vmfs_flags vmfs_flags_t __attribute__((transparent_union));
 #include "vmfs_volume.h"
 #include "vmfs_fs.h"
 #include "vmfs_lvm.h"
+#include "vmfs_host.h"
 
 #endif

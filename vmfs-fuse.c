@@ -119,6 +119,8 @@ int main(int argc, char *argv[])
    struct vmfs_fuse_opts opts = { 0, };
    int err = -1;
 
+   vmfs_host_init();
+
    if (!(opts.lvm = vmfs_lvm_create(0))) {
       fprintf(stderr,"Unable to create LVM structure\n");
       goto cleanup;

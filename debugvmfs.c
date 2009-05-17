@@ -395,6 +395,13 @@ static int cmd_show_bitmap_item(vmfs_fs_t *fs,int argc,char *argv[])
    return(0);
 }
 
+/* Show host information */
+static int cmd_show_host(vmfs_fs_t *fs,int argc,char *argv[])
+{
+   vmfs_host_show_info();
+   return(0);
+}
+
 struct cmd {
    char *name;
    char *description;
@@ -420,6 +427,7 @@ struct cmd cmd_array[] = {
    { "convert_block_id", "Convert block ID", cmd_convert_block_id },
    { "read_block", "Read a block", cmd_read_block },
    { "show_bitmap_item", "Show a bitmap item", cmd_show_bitmap_item },
+   { "show_host", "Show host information", cmd_show_host },
    { "shell", "Opens a shell", cmd_shell },
    { NULL, NULL },
 };
@@ -510,6 +518,8 @@ int main(int argc,char *argv[])
       show_usage(argv[0]);
       return(0);
    }
+
+   vmfs_host_init();
 
    if (!(lvm = vmfs_lvm_create(0))) {
       fprintf(stderr,"Unable to create LVM structure\n");
