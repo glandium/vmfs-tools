@@ -75,4 +75,7 @@ int vmfs_heartbeat_unlock(vmfs_fs_t *fs,vmfs_heartbeat_t *hb);
 /* Update an heartbeat */
 int vmfs_heartbeat_update(vmfs_fs_t *fs,vmfs_heartbeat_t *hb);
 
+/* Acquire an heartbeat (ID is chosen automatically) */
+int vmfs_heartbeat_acquire(vmfs_fs_t *fs);
+
 #endif

@@ -90,6 +90,11 @@ struct vmfs_fs {
 
    /* Root directory */
    vmfs_file_t *root_dir;
+
+   /* Heartbeat used to lock meta-data */
+   vmfs_heartbeat_t hb;
+   u_int hb_id;
+   u_int hb_refcount;
 };
 
 /* Get block size of a volume */

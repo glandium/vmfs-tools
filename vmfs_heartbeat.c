@@ -153,7 +153,6 @@ int vmfs_heartbeat_unlock(vmfs_fs_t *fs,vmfs_heartbeat_t *hb)
       return(-1);
 
    hb->magic = VMFS_HB_MAGIC_OFF;
-   hb->uptime = 0;
    uuid_clear(hb->uuid);
    vmfs_heartbeat_write(hb,buf);
 
@@ -172,4 +171,41 @@ int vmfs_heartbeat_update(vmfs_fs_t *fs,vmfs_heartbeat_t *hb)
    vmfs_heartbeat_write(hb,buf);
 
    return((vmfs_lvm_write(fs->lvm,hb->pos,buf,buf_len) == buf_len) ? 0 : -1);
+}
+
+/* Acquire an heartbeat (ID is chosen automatically) */
+int vmfs_heartbeat_acquire(vmfs_fs_t *fs)
+{   
+   DECL_ALIGNED_BUFFER(buf,VMFS_HB_SIZE);
+   vmfs_heartbeat_t hb;
+   off_t pos;
+   int i;
+
+   /* Try to reuse the current ID */
+   if (!vmfs_heartbeat_lock(fs,fs->hb_id,&fs->hb))
+      return(0);
+
+   /* 
+    * Heartbeat is taken by someone else, find a new one.
+    * To avoid high contention with SCSI reservation, we first read
+    * directly the heartbeat info, and if the heartbeat is not taken, 
+    * we try to acquire it definitely with reservation.
+    */
+   for(i=0;i<VMFS_HB_NUM;i++) {
+      pos = VMFS_HB_BASE + (i * VMFS_HB_SIZE);
+
+      if (vmfs_lvm_read(fs->lvm,pos,buf,buf_len) != buf_len)
+         return(-1);
+
+      vmfs_heartbeat_read(&hb,buf);
+      if (hb.magic != VMFS_HB_MAGIC_OFF)
+         continue;
+
+      if (!vmfs_heartbeat_lock(fs,i,&fs->hb)) {
+         fs->hb_id = i;
+         return(0);
+      }
+   }
+
+   return(-1);
 }
