@@ -18,6 +18,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <string.h>
 #include <errno.h>
 #include <sys/types.h>
 #include <scsi/scsi.h>
@@ -39,6 +40,7 @@ int scsi_reserve(int fd)
    u_char sense_buffer[32];
    u_char cmd[SCSI_CMD_LEN_RESERVE] = { SCSI_CMD_RESERVE, 0, 0, 0, 0, 0 };
 
+   memset(&io_hdr, 0, sizeof(struct sg_io_hdr));
    io_hdr.interface_id    = 'S';
    io_hdr.cmd_len         = sizeof(cmd);
    io_hdr.mx_sb_len       = sizeof(sense_buffer);
@@ -62,6 +64,7 @@ int scsi_release(int fd)
    u_char sense_buffer[32];
    u_char cmd[SCSI_CMD_LEN_RELEASE] = { SCSI_CMD_RELEASE, 0, 0, 0, 0, 0 };
 
+   memset(&io_hdr, 0, sizeof(struct sg_io_hdr));
    io_hdr.interface_id    = 'S';
    io_hdr.cmd_len         = sizeof(cmd);
    io_hdr.mx_sb_len       = sizeof(sense_buffer);
