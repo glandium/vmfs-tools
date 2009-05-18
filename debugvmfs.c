@@ -541,6 +541,7 @@ int main(int argc,char *argv[])
    vmfs_fs_t *fs;
    struct cmd *cmd = NULL;
    int arg, i, ret;
+   vmfs_flags_t flags;
 
    if (argc < 3) {
       show_usage(argv[0]);
@@ -560,7 +561,13 @@ int main(int argc,char *argv[])
 
    vmfs_host_init();
 
-   if (!(lvm = vmfs_lvm_create(0))) {
+   flags.packed = 0;
+
+#ifdef VMFS_WRITE
+   flags.read_write = 1;
+#endif
+
+   if (!(lvm = vmfs_lvm_create(flags))) {
       fprintf(stderr,"Unable to create LVM structure\n");
       exit(EXIT_FAILURE);
    }
