@@ -60,4 +60,12 @@ int vmfs_metadata_hdr_write(const vmfs_metadata_hdr_t *mdh,u_char *buf);
 /* Show a metadata header */
 void vmfs_metadata_hdr_show(const vmfs_metadata_hdr_t *mdh);
 
+/* Lock and read metadata at specified position */
+int vmfs_metadata_lock(vmfs_fs_t *fs,off_t pos,u_char *buf,size_t buf_len,
+                       vmfs_metadata_hdr_t *mdh);
+
+/* Unlock metadata */
+int vmfs_metadata_unlock(vmfs_fs_t *fs,off_t pos,u_char *buf,size_t buf_len,
+                         vmfs_metadata_hdr_t *mdh);
+
 #endif

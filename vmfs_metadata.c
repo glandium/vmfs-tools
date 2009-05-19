@@ -61,3 +61,69 @@ void vmfs_metadata_hdr_show(const vmfs_metadata_hdr_t *mdh)
    printf("  - HB Sequence  : 0x%"PRIx64"\n",mdh->hb_seq);
    printf("  - Obj Sequence : 0x%"PRIx64"\n",mdh->obj_seq);
 }
+
+/* Lock and read metadata at specified position */
+int vmfs_metadata_lock(vmfs_fs_t *fs,off_t pos,u_char *buf,size_t buf_len,
+                       vmfs_metadata_hdr_t *mdh)
+{
+   int res;
+
+   if (vmfs_lvm_reserve(fs->lvm,pos) == -1) {
+      fprintf(stderr,"VMFS: unable to reserve volume.\n");
+      return(-1);
+   }
+
+   /* Read the complete metadata for the caller */
+   if (vmfs_lvm_read(fs->lvm,pos,buf,buf_len) != buf_len) {
+      fprintf(stderr,"VMFS: unable to read metadata.\n");
+      goto done;
+   }
+
+   vmfs_metadata_hdr_read(mdh,buf);
+   
+   if (mdh->hb_lock != 0)
+      goto done;
+
+   /* Update metadata information */
+   mdh->obj_seq++;
+   mdh->hb_lock = 1;
+   mdh->hb_pos  = fs->hb.pos;
+   mdh->hb_seq  = fs->hb_seq;
+   uuid_copy(mdh->hb_uuid,fs->hb.uuid);
+   vmfs_metadata_hdr_write(mdh,buf);
+
+   /* Rewrite the metadata header only */
+   if (vmfs_lvm_write(fs->lvm,pos,buf,VMFS_METADATA_HDR_SIZE) 
+       != VMFS_METADATA_HDR_SIZE)
+   {
+      fprintf(stderr,"VMFS: unable to write metadata header.\n");
+      goto done;
+   }
+
+   res = 0;
+ done:
+   vmfs_lvm_release(fs->lvm,pos);
+   return(res);
+}
+
+/* Unlock metadata */
+int vmfs_metadata_unlock(vmfs_fs_t *fs,off_t pos,u_char *buf,size_t buf_len,
+                         vmfs_metadata_hdr_t *mdh)
+{
+   if (buf_len < VMFS_METADATA_HDR_SIZE)
+      return(-1);
+
+   mdh->hb_lock = 0;
+   uuid_clear(mdh->hb_uuid);
+   vmfs_metadata_hdr_write(mdh,buf);
+
+   /* Rewrite the metadata header only */
+   if (vmfs_lvm_write(fs->lvm,pos,buf,VMFS_METADATA_HDR_SIZE) 
+       != VMFS_METADATA_HDR_SIZE) 
+   {
+      fprintf(stderr,"VMFS: unable to write metadata header.\n");
+      return(-1);
+   }
+
+   return(0);
+}
