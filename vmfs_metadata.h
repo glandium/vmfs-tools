@@ -23,14 +23,14 @@
 #define VMFS_METADATA_HDR_SIZE  512
 
 struct vmfs_metadata_hdr_raw {
-   uint32_t magic;
-   uint64_t pos;
-   uint64_t hb_pos;
-   uint64_t hb_seq;
-   uint64_t obj_seq;
-   uint32_t hb_lock;
-   uuid_t hb_uuid;
-   u_char pad1[0x1c8];
+   uint32_t magic;         /* Magic number */
+   uint64_t pos;           /* Position in the volume */
+   uint64_t hb_pos;        /* Heartbeat position */
+   uint64_t hb_seq;        /* Heartbeat sequence */
+   uint64_t obj_seq;       /* Object sequence */
+   uint32_t hb_lock;       /* Heartbeat lock flag */
+   uuid_t hb_uuid;         /* UUID of locking server */
+   u_char pad1[0x1c8];     /* Padding/unknown */
 } __attribute__((packed));
 
 #define VMFS_MDH_OFS_MAGIC    offsetof(struct vmfs_metadata_hdr_raw, magic)
