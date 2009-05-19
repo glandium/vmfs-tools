@@ -61,22 +61,16 @@ void vmfs_bmh_show(const vmfs_bitmap_header_t *bmh)
 /* Read a bitmap entry */
 int vmfs_bme_read(vmfs_bitmap_entry_t *bme,const u_char *buf,int copy_bitmap)
 {
-   bme->magic    = read_le32(buf,VMFS_BME_OFS_MAGIC);
-   bme->pos      = read_le64(buf,VMFS_BME_OFS_POS);
-   bme->hb_pos   = read_le64(buf,VMFS_BME_OFS_HB_POS);
-   bme->hb_seq   = read_le64(buf,VMFS_BME_OFS_HB_SEQ);
-   bme->obj_seq  = read_le64(buf,VMFS_BME_OFS_OBJ_SEQ);
-   bme->hb_lock  = read_le32(buf,VMFS_BME_OFS_HB_LOCK);
-   bme->id       = read_le32(buf,VMFS_BME_OFS_ID);
-   bme->total    = read_le32(buf,VMFS_BME_OFS_TOTAL);
-   bme->free     = read_le32(buf,VMFS_BME_OFS_FREE);
-   bme->ffree    = read_le32(buf,VMFS_BME_OFS_FFREE);
+   vmfs_metadata_hdr_read(&bme->mdh,buf);
+   bme->id     = read_le32(buf,VMFS_BME_OFS_ID);
+   bme->total  = read_le32(buf,VMFS_BME_OFS_TOTAL);
+   bme->free   = read_le32(buf,VMFS_BME_OFS_FREE);
+   bme->ffree  = read_le32(buf,VMFS_BME_OFS_FFREE);
 
    if (copy_bitmap) {
       memcpy(bme->bitmap,&buf[VMFS_BME_OFS_BITMAP],(bme->total+7)/8);
    }
 
-   read_uuid(buf,VMFS_BME_OFS_HB_UUID,&bme->hb_uuid);
    return(0);
 }
 
@@ -314,7 +308,7 @@ int vmfs_bitmap_check(vmfs_bitmap_t *b)
 
          vmfs_bme_read(&entry,buf,0);
 
-         if (entry.magic == 0)
+         if (entry.mdh.magic == 0)
             goto done;
 
          /* check the entry ID */
@@ -325,11 +319,11 @@ int vmfs_bitmap_check(vmfs_bitmap_t *b)
          
          /* check the magic number */
          if (magic == 0) {
-            magic = entry.magic;
+            magic = entry.mdh.magic;
          } else {
-            if (entry.magic != magic) {
+            if (entry.mdh.magic != magic) {
                printf("Entry 0x%x has an incorrect magic id (0x%x)\n",
-                      entry_id,entry.magic);
+                      entry_id,entry.mdh.magic);
                errors++;
             }
          }
