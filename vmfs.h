@@ -23,6 +23,7 @@ typedef struct vmfs_volinfo vmfs_volinfo_t;
 typedef struct vmfs_fsinfo vmfs_fsinfo_t;
 typedef struct vmfs_lvminfo vmfs_lvminfo_t;
 typedef struct vmfs_heartbeat vmfs_heartbeat_t;
+typedef struct vmfs_metadata_hdr vmfs_metadata_hdr_t;
 typedef struct vmfs_bitmap_header vmfs_bitmap_header_t;
 typedef struct vmfs_bitmap_entry  vmfs_bitmap_entry_t;
 typedef struct vmfs_bitmap vmfs_bitmap_t;
@@ -47,6 +48,7 @@ typedef union vmfs_flags vmfs_flags_t __attribute__((transparent_union));
 
 #include "utils.h"
 #include "vmfs_heartbeat.h"
+#include "vmfs_metadata.h"
 #include "vmfs_block.h"
 #include "vmfs_bitmap.h"
 #include "vmfs_inode.h"
