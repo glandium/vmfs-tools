@@ -66,8 +66,13 @@ void vmfs_metadata_hdr_show(const vmfs_metadata_hdr_t *mdh)
 int vmfs_metadata_lock(vmfs_fs_t *fs,off_t pos,u_char *buf,size_t buf_len,
                        vmfs_metadata_hdr_t *mdh)
 {
-   int res;
+   int res = -1;
 
+   /* We must have an active heartbeat to lock metadata */
+   if (!vmfs_heartbeat_active(&fs->hb))
+      return(-1);
+
+   /* Reserve volume */
    if (vmfs_lvm_reserve(fs->lvm,pos) == -1) {
       fprintf(stderr,"VMFS: unable to reserve volume.\n");
       return(-1);
