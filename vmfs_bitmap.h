@@ -72,6 +72,9 @@ void vmfs_bmh_show(const vmfs_bitmap_header_t *bmh);
 /* Read a bitmap entry */
 int vmfs_bme_read(vmfs_bitmap_entry_t *bme,const u_char *buf,int copy_bitmap);
 
+/* Write a bitmap entry */
+int vmfs_bme_write(const vmfs_bitmap_entry_t *bme,u_char *buf);
+
 /* Read a bitmap entry given a block id */
 int vmfs_bitmap_get_entry(vmfs_bitmap_t *b,u_int blk,
                           vmfs_bitmap_entry_t *entry);

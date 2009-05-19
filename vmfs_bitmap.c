@@ -74,6 +74,18 @@ int vmfs_bme_read(vmfs_bitmap_entry_t *bme,const u_char *buf,int copy_bitmap)
    return(0);
 }
 
+/* Write a bitmap entry */
+int vmfs_bme_write(const vmfs_bitmap_entry_t *bme,u_char *buf)
+{
+   vmfs_metadata_hdr_write(&bme->mdh,buf);
+   write_le32(buf,VMFS_BME_OFS_ID,bme->id);
+   write_le32(buf,VMFS_BME_OFS_TOTAL,bme->total);
+   write_le32(buf,VMFS_BME_OFS_FREE,bme->free);
+   write_le32(buf,VMFS_BME_OFS_FFREE,bme->ffree);
+   memcpy(&buf[VMFS_BME_OFS_BITMAP],bme->bitmap,(bme->total+7)/8);
+   return(0);
+}
+
 /* Get number of items per area */
 static inline u_int
 vmfs_bitmap_get_items_per_area(const vmfs_bitmap_header_t *bmh,u_int id)
