@@ -87,11 +87,11 @@ int vmfs_heartbeat_show_active(const vmfs_fs_t *fs)
 
       vmfs_heartbeat_read(&hb,buf);
       
-      if (hb.magic == VMFS_HB_MAGIC_ON) {
+      if (vmfs_heartbeat_active(&hb)) {
          vmfs_heartbeat_show(&hb);
          count++;
       } else if (hb.magic != VMFS_HB_MAGIC_OFF) {
-         fprintf(stderr,"VMFS: unable to read heartbeat info.\n");
+         fprintf(stderr,"VMFS: invalid heartbeat info.\n");
          break;
       }
 
@@ -125,7 +125,7 @@ int vmfs_heartbeat_lock(vmfs_fs_t *fs,u_int id,vmfs_heartbeat_t *hb)
 
    vmfs_heartbeat_read(hb,buf);
    
-   if (hb->magic != VMFS_HB_MAGIC_OFF)
+   if (vmfs_heartbeat_active(hb))
       goto done;
 
    hb->magic = VMFS_HB_MAGIC_ON;
@@ -149,7 +149,7 @@ int vmfs_heartbeat_unlock(vmfs_fs_t *fs,vmfs_heartbeat_t *hb)
 {
    DECL_ALIGNED_BUFFER(buf,VMFS_HB_SIZE);
 
-   if (hb->magic != VMFS_HB_MAGIC_ON)
+   if (!vmfs_heartbeat_active(hb))
       return(-1);
 
    hb->magic = VMFS_HB_MAGIC_OFF;
@@ -164,7 +164,7 @@ int vmfs_heartbeat_update(vmfs_fs_t *fs,vmfs_heartbeat_t *hb)
 {  
    DECL_ALIGNED_BUFFER(buf,VMFS_HB_SIZE);
 
-   if (hb->magic != VMFS_HB_MAGIC_ON)
+   if (!vmfs_heartbeat_active(hb))
       return(-1);
 
    hb->uptime = vmfs_host_get_uptime();
@@ -198,7 +198,8 @@ int vmfs_heartbeat_acquire(vmfs_fs_t *fs)
          return(-1);
 
       vmfs_heartbeat_read(&hb,buf);
-      if (hb.magic != VMFS_HB_MAGIC_OFF)
+
+      if (vmfs_heartbeat_active(&hb))
          continue;
 
       if (!vmfs_heartbeat_lock(fs,i,&fs->hb)) {

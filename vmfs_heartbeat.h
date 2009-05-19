@@ -19,6 +19,7 @@
 #define VMFS_HEARTBEAT_H
 
 #include <stddef.h>
+#include <stdbool.h>
 
 #define VMFS_HB_BASE  0x0300000
 
@@ -53,6 +54,11 @@ struct vmfs_heartbeat {
    uuid_t uuid;           /* UUID of the server */
    uint32_t journal_blk;  /* Journal block */
 };
+
+static inline bool vmfs_heartbeat_active(vmfs_heartbeat_t *hb)
+{
+   return(hb->magic == VMFS_HB_MAGIC_ON);
+}
 
 /* Read a heartbeart info */
 int vmfs_heartbeat_read(vmfs_heartbeat_t *hb,const u_char *buf);
