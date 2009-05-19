@@ -65,6 +65,8 @@ int vmfs_dirent_search(vmfs_file_t *dir_entry,const char *name,
 
       if (!strcmp(rec->name,name))
          return(1);
+
+      free(rec->name);
    }
 
    return(0);

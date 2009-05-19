@@ -1,3 +1,5 @@
 - Check if we want to read/update separately metadata header from the metadata
   itself (for example: vmfs_inode_read/vmfs_inode_write)
 - Add locking/unlocking/update functions for metadata headers
+- Avoid strndup() in vmfs_dirent_read() because it causes too many useless 
+  malloc/free in vmfs_dirent_search
