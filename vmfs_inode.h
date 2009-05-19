@@ -30,7 +30,7 @@ struct vmfs_inode_raw {
    uint32_t id2;              /* seems to be VMFS_BLK_FD_ITEM(id) + 1 */
    uint32_t nlink;
    uint32_t type;
-   uint32_t _unknown3;
+   uint32_t _unknown1;
    uint64_t size;
    uint64_t blk_size;
    uint64_t blk_count;
@@ -40,7 +40,7 @@ struct vmfs_inode_raw {
    uint32_t uid;
    uint32_t gid;
    uint32_t mode;
-   u_char _unknown5[444];
+   u_char _unknown2[444];
    union {
       uint32_t blocks[VMFS_INODE_BLK_COUNT];
       uint32_t rdm_id;
