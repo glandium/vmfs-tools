@@ -25,14 +25,7 @@
 #define VMFS_INODE_BLK_COUNT      0x100
 
 struct vmfs_inode_raw {
-   uint32_t magic;
-   uint64_t pos;
-   uint64_t hb_pos;
-   uint64_t hb_seq;
-   uint64_t obj_seq;
-   uint32_t hb_lock;
-   uuid_t hb_uuid;
-   u_char _unknown1[456];
+   struct vmfs_metadata_hdr_raw mdh;
    uint32_t id;
    uint32_t id2;              /* seems to be VMFS_BLK_FD_ITEM(id) + 1 */
    uint32_t nlink;
@@ -54,13 +47,6 @@ struct vmfs_inode_raw {
    };
 } __attribute__((packed));
 
-#define VMFS_INODE_OFS_MAGIC      offsetof(struct vmfs_inode_raw, magic)
-#define VMFS_INODE_OFS_POS        offsetof(struct vmfs_inode_raw, pos)
-#define VMFS_INODE_OFS_HB_POS     offsetof(struct vmfs_inode_raw, hb_pos)
-#define VMFS_INODE_OFS_HB_SEQ     offsetof(struct vmfs_inode_raw, hb_seq)
-#define VMFS_INODE_OFS_OBJ_SEQ    offsetof(struct vmfs_inode_raw, obj_seq)
-#define VMFS_INODE_OFS_HB_LOCK    offsetof(struct vmfs_inode_raw, hb_lock)
-#define VMFS_INODE_OFS_HB_UUID    offsetof(struct vmfs_inode_raw, hb_uuid)
 #define VMFS_INODE_OFS_ID         offsetof(struct vmfs_inode_raw, id)
 #define VMFS_INODE_OFS_ID2        offsetof(struct vmfs_inode_raw, id2)
 #define VMFS_INODE_OFS_NLINK      offsetof(struct vmfs_inode_raw, nlink)
@@ -79,13 +65,7 @@ struct vmfs_inode_raw {
 #define VMFS_INODE_OFS_RDM_ID     offsetof(struct vmfs_inode_raw, rdm_id)
 
 struct vmfs_inode {
-   uint32_t magic;
-   uint64_t position;
-   uint64_t hb_pos;
-   uint64_t hb_seq;
-   uint64_t obj_seq;
-   uint32_t hb_lock;
-   uuid_t  hb_uuid;
+   vmfs_metadata_hdr_t mdh;
    uint32_t id,id2;
    uint32_t nlink;
    uint32_t type;

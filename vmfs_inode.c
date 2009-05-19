@@ -26,12 +26,7 @@
 /* Read an inode */
 int vmfs_inode_read(vmfs_inode_t *inode,const u_char *buf)
 {
-   inode->magic     = read_le32(buf,VMFS_INODE_OFS_MAGIC);
-   inode->position  = read_le64(buf,VMFS_INODE_OFS_POS);
-   inode->hb_pos    = read_le64(buf,VMFS_INODE_OFS_HB_POS);
-   inode->hb_seq    = read_le64(buf,VMFS_INODE_OFS_HB_SEQ);
-   inode->obj_seq   = read_le64(buf,VMFS_INODE_OFS_OBJ_SEQ);
-   inode->hb_lock   = read_le32(buf,VMFS_INODE_OFS_HB_LOCK);
+   vmfs_metadata_hdr_read(&inode->mdh,buf);
    inode->id        = read_le32(buf,VMFS_INODE_OFS_ID);
    inode->id2       = read_le32(buf,VMFS_INODE_OFS_ID2);
    inode->nlink     = read_le32(buf,VMFS_INODE_OFS_NLINK);
@@ -49,8 +44,6 @@ int vmfs_inode_read(vmfs_inode_t *inode,const u_char *buf)
    /* "corrected" mode */
    inode->cmode    = inode->mode | vmfs_file_type2mode(inode->type);
 
-   read_uuid(buf,VMFS_INODE_OFS_HB_UUID,&inode->hb_uuid);
-
    if (inode->type == VMFS_FILE_TYPE_RDM) {
       inode->rdm_id = read_le32(buf,VMFS_INODE_OFS_RDM_ID);
    }
@@ -61,10 +54,7 @@ int vmfs_inode_read(vmfs_inode_t *inode,const u_char *buf)
 /* Write an inode */
 int vmfs_inode_write(const vmfs_inode_t *inode,u_char *buf)
 {
-   write_le32(buf,VMFS_INODE_OFS_MAGIC,inode->magic);
-   write_le64(buf,VMFS_INODE_OFS_POS,inode->position);
-   write_le64(buf,VMFS_INODE_OFS_HB_POS,inode->hb_pos);
-   write_le32(buf,VMFS_INODE_OFS_HB_LOCK,inode->hb_lock);
+   vmfs_metadata_hdr_write(&inode->mdh,buf);
    write_le32(buf,VMFS_INODE_OFS_ID,inode->id);
    write_le32(buf,VMFS_INODE_OFS_ID2,inode->id2);
    write_le32(buf,VMFS_INODE_OFS_NLINK,inode->nlink);
@@ -86,13 +76,8 @@ void vmfs_inode_show(const vmfs_inode_t *inode)
 {
    char tbuf[64];
 
-   printf("  - Magic        : 0x%8.8x\n",inode->magic);
-   printf("  - Position     : 0x%"PRIx64"\n",inode->position);
-   printf("  - HB Position  : 0x%"PRIx64"\n",inode->hb_pos);
-   printf("  - HB Lock      : %d (%s)\n",
-          inode->hb_lock,(inode->hb_lock > 0) ? "LOCKED":"UNLOCKED");
-   printf("  - HB Sequence  : 0x%"PRIx64"\n",inode->hb_seq);
-   printf("  - Obj Sequence : 0x%"PRIx64"\n",inode->obj_seq);
+   vmfs_metadata_hdr_show(&inode->mdh);
+
    printf("  - ID           : 0x%8.8x\n",inode->id);
    printf("  - ID2          : 0x%8.8x\n",inode->id2);
    printf("  - Links        : %u\n",inode->nlink);
