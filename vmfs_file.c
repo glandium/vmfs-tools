@@ -166,7 +166,8 @@ ssize_t vmfs_file_pread(vmfs_file_t *f,u_char *buf,size_t len,off_t pos)
 
             offset = pos % blk_size;
 
-            exp_len = m_min(tbuf_len,len);
+            blk_len = tbuf_len - (pos & (tbuf_len - 1));
+            exp_len = m_min(blk_len,len);
             clen = m_min(exp_len,file_size - pos);
 
             sub_page   = offset & ~((off_t)tbuf_len - 1);
