@@ -130,6 +130,7 @@ int vmfs_heartbeat_lock(vmfs_fs_t *fs,u_int id,vmfs_heartbeat_t *hb)
 
    hb->magic = VMFS_HB_MAGIC_ON;
    hb->uptime = vmfs_host_get_uptime();
+   hb->seq++;
    vmfs_host_get_uuid(hb->uuid);
    vmfs_heartbeat_write(hb,buf);
 
@@ -153,6 +154,7 @@ int vmfs_heartbeat_unlock(vmfs_fs_t *fs,vmfs_heartbeat_t *hb)
       return(-1);
 
    hb->magic = VMFS_HB_MAGIC_OFF;
+   hb->seq++;
    uuid_clear(hb->uuid);
    vmfs_heartbeat_write(hb,buf);
 
@@ -203,7 +205,8 @@ int vmfs_heartbeat_acquire(vmfs_fs_t *fs)
          continue;
 
       if (!vmfs_heartbeat_lock(fs,i,&fs->hb)) {
-         fs->hb_id = i;
+         fs->hb_id  = i;
+         fs->hb_seq = fs->hb.seq;
          return(0);
       }
    }
