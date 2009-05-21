@@ -16,11 +16,13 @@ vmfs-fuse: LDFLAGS+=$(shell pkg-config --libs fuse)
 vmfs-fuse.o: CFLAGS+=$(shell pkg-config --cflags fuse)
 
 define program_template
-$(1): $(1).o libvmfs.a
+$(strip $(1))_EXTRA_OBJS := $$($(strip $(1))_EXTRA_SRCS:%.c=%.o)
+LIBVMFS_EXCLUDE_OBJS += $(1).o $$($(strip $(1))_EXTRA_OBJS)
+$(1): $(1).o $$($(strip $(1))_EXTRA_OBJS) libvmfs.a
 endef
-$(foreach program, $(PROGRAMS), $(eval $(call program_template, $(program))))
+$(foreach program, $(PROGRAMS), $(eval $(call program_template,$(program))))
 
-libvmfs.a: $(filter-out $(foreach program,$(PROGRAMS),$(program).o),$(OBJS))
+libvmfs.a: $(filter-out $(LIBVMFS_EXCLUDE_OBJS),$(OBJS))
 	ar -r $@ $^
 	ranlib $@
 
