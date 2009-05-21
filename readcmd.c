@@ -25,6 +25,9 @@
 
 static const cmd_t empty_cmd = { 0, };
 
+/* Argv allocation increment */
+#define ARGV_INCR 16
+
 /* Return a command after having prompted for it */
 const cmd_t *readcmd(const char *prompt) {
    char *buf;
@@ -65,14 +68,23 @@ const cmd_t *readcmd(const char *prompt) {
       while (*cmd->redir == ' ')
          cmd->redir++;
    }
-   /* With a command buffer of 512 bytes, there can't be
-    * more arguments than that */
-   cmd->argv = malloc(256 * sizeof(char *));
+   cmd->argv = malloc(ARGV_INCR * sizeof(char *));
    cmd->argv[0] = buf;
    do {
       while (*(cmd->argv[cmd->argc]) == ' ')
          *(cmd->argv[cmd->argc]++) = 0;
-   } while((cmd->argv[++cmd->argc] = strchr(cmd->argv[cmd->argc - 1], ' ')));
+      if (!(++cmd->argc % ARGV_INCR)) {
+         char **newargv = realloc(cmd->argv,
+                                  (cmd->argc + ARGV_INCR) * sizeof(char *));
+         if (newargv) {
+            cmd->argv = newargv;
+         } else {
+            freecmd(cmd);
+            fprintf(stderr, "Not enough memory\n");
+            return NULL;
+         }
+      }
+   } while((cmd->argv[cmd->argc] = strchr(cmd->argv[cmd->argc - 1], ' ')));
 
    return cmd;
 }
