@@ -224,25 +224,33 @@ int vmfs_bitmap_area_find_free_items(vmfs_bitmap_t *b,
                                      u_int area,u_int num_items,
                                      vmfs_bitmap_entry_t *entry)
 {
-   u_char buf[VMFS_BITMAP_ENTRY_SIZE];
+   u_char *buf;
+   size_t buf_len;
    off_t pos;
+   int res = -1;
    int i;
 
    pos = vmfs_bitmap_get_area_addr(&b->bmh,area);
+   buf_len = b->bmh.bmp_entries_per_area * VMFS_BITMAP_ENTRY_SIZE;
+
+   if (!(buf = iobuffer_alloc(buf_len)))
+      return(-1);
+
+   if (vmfs_file_pread(b->f,buf,buf_len,pos) != buf_len)
+      goto done;
 
    for(i=0;i<b->bmh.bmp_entries_per_area;i++) {
-      if (vmfs_file_pread(b->f,buf,sizeof(buf),pos) != sizeof(buf))
+      vmfs_bme_read(entry,buf+(i * VMFS_BITMAP_ENTRY_SIZE),1);
+
+      if (entry->free >= num_items) {
+         res = 0;
          break;
-
-      vmfs_bme_read(entry,buf,1);
-
-      if (entry->free >= num_items)
-         return(0);
-
-      pos += sizeof(buf);
+      }
    }
 
-   return(-1);
+ done:
+   iobuffer_free(buf);
+   return(res);
 }
 
 /* Find a bitmap entry with at least "num_items" free (scan all areas) */
