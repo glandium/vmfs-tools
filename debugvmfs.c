@@ -59,15 +59,17 @@ static int cmd_ls(vmfs_fs_t *fs,int argc,char *argv[])
    char buffer[1024];
    int i,res,long_format=0;
 
-   if (argc == 0) {
+   if ((argc == 2) && (strcmp(argv[0],"-l") == 0)) {
+      long_format = 1;
+      argv++;
+      argc--;
+   }
+
+   if (argc != 1) {
       printf("Usage: ls [-l] <path>\n");
       return(-1);
    }
 
-   if ((argc == 2) && (strcmp(argv[0],"-l") == 0)) {
-      long_format = 1;
-      argv++;
-   }
 
    res = vmfs_dirent_readdir(fs,argv[0],&dlist);
 
