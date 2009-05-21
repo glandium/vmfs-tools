@@ -53,42 +53,20 @@ static int cmd_cat(vmfs_fs_t *fs,int argc,char *argv[])
 static int cmd_ls(vmfs_fs_t *fs,int argc,char *argv[])
 {
    vmfs_dirent_t **dlist,*entry;
-   int i,res;
-
-   if (argc == 0) {
-      printf("Usage: ls <path>\n");
-      return(-1);
-   }
-
-   res = vmfs_dirent_readdir(fs,argv[0],&dlist);
-
-   if (res == -1) {
-      fprintf(stderr,"Unable to read directory %s\n",argv[0]);
-      return(-1);
-   }
-
-   for(i=0;i<res;i++) {
-      entry = dlist[i]; 
-      printf("%s\n",entry->name);
-   }
-
-   vmfs_dirent_free_dlist(res,&dlist);
-   return(0);
-}
-
-/* "dir" with long format command */
-static int cmd_dirl(vmfs_fs_t *fs,int argc,char *argv[])
-{
-   vmfs_dirent_t **dlist,*entry;
    struct stat st_info;
    struct passwd *usr;
    struct group *grp;
    char buffer[1024];
-   int i,res;
+   int i,res,long_format=0;
 
    if (argc == 0) {
-      printf("Usage: dir <path>\n");
+      printf("Usage: ls [-l] <path>\n");
       return(-1);
+   }
+
+   if ((argc == 2) && (strcmp(argv[0],"-l") == 0)) {
+      long_format = 1;
+      argv++;
    }
 
    res = vmfs_dirent_readdir(fs,argv[0],&dlist);
@@ -100,30 +78,33 @@ static int cmd_dirl(vmfs_fs_t *fs,int argc,char *argv[])
 
    for(i=0;i<res;i++) {
       entry = dlist[i];
+      if (long_format) {
+         snprintf(buffer,sizeof(buffer),"%s/%s",argv[0],entry->name);
+         if (vmfs_file_lstat(fs,buffer,&st_info) == -1)
+            continue;
 
-      snprintf(buffer,sizeof(buffer),"%s/%s",argv[0],entry->name);
-      if (vmfs_file_lstat(fs,buffer,&st_info) == -1)
-         continue;
+         printf("%-10s ",m_fmode_to_str(st_info.st_mode,buffer));
 
-      printf("%-10s ",m_fmode_to_str(st_info.st_mode,buffer));
+         usr = getpwuid(st_info.st_uid);
+         grp = getgrgid(st_info.st_gid);
 
-      usr = getpwuid(st_info.st_uid);
-      grp = getgrgid(st_info.st_gid);
+         printf("%u ", (unsigned int)st_info.st_nlink);
+         if (usr)
+            printf("%8s ", usr->pw_name);
+         else
+            printf("%8u ", st_info.st_uid);
+         if (grp)
+            printf("%8s ", grp->gr_name);
+         else
+            printf("%8u ", st_info.st_gid);
 
-      printf("%u ", (unsigned int)st_info.st_nlink);
-      if (usr)
-         printf("%8s ", usr->pw_name);
-      else
-         printf("%8u ", st_info.st_uid);
-      if (grp)
-         printf("%8s ", grp->gr_name);
-      else
-         printf("%8u ", st_info.st_gid);
-
-      printf("%10llu %s %s\n",
-             (unsigned long long)st_info.st_size,
-             m_ctime(&st_info.st_ctime,buffer,sizeof(buffer)),
-             entry->name);
+         printf("%10llu %s %s\n",
+                (unsigned long long)st_info.st_size,
+                m_ctime(&st_info.st_ctime,buffer,sizeof(buffer)),
+                entry->name);
+      } else {
+         printf("%s\n",entry->name);
+      }
    }
 
    vmfs_dirent_free_dlist(res,&dlist);
@@ -452,7 +433,6 @@ static int cmd_shell(vmfs_fs_t *fs,int argc,char *argv[]);
 struct cmd cmd_array[] = {
    { "cat", "Concatenate files and print on standard output", cmd_cat },
    { "ls", "List files in specified directory", cmd_ls },
-   { "dirl", "List files in specified directory (long format)", cmd_dirl },
    { "df", "Show available free space", cmd_df },
    { "show_dirent", "Show directory entry", cmd_show_dirent },
    { "show_inode", "Show inode", cmd_show_inode },
