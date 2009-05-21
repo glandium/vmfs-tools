@@ -27,6 +27,7 @@
 #include <grp.h>
 #include <sys/wait.h>
 #include "vmfs.h"
+#include "readcmd.h"
 
 /* "cat" command */
 static int cmd_cat(vmfs_fs_t *fs,int argc,char *argv[])
@@ -508,82 +509,49 @@ static int pipe_exec(const char *cmd) {
 static int cmd_shell(vmfs_fs_t *fs,int argc,char *argv[])
 {
    struct cmd *cmd = NULL;
-   char buf[512];
-   int aargc;
-   char *aargv[256]; /* With a command buffer of 512 bytes, there can't be
-                      * more arguments than that */
-   char *redir;
-   int i,prompt = isatty(fileno(stdin));
-
+   const cmd_t *cmdline = NULL;
    do {
-      int append = 0,is_pipe = 0;
-      if (prompt)
-         fprintf(stdout, "debugvmfs> ");
-      if (!fgets(buf, 511, stdin)) {
-         if (prompt)
-            fprintf(stdout, "\n");
-         return(0);
-      }
-      for(i=strlen(buf)-1;(i>=0)&&(buf[i]==' '||buf[i]=='\n');buf[i--]=0);
-      if (buf[0]==0)
-         continue;
-      if (!strcmp(buf, "exit") || !strcmp(buf, "quit"))
-         return(0);
-      if ((redir = index(buf, '|')))
-         is_pipe = 1;
-      else
-         redir = index(buf, '>');
-      if (redir) {
-         char *s;
-         for(s=redir-1;(s>=buf)&&(*s==' ');*(s--)=0);
-         *(redir++) = 0;
-         if (!is_pipe && *redir == '>') {
-            append = 1;
-            if (*(++redir) == '>') {
-               fprintf(stderr,"Unexpected token '>'\n");
-               continue;
-            }
-         }
-         while (*redir == ' ')
-            redir++;
-      }
-      aargc = 0;
-      aargv[0] = buf;
-      do {
-         while (*(aargv[aargc]) == ' ')
-            *(aargv[aargc]++) = 0;
-      } while((aargv[++aargc] = strchr(aargv[aargc - 1], ' ')));
-      cmd = cmd_find(aargv[0]);
+      freecmd(cmdline);
+      cmdline = readcmd("debugvmfs> ");
+      if (!cmdline) return(0);
+      if (!cmdline->argc) continue;
+      if (!strcmp(cmdline->argv[0], "exit") ||
+          !strcmp(cmdline->argv[0], "quit")) return(0);
+
+      cmd = cmd_find(cmdline->argv[0]);
       if (!cmd) {
-        printf("Unknown command: %s\n", aargv[0]);
+        int i;
+        printf("Unknown command: %s\n", cmdline->argv[0]);
         printf("Available commands:\n");
         for(i=0;cmd_array[i].name;i++)
            if (cmd_array[i].fn != cmd_shell)
               printf("  - %s : %s\n",cmd_array[i].name,cmd_array[i].description);
       } else if (cmd->fn != cmd_shell) {
         int out = -1;
-        if (redir) {
+        if (cmdline->redir) {
            int fd;
-           if (is_pipe) {
-              if ((fd = pipe_exec(redir)) < 0) {
+           if (cmdline->piped) {
+              if ((fd = pipe_exec(cmdline->redir)) < 0) {
                  fprintf(stderr, "Error executing pipe command: %s\n",
                          strerror(errno));
                  continue;
               }
-           } else if ((fd = open(redir,O_CREAT|O_WRONLY|
-                                       (append?O_APPEND:O_TRUNC),0666)) < 0) {
-              fprintf(stderr, "Error opening %s: %s\n",redir,strerror(errno));
+           } else if ((fd = open(cmdline->redir,O_CREAT|O_WRONLY|
+                                 (cmdline->append?O_APPEND:O_TRUNC),
+                                 0666)) < 0) {
+              fprintf(stderr, "Error opening %s: %s\n",cmdline->redir,
+                                                       strerror(errno));
               continue;
            }
            out=dup(1);
            dup2(fd,1);
            close(fd);
         }
-        cmd->fn(fs,aargc-1,&aargv[1]);
-        if (redir) {
+        cmd->fn(fs,cmdline->argc-1,&cmdline->argv[1]);
+        if (cmdline->redir) {
            dup2(out,1);
            close(out);
-           if (is_pipe) wait(NULL);
+           if (cmdline->piped) wait(NULL);
         }
       }
    } while (1);
