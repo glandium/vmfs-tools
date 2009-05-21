@@ -21,6 +21,7 @@
 #include <unistd.h>
 #include <string.h>
 #include <readline/readline.h>
+#include <readline/history.h>
 #include "readcmd.h"
 
 static const cmd_t empty_cmd = { 0, };
@@ -45,6 +46,7 @@ const cmd_t *readcmd(const char *prompt) {
       free(buf);
       return &empty_cmd;
    }
+   add_history(buf);
 
    cmd = calloc(sizeof(cmd_t),1);
    cmd->buf = buf;
