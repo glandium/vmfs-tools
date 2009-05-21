@@ -51,6 +51,11 @@ struct vmfs_metadata_hdr {
    uuid_t  hb_uuid;
 };
 
+static inline bool vmfs_metadata_is_locked(vmfs_metadata_hdr_t *mdh)
+{
+   return(mdh->hb_lock != 0);
+}
+
 /* Read a metadata header */
 int vmfs_metadata_hdr_read(vmfs_metadata_hdr_t *mdh,const u_char *buf);
 
