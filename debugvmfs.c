@@ -49,14 +49,14 @@ static int cmd_cat(vmfs_fs_t *fs,int argc,char *argv[])
    return(0);
 }
 
-/* "dir" command */
-static int cmd_dir(vmfs_fs_t *fs,int argc,char *argv[])
+/* "ls" command */
+static int cmd_ls(vmfs_fs_t *fs,int argc,char *argv[])
 {
    vmfs_dirent_t **dlist,*entry;
    int i,res;
 
    if (argc == 0) {
-      printf("Usage: dir <path>\n");
+      printf("Usage: ls <path>\n");
       return(-1);
    }
 
@@ -451,7 +451,7 @@ static int cmd_shell(vmfs_fs_t *fs,int argc,char *argv[]);
 
 struct cmd cmd_array[] = {
    { "cat", "Concatenate files and print on standard output", cmd_cat },
-   { "dir", "List files in specified directory", cmd_dir },
+   { "ls", "List files in specified directory", cmd_ls },
    { "dirl", "List files in specified directory (long format)", cmd_dirl },
    { "df", "Show available free space", cmd_df },
    { "show_dirent", "Show directory entry", cmd_show_dirent },
