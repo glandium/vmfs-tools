@@ -177,15 +177,23 @@ int vmfs_heartbeat_update(vmfs_fs_t *fs,vmfs_heartbeat_t *hb)
 
 /* Acquire an heartbeat (ID is chosen automatically) */
 int vmfs_heartbeat_acquire(vmfs_fs_t *fs)
-{   
-   DECL_ALIGNED_BUFFER(buf,VMFS_HB_SIZE);
-   vmfs_heartbeat_t hb;
-   off_t pos;
-   int i;
+{
+   vmfs_heartbeat_t hb;   
+   u_char *buf;
+   size_t buf_len;
+   int i,res = -1;
 
    /* Try to reuse the current ID */
    if (!vmfs_heartbeat_lock(fs,fs->hb_id,&fs->hb))
       return(0);
+
+   buf_len = VMFS_HB_NUM * VMFS_HB_SIZE;
+
+   if (!(buf = iobuffer_alloc(buf_len)))
+      return(-1);
+
+   if (vmfs_lvm_read(fs->lvm,VMFS_HB_BASE,buf,buf_len) != buf_len)
+      return(-1);
 
    /* 
     * Heartbeat is taken by someone else, find a new one.
@@ -194,12 +202,7 @@ int vmfs_heartbeat_acquire(vmfs_fs_t *fs)
     * we try to acquire it definitely with reservation.
     */
    for(i=0;i<VMFS_HB_NUM;i++) {
-      pos = VMFS_HB_BASE + (i * VMFS_HB_SIZE);
-
-      if (vmfs_lvm_read(fs->lvm,pos,buf,buf_len) != buf_len)
-         return(-1);
-
-      vmfs_heartbeat_read(&hb,buf);
+      vmfs_heartbeat_read(&hb,buf+(i * VMFS_HB_SIZE));
 
       if (vmfs_heartbeat_active(&hb))
          continue;
@@ -207,9 +210,11 @@ int vmfs_heartbeat_acquire(vmfs_fs_t *fs)
       if (!vmfs_heartbeat_lock(fs,i,&fs->hb)) {
          fs->hb_id  = i;
          fs->hb_seq = fs->hb.seq;
-         return(0);
+         res = 0;
+         break;
       }
    }
 
-   return(-1);
+   iobuffer_free(buf);
+   return(res);
 }
