@@ -485,7 +485,7 @@ static int cmd_shell(vmfs_fs_t *fs,int argc,char *argv[])
    int aargc;
    char *aargv[256]; /* With a command buffer of 512 bytes, there can't be
                       * more arguments than that */
-   int prompt = isatty(fileno(stdin));
+   int i,prompt = isatty(fileno(stdin));
 
    do {
       if (prompt)
@@ -494,7 +494,7 @@ static int cmd_shell(vmfs_fs_t *fs,int argc,char *argv[])
          fprintf(stdout, "\n");
          return(0);
       }
-      buf[strlen(buf)-1] = 0;
+      for(i=strlen(buf)-1;(i>=0)&&(buf[i]==' '||buf[i]=='\n');buf[i--]=0);
       if (!strcmp(buf, "exit") || !strcmp(buf, "quit"))
          return(0);
       aargc = 0;
@@ -505,7 +505,6 @@ static int cmd_shell(vmfs_fs_t *fs,int argc,char *argv[])
       } while((aargv[++aargc] = strchr(aargv[aargc - 1], ' ')));
       cmd = cmd_find(aargv[0]);
       if (!cmd) {
-        int i;
         printf("Unknown command: %s\n", aargv[0]);
         printf("Available commands:\n");
         for(i=0;cmd_array[i].name;i++)
