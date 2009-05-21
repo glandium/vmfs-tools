@@ -20,13 +20,14 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <string.h>
+#include <readline/readline.h>
 #include "readcmd.h"
 
 static const cmd_t empty_cmd = { 0, };
 
 /* Return a command after having prompted for it */
 const cmd_t *readcmd(const char *prompt) {
-   char buf[512];
+   char *buf;
    int aargc;
    char *aargv[256]; /* With a command buffer of 512 bytes, there can't be
                       * more arguments than that */
@@ -35,15 +36,12 @@ const cmd_t *readcmd(const char *prompt) {
    cmd_t *cmd;
    if (!isatty(fileno(stdin)))
       prompt = NULL;
-   if (prompt)
-      fprintf(stdout, "%s", prompt);
-
-   if (!fgets(buf, 511, stdin)) {
+   if (!(buf = readline(prompt))) {
       if (prompt)
          fprintf(stdout, "\n");
       return NULL;
    }
-   for(i=strlen(buf)-1;(i>=0)&&(buf[i]==' '||buf[i]=='\n');buf[i--]=0);
+   for(i=strlen(buf)-1;(i>=0)&&(buf[i]==' ');buf[i--]=0);
    if (buf[0]==0)
       return &empty_cmd;
 

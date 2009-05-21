@@ -16,6 +16,7 @@ vmfs-fuse: LDFLAGS+=$(shell pkg-config --libs fuse)
 vmfs-fuse.o: CFLAGS+=$(shell pkg-config --cflags fuse)
 
 debugvmfs_EXTRA_SRCS := readcmd.c
+debugvmfs: LDFLAGS+=-lreadline
 
 define program_template
 $(strip $(1))_EXTRA_OBJS := $$($(strip $(1))_EXTRA_SRCS:%.c=%.o)
