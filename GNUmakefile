@@ -16,16 +16,20 @@ vmfs-fuse: LDFLAGS+=$(shell pkg-config --libs fuse)
 vmfs-fuse.o: CFLAGS+=$(shell pkg-config --cflags fuse)
 
 define program_template
-$(1): $(filter-out $(foreach program,$(filter-out $(1), $(PROGRAMS)),$(program).o), $(OBJS))
+$(1): $(1).o libvmfs.a
 endef
 $(foreach program, $(PROGRAMS), $(eval $(call program_template, $(program))))
+
+libvmfs.a: $(filter-out $(foreach program,$(PROGRAMS),$(program).o),$(OBJS))
+	ar -r $@ $^
+	ranlib $@
 
 $(OBJS): %.o: %.c $(HEADERS)
 
 $(PROGRAMS):
 	$(CC) -o $@ $^ $(LDFLAGS)
 
-clean: CLEAN := $(filter $(PROGRAMS) $(OBJS) $(PACKAGE)-%.tar.gz,$(wildcard *))
+clean: CLEAN := $(filter libvmfs.a $(PROGRAMS) $(OBJS) $(PACKAGE)-%.tar.gz,$(wildcard *))
 clean:
 	$(if $(CLEAN),rm $(CLEAN))
 
