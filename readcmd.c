@@ -28,12 +28,8 @@ static const cmd_t empty_cmd = { 0, };
 /* Return a command after having prompted for it */
 const cmd_t *readcmd(const char *prompt) {
    char *buf;
-   int aargc;
-   char *aargv[256]; /* With a command buffer of 512 bytes, there can't be
-                      * more arguments than that */
-   char *redir;
-   int i,append = 0,is_pipe = 0;
-   cmd_t *cmd;
+   int i;
+   cmd_t *cmd = NULL;
    if (!isatty(fileno(stdin)))
       prompt = NULL;
    if (!(buf = readline(prompt))) {
@@ -42,56 +38,51 @@ const cmd_t *readcmd(const char *prompt) {
       return NULL;
    }
    for(i=strlen(buf)-1;(i>=0)&&(buf[i]==' ');buf[i--]=0);
-   if (buf[0]==0)
+   if (buf[0]==0) {
+      free(buf);
       return &empty_cmd;
+   }
 
-   if ((redir = index(buf, '|')))
-      is_pipe = 1;
+   cmd = calloc(sizeof(cmd_t),1);
+   cmd->buf = buf;
+   if ((cmd->redir = index(buf, '|')))
+      cmd->piped = 1;
    else
-      redir = index(buf, '>');
-   if (redir) {
+      cmd->redir = index(buf, '>');
+   if (cmd->redir) {
       char *s;
-      for(s=redir-1;(s>=buf)&&(*s==' ');*(s--)=0);
-      *(redir++) = 0;
-      if (!is_pipe && *redir == '>') {
-         append = 1;
-         if (*(++redir) == '>') {
+      for(s=cmd->redir-1;(s>=buf)&&(*s==' ');*(s--)=0);
+      *(cmd->redir++) = 0;
+      if (!cmd->piped && *cmd->redir == '>') {
+         cmd->append = 1;
+         if (*(++cmd->redir) == '>') {
             fprintf(stderr,"Unexpected token '>'\n");
+            free(cmd);
+            free(buf);
             return &empty_cmd;
          }
       }
-      while (*redir == ' ')
-         redir++;
+      while (*cmd->redir == ' ')
+         cmd->redir++;
    }
-   aargc = 0;
-   aargv[0] = buf;
+   /* With a command buffer of 512 bytes, there can't be
+    * more arguments than that */
+   cmd->argv = malloc(256 * sizeof(char *));
+   cmd->argv[0] = buf;
    do {
-      while (*(aargv[aargc]) == ' ')
-         *(aargv[aargc]++) = 0;
-   } while((aargv[++aargc] = strchr(aargv[aargc - 1], ' ')));
-
-   cmd = calloc(sizeof(cmd_t),1);
-   cmd->argc = aargc;
-   cmd->argv = malloc(aargc * sizeof(char *));
-   for(i=0; i<cmd->argc; i++)
-      cmd->argv[i] = strdup(aargv[i]);
-   cmd->piped = is_pipe;
-   cmd->append = append;
-   if (redir)
-      cmd->redir = strdup(redir);
+      while (*(cmd->argv[cmd->argc]) == ' ')
+         *(cmd->argv[cmd->argc]++) = 0;
+   } while((cmd->argv[++cmd->argc] = strchr(cmd->argv[cmd->argc - 1], ' ')));
 
    return cmd;
 }
 
 /* Free a command */
 void freecmd(const cmd_t *cmd) {
-   int i;
    if (!cmd || cmd == &empty_cmd)
       return;
 
-   for(i=0; i<cmd->argc; i++)
-      free(cmd->argv[i]);
    free(cmd->argv);
-   free(cmd->redir);
+   free(cmd->buf);
    free((cmd_t *)cmd);
 }

@@ -23,6 +23,7 @@ struct _cmd {
    int piped;
    int append;
    char *redir;
+   char *buf;
 };
 
 typedef struct _cmd cmd_t;
