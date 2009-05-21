@@ -570,7 +570,7 @@ static int cmd_shell(vmfs_fs_t *fs,int argc,char *argv[])
                  continue;
               }
            } else if ((fd = open(redir,O_CREAT|O_WRONLY|
-                                       (append?O_APPEND:O_TRUNC),0777)) < 0) {
+                                       (append?O_APPEND:O_TRUNC),0666)) < 0) {
               fprintf(stderr, "Error opening %s: %s\n",redir,strerror(errno));
               continue;
            }
