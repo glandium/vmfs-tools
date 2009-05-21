@@ -25,6 +25,7 @@
 #include <errno.h>
 #include <pwd.h>
 #include <grp.h>
+#include <sys/wait.h>
 #include "vmfs.h"
 
 /* "cat" command */
@@ -479,6 +480,30 @@ static struct cmd *cmd_find(char *name)
    return NULL;
 }
 
+/* Executes a command through "sh -c", and returns the file descriptor to its
+ * stdin or -1 on error */
+static int pipe_exec(const char *cmd) {
+   int fd[2];
+   pid_t p;
+
+   if (pipe(fd) == -1)
+      return -1;
+
+   if ((p = fork()) == -1)
+      return -1;
+
+   if (p == 0) { /* Child process */
+      close(fd[1]);
+      dup2(fd[0],0);
+      close(fd[0]);
+      execl("/bin/sh", "/bin/sh", "-c", cmd, NULL);
+      return -1;
+   } else { /* Parent process */
+      close(fd[0]);
+      return fd[1];
+   }
+}
+
 /* Opens a shell */
 static int cmd_shell(vmfs_fs_t *fs,int argc,char *argv[])
 {
@@ -491,7 +516,7 @@ static int cmd_shell(vmfs_fs_t *fs,int argc,char *argv[])
    int i,prompt = isatty(fileno(stdin));
 
    do {
-      int append = 0;
+      int append = 0,is_pipe = 0;
       if (prompt)
          fprintf(stdout, "debugvmfs> ");
       if (!fgets(buf, 511, stdin)) {
@@ -503,11 +528,15 @@ static int cmd_shell(vmfs_fs_t *fs,int argc,char *argv[])
          continue;
       if (!strcmp(buf, "exit") || !strcmp(buf, "quit"))
          return(0);
-      if ((redir = index(buf, '>'))) {
+      if ((redir = index(buf, '|')))
+         is_pipe = 1;
+      else
+         redir = index(buf, '>');
+      if (redir) {
          char *s;
          for(s=redir-1;(s>=buf)&&(*s==' ');*(s--)=0);
          *(redir++) = 0;
-         if (*redir == '>') {
+         if (!is_pipe && *redir == '>') {
             append = 1;
             if (*(++redir) == '>') {
                fprintf(stderr,"Unexpected token '>'\n");
@@ -534,8 +563,14 @@ static int cmd_shell(vmfs_fs_t *fs,int argc,char *argv[])
         int out = -1;
         if (redir) {
            int fd;
-           if ((fd = open(redir,O_CREAT|O_WRONLY|(append?O_APPEND:O_TRUNC),
-                          0777)) < 0) {
+           if (is_pipe) {
+              if ((fd = pipe_exec(redir)) < 0) {
+                 fprintf(stderr, "Error executing pipe command: %s\n",
+                         strerror(errno));
+                 continue;
+              }
+           } else if ((fd = open(redir,O_CREAT|O_WRONLY|
+                                       (append?O_APPEND:O_TRUNC),0777)) < 0) {
               fprintf(stderr, "Error opening %s: %s\n",redir,strerror(errno));
               continue;
            }
@@ -547,6 +582,7 @@ static int cmd_shell(vmfs_fs_t *fs,int argc,char *argv[])
         if (redir) {
            dup2(out,1);
            close(out);
+           if (is_pipe) wait(NULL);
         }
       }
    } while (1);
