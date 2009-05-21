@@ -32,7 +32,7 @@ static int cmd_cat(vmfs_fs_t *fs,int argc,char *argv[])
    int i;
 
    if (argc == 0) {
-      printf("Usage: cat file1 ... fileN\n");
+      fprintf(stderr,"Usage: cat file1 ... fileN\n");
       return(-1);
    }
 
@@ -66,7 +66,7 @@ static int cmd_ls(vmfs_fs_t *fs,int argc,char *argv[])
    }
 
    if (argc != 1) {
-      printf("Usage: ls [-l] <path>\n");
+      fprintf(stderr,"Usage: ls [-l] <path>\n");
       return(-1);
    }
 
@@ -144,7 +144,7 @@ static int cmd_show_dirent(vmfs_fs_t *fs,int argc,char *argv[])
    vmfs_dirent_t entry;
 
    if (argc == 0) {
-      printf("Usage: show_dirent <filename>\n");
+      fprintf(stderr,"Usage: show_dirent <filename>\n");
       return(-1);
    }
 
@@ -163,7 +163,7 @@ static int cmd_show_inode(vmfs_fs_t *fs,int argc,char *argv[])
    vmfs_file_t *f;
 
    if (argc == 0) {
-      printf("Usage: show_dirent <filename>\n");
+      fprintf(stderr,"Usage: show_dirent <filename>\n");
       return(-1);
    }
 
@@ -183,7 +183,7 @@ static int cmd_show_file_blocks(vmfs_fs_t *fs,int argc,char *argv[])
    vmfs_file_t *f;
 
    if (argc == 0) {
-      printf("Usage: show_file_blocks <filename>\n");
+      fprintf(stderr,"Usage: show_file_blocks <filename>\n");
       return(-1);
    }
 
@@ -251,7 +251,7 @@ static int cmd_test_heartbeats(vmfs_fs_t *fs,int argc,char *argv[])
    u_int id;
 
    if (argc == 0) {
-      printf("Usage: test_heartbeats <hb_id>\n");
+      fprintf(stderr,"Usage: test_heartbeats <hb_id>\n");
       return(-1);
    }
 
@@ -289,7 +289,7 @@ static int cmd_convert_block_id(vmfs_fs_t *fs,int argc,char *argv[])
    int i;
 
    if (argc == 0) {
-      printf("Usage: convert_block_id blk1 ... blkN\n");
+      fprintf(stderr,"Usage: convert_block_id blk1 ... blkN\n");
       return(-1);
    }
    
@@ -335,7 +335,7 @@ static int cmd_read_block(vmfs_fs_t *fs,int argc,char *argv[])
    u_char *buf;
 
    if (argc == 0) {
-      printf("Usage: read_block blk_id\n");
+      fprintf(stderr,"Usage: read_block blk_id\n");
       return(-1);
    }
 
@@ -379,7 +379,7 @@ static int cmd_show_bitmap_item(vmfs_fs_t *fs,int argc,char *argv[])
    size_t len;
 
    if (argc == 0) {
-      printf("Usage: show_bitmap_item blk_id\n");
+      fprintf(stderr,"Usage: show_bitmap_item blk_id\n");
       return(-1);
    }
 
