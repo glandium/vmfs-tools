@@ -162,3 +162,23 @@ int bit_count(u_char val)
 
    return(qb[val >> 4] + qb[val & 0x0F]);
 }
+
+/* Allocate a buffer with alignment compatible for direct I/O */
+u_char *iobuffer_alloc(size_t len)
+{
+   size_t buf_len;
+   void *buf;
+
+   buf_len = ALIGN_NUM(len,M_DIO_BLK_SIZE);
+
+   if (posix_memalign(&buf,M_DIO_BLK_SIZE,buf_len) != 0)
+      return NULL;
+
+   return buf;
+}
+
+/* Free a buffer previously allocated by iobuffer_alloc() */
+void iobuffer_free(u_char *buf)
+{
+   free(buf);
+}

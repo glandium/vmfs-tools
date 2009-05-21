@@ -152,4 +152,10 @@ void mem_dump(FILE *f_output,const u_char *pkt,u_int len);
 /* Count the number of bits set in a byte */
 int bit_count(u_char val);
 
+/* Allocate a buffer with alignment compatible for direct I/O */
+u_char *iobuffer_alloc(size_t len);
+
+/* Free a buffer previously allocated by iobuffer_alloc() */
+void iobuffer_free(u_char *buf);
+
 #endif
