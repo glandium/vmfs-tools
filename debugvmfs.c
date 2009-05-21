@@ -520,7 +520,8 @@ static int cmd_shell(vmfs_fs_t *fs,int argc,char *argv[])
       if (prompt)
          fprintf(stdout, "debugvmfs> ");
       if (!fgets(buf, 511, stdin)) {
-         fprintf(stdout, "\n");
+         if (prompt)
+            fprintf(stdout, "\n");
          return(0);
       }
       for(i=strlen(buf)-1;(i>=0)&&(buf[i]==' '||buf[i]=='\n');buf[i--]=0);
