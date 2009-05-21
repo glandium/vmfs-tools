@@ -21,6 +21,8 @@
 #include <string.h>
 #include <sys/stat.h>
 #include <sys/types.h>
+#include <fcntl.h>
+#include <errno.h>
 #include <pwd.h>
 #include <grp.h>
 #include "vmfs.h"
@@ -485,6 +487,7 @@ static int cmd_shell(vmfs_fs_t *fs,int argc,char *argv[])
    int aargc;
    char *aargv[256]; /* With a command buffer of 512 bytes, there can't be
                       * more arguments than that */
+   char *redir;
    int i,prompt = isatty(fileno(stdin));
 
    do {
@@ -499,6 +502,17 @@ static int cmd_shell(vmfs_fs_t *fs,int argc,char *argv[])
          continue;
       if (!strcmp(buf, "exit") || !strcmp(buf, "quit"))
          return(0);
+      if ((redir = index(buf, '>'))) {
+         char *s;
+         for(s=redir-1;(s>=buf)&&(*s==' ');*(s--)=0);
+         *(redir++) = 0;
+         if (*redir == '>') {
+            fprintf(stderr,"Unexpected token '>'\n");
+            continue;
+         }
+         while (*redir == ' ')
+            redir++;
+      }
       aargc = 0;
       aargv[0] = buf;
       do {
@@ -513,7 +527,22 @@ static int cmd_shell(vmfs_fs_t *fs,int argc,char *argv[])
            if (cmd_array[i].fn != cmd_shell)
               printf("  - %s : %s\n",cmd_array[i].name,cmd_array[i].description);
       } else if (cmd->fn != cmd_shell) {
+        int out = -1;
+        if (redir) {
+           int fd;
+           if ((fd = open(redir,O_CREAT|O_WRONLY|O_TRUNC,0777)) < 0) {
+              fprintf(stderr, "Error opening %s: %s\n",redir,strerror(errno));
+              continue;
+           }
+           out=dup(1);
+           dup2(fd,1);
+           close(fd);
+        }
         cmd->fn(fs,aargc-1,&aargv[1]);
+        if (redir) {
+           dup2(out,1);
+           close(out);
+        }
       }
    } while (1);
 }
