@@ -495,6 +495,8 @@ static int cmd_shell(vmfs_fs_t *fs,int argc,char *argv[])
          return(0);
       }
       for(i=strlen(buf)-1;(i>=0)&&(buf[i]==' '||buf[i]=='\n');buf[i--]=0);
+      if (buf[0]==0)
+         continue;
       if (!strcmp(buf, "exit") || !strcmp(buf, "quit"))
          return(0);
       aargc = 0;
