@@ -142,11 +142,9 @@ int vmfs_fs_dump_bitmaps(const vmfs_fs_t *fs)
 static int vmfs_read_fdc_base(vmfs_fs_t *fs)
 {
    DECL_ALIGNED_BUFFER_WOL(buf,VMFS_INODE_SIZE);
-   struct vmfs_inode_raw inode;
+   struct vmfs_inode_raw inode = { { 0, }, };
    off_t fdc_base;
    uint32_t tmp;
-
-   memset(&inode,0,sizeof(inode));
 
    /* 
     * Compute position of FDC base: it is located at the first
