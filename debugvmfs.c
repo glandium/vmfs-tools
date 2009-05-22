@@ -460,8 +460,13 @@ struct cmd cmd_array[] = {
 static void show_usage(char *prog_name) 
 {
    int i;
+   char *name = index(prog_name,'/');
+   if (name)
+      name++;
+   else
+      name = prog_name;
 
-   fprintf(stderr,"Syntax: %s <device_name...> <command> <args...>\n\n",prog_name);
+   fprintf(stderr,"Syntax: %s <device_name...> <command> <args...>\n\n",name);
    fprintf(stderr,"Available commands:\n");
 
    for(i=0;cmd_array[i].name;i++)
