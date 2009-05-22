@@ -1,0 +1,4 @@
+*.tar.gz
+*.[ao]
+debugvmfs
+vmfs-fuse

@@ -10,7 +10,7 @@ OBJS := $(SRC:%.c=%.o)
 PROGRAMS := debugvmfs vmfs-fuse
 prefix := /usr
 
-all: $(PROGRAMS)
+all: $(PROGRAMS) $(wildcard .gitignore)
 
 vmfs-fuse: LDFLAGS+=$(shell pkg-config --libs fuse)
 vmfs-fuse.o: CFLAGS+=$(shell pkg-config --cflags fuse)
@@ -52,3 +52,9 @@ install:
 	install -m 0755 $(PROGRAMS) $(DESTDIR)$(prefix)/sbin
 
 .PHONY: all clean dist install
+
+.gitignore: $(MAKEFILE_LIST)
+	(echo "*.tar.gz"; \
+	 echo "*.[ao]"; \
+	 $(foreach program, $(PROGRAMS),echo $(program);) \
+	) > .gitignore
