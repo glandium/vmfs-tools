@@ -100,33 +100,6 @@ vmfs_bitmap_get_area_addr(const vmfs_bitmap_header_t *bmh,u_int area)
    return(bmh->hdr_size + (area * bmh->area_size));
 }
 
-/* Get data address of a given area (after the bitmap array) */
-static inline off_t
-vmfs_bitmap_get_area_data_addr(const vmfs_bitmap_header_t *bmh,u_int area)
-{
-   off_t addr;
-
-   addr  = vmfs_bitmap_get_area_addr(bmh,area);
-   addr += bmh->bmp_entries_per_area * VMFS_BITMAP_ENTRY_SIZE;
-   return(addr);
-}
-
-/* Get address of a block */
-off_t vmfs_bitmap_get_block_addr(const vmfs_bitmap_header_t *bmh,uint32_t blk)
-{
-   uint32_t items_per_area;
-   off_t addr;
-   u_int area;
-
-   items_per_area = vmfs_bitmap_get_items_per_area(bmh,blk);
-   area = blk / items_per_area;
-
-   addr  = vmfs_bitmap_get_area_data_addr(bmh,area);
-   addr += (blk % items_per_area) * bmh->data_size;
-
-   return(addr);
-}
-
 /* Read a bitmap entry given a block id */
 int vmfs_bitmap_get_entry(vmfs_bitmap_t *b,u_int blk,
                           vmfs_bitmap_entry_t *entry)
@@ -157,9 +130,17 @@ bool vmfs_bitmap_get_item(vmfs_bitmap_t *b, uint32_t entry, uint32_t item,
 {
    off_t pos;
    uint32_t addr;
+   uint32_t items_per_area;
+   u_int area;
 
    addr = (entry * b->bmh.items_per_bitmap_entry) + item;
-   pos  = vmfs_bitmap_get_block_addr(&b->bmh,addr);
+
+   items_per_area = b->bmh.bmp_entries_per_area * b->bmh.items_per_bitmap_entry;
+   area = addr / items_per_area;
+
+   pos  = b->bmh.hdr_size + (area * b->bmh.area_size);
+   pos += b->bmh.bmp_entries_per_area * VMFS_BITMAP_ENTRY_SIZE;
+   pos += (addr % items_per_area) * b->bmh.data_size;
 
    return(vmfs_file_pread(b->f,buf,b->bmh.data_size,pos) == b->bmh.data_size);
 }
