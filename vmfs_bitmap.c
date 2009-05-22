@@ -153,8 +153,27 @@ vmfs_bitmap_get_item_offset(const vmfs_bitmap_header_t *bmh,u_int blk,
    u_int idx;
 
    idx = blk % bmh->items_per_bitmap_entry;
-   *array_idx = idx / 8;
+   *array_idx = idx >> 3;
    *bit_idx   = idx & 0x07;
+}
+
+/* Update the first free item field */
+static void vmfs_bitmap_update_ffree(vmfs_bitmap_entry_t *entry)
+{
+   u_int array_idx,bit_idx;
+   int i;
+
+   entry->ffree = 0;
+
+   for(i=0;i<entry->total;i++) {
+      array_idx = i >> 3;
+      bit_idx   = i & 0x07;
+
+      if (entry->bitmap[array_idx] & (1 << bit_idx)) {
+         entry->ffree = i;
+         break;
+      }
+   }
 }
 
 /* Mark an item as free or allocated */
@@ -184,6 +203,7 @@ int vmfs_bitmap_set_item_status(const vmfs_bitmap_header_t *bmh,
       entry->free--;
    }
 
+   vmfs_bitmap_update_ffree(entry);
    return(0);
 }
 
