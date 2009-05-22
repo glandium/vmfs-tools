@@ -461,13 +461,13 @@ static void show_usage(char *prog_name)
 {
    int i;
 
-   printf("Syntax: %s <device_name...> <command> <args...>\n\n",prog_name);
-   printf("Available commands:\n");
+   fprintf(stderr,"Syntax: %s <device_name...> <command> <args...>\n\n",prog_name);
+   fprintf(stderr,"Available commands:\n");
 
    for(i=0;cmd_array[i].name;i++)
-      printf("  - %s : %s\n",cmd_array[i].name,cmd_array[i].description);
+      fprintf(stderr,"  - %s : %s\n",cmd_array[i].name,cmd_array[i].description);
 
-   printf("\n");
+   fprintf(stderr,"\n");
 }
 
 static struct cmd *cmd_find(char *name)
@@ -521,11 +521,12 @@ static int cmd_shell(vmfs_fs_t *fs,int argc,char *argv[])
       cmd = cmd_find(cmdline->argv[0]);
       if (!cmd) {
         int i;
-        printf("Unknown command: %s\n", cmdline->argv[0]);
-        printf("Available commands:\n");
+        fprintf(stderr,"Unknown command: %s\n", cmdline->argv[0]);
+        fprintf(stderr,"Available commands:\n");
         for(i=0;cmd_array[i].name;i++)
            if (cmd_array[i].fn != cmd_shell)
-              printf("  - %s : %s\n",cmd_array[i].name,cmd_array[i].description);
+              fprintf(stderr,"  - %s : %s\n",cmd_array[i].name,
+                                             cmd_array[i].description);
       } else if (cmd->fn != cmd_shell) {
         int out = -1;
         if (cmdline->redir) {
