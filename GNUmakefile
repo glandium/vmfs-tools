@@ -1,5 +1,5 @@
 PACKAGE := vmfs-tools
-VERSION := 0.0.0
+VERSION := $(shell (cat version || ( [ -d .git ] && git describe --tags --abbrev=4 HEAD | sed s/-/./g ) || echo v0.0.0) 2> /dev/null)
 
 CC := gcc
 CFLAGS := -Wall -O2 -g -D_FILE_OFFSET_BITS=64 $(EXTRA_CFLAGS)
@@ -39,11 +39,12 @@ clean:
 	$(if $(CLEAN),rm $(CLEAN))
 
 ALL_DIST := $(SRC) $(HEADERS) $(MAKEFILE_LIST) LICENSE README
-DIST_DIR := $(PACKAGE)-$(VERSION)
+DIST_DIR := $(PACKAGE)-$(VERSION:v%=%)
 dist: $(ALL_DIST)
 	@rm -rf "$(DIST_DIR)"
 	@mkdir "$(DIST_DIR)"
 	cp -p $(ALL_DIST) $(DIST_DIR)
+	echo $(VERSION) > $(DIST_DIR)/version
 	tar -zcf "$(DIST_DIR).tar.gz" "$(DIST_DIR)"
 	@rm -rf "$(DIST_DIR)"
 
@@ -56,5 +57,6 @@ install:
 .gitignore: $(MAKEFILE_LIST)
 	(echo "*.tar.gz"; \
 	 echo "*.[ao]"; \
+	 echo "version"; \
 	 $(foreach program, $(PROGRAMS),echo $(program);) \
 	) > .gitignore

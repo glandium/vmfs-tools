@@ -1,4 +1,5 @@
 *.tar.gz
 *.[ao]
+version
 debugvmfs
 vmfs-fuse
