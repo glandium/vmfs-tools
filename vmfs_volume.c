@@ -169,7 +169,7 @@ void vmfs_vol_show(const vmfs_volume_t *vol)
    printf("  - LUN     : %d\n",vol->vol_info.lun);
    printf("  - Version : %d\n",vol->vol_info.version);
    printf("  - Name    : %s\n",vol->vol_info.name);
-   printf("  - Size    : %u GB\n",vol->vol_info.size / (4*1048576));
+   printf("  - Size    : %.2f GB\n",(float)vol->vol_info.size / (4*1048576));
    printf("  - Num. Segments : %u\n",vol->vol_info.num_segments);
    printf("  - First Segment : %u\n",vol->vol_info.first_segment);
    printf("  - Last Segment  : %u\n",vol->vol_info.last_segment);

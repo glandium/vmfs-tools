@@ -111,8 +111,8 @@ void vmfs_lvm_show(const vmfs_lvm_t *lvm) {
 
    printf("Logical Volume Information:\n");
    printf("  - UUID    : %s\n",m_uuid_to_str(lvm->lvm_info.uuid,uuid_str));
-   printf("  - Size    : %"PRIu64" GB\n",
-          lvm->extents[0]->vol_info.lvm_size / (1024*1048576));
+   printf("  - Size    : %.2f GB\n",
+          (float)lvm->extents[0]->vol_info.lvm_size / (1024*1048576));
    printf("  - Blocks  : %"PRIu64"\n",lvm->extents[0]->vol_info.blocks);
    printf("  - Num. Extents : %u\n",lvm->extents[0]->vol_info.num_extents);
 
