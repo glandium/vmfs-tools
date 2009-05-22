@@ -31,10 +31,11 @@ struct vmfs_volinfo_raw {
    u_char lun;
    u_char _unknown1[3];
    char name[28];
-   u_char _unknown2[84]; /* There are strange things at the beginning of this
-                          * array ; on some filesystems, it looks like the lun
-                          * name as exposed by ESX, but on others, it looks
-                          * just like garbage */
+   u_char _unknown2[49]; /* The beginning of this array looks like it is a LUN
+                          * GUID for 3.31 * filesystems, and the LUN identifier
+                          * string as given by ESX for 3.21 filesystems. */
+   uint32_t size; /* Size of the physical volume, divided by 256 */
+   u_char _unknown3[31];
    uuid_t uuid;
    uint64_t ctime; /* ctime? in usec */
    uint64_t mtime; /* mtime? in usec */
@@ -44,6 +45,7 @@ struct vmfs_volinfo_raw {
 #define VMFS_VOLINFO_OFS_VER   offsetof(struct vmfs_volinfo_raw, ver)
 #define VMFS_VOLINFO_OFS_LUN   offsetof(struct vmfs_volinfo_raw, lun)
 #define VMFS_VOLINFO_OFS_NAME  offsetof(struct vmfs_volinfo_raw, name)
+#define VMFS_VOLINFO_OFS_SIZE  offsetof(struct vmfs_volinfo_raw, size)
 #define VMFS_VOLINFO_OFS_UUID  offsetof(struct vmfs_volinfo_raw, uuid)
 
 #define VMFS_VOLINFO_OFS_NAME_SIZE \
@@ -102,7 +104,8 @@ struct vmfs_volinfo {
    uuid_t uuid;
    int lun;
 
-   uint64_t size;
+   uint32_t size;
+   uint64_t lvm_size;
    uint64_t blocks;
    uuid_t lvm_uuid;
    uint32_t num_segments,

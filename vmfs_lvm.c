@@ -112,7 +112,7 @@ void vmfs_lvm_show(const vmfs_lvm_t *lvm) {
    printf("Logical Volume Information:\n");
    printf("  - UUID    : %s\n",m_uuid_to_str(lvm->lvm_info.uuid,uuid_str));
    printf("  - Size    : %"PRIu64" GB\n",
-          lvm->extents[0]->vol_info.size / (1024*1048576));
+          lvm->extents[0]->vol_info.lvm_size / (1024*1048576));
    printf("  - Blocks  : %"PRIu64"\n",lvm->extents[0]->vol_info.blocks);
    printf("  - Num. Extents : %u\n",lvm->extents[0]->vol_info.num_extents);
 
@@ -152,13 +152,13 @@ int vmfs_lvm_add_extent(vmfs_lvm_t *lvm, const char *filename)
 
    if (lvm->loaded_extents == 0) {
       uuid_copy(lvm->lvm_info.uuid, vol->vol_info.lvm_uuid);
-      lvm->lvm_info.size = vol->vol_info.size;
+      lvm->lvm_info.size = vol->vol_info.lvm_size;
       lvm->lvm_info.blocks = vol->vol_info.blocks;
       lvm->lvm_info.num_extents = vol->vol_info.num_extents;
    } else if (uuid_compare(lvm->lvm_info.uuid, vol->vol_info.lvm_uuid)) {
       fprintf(stderr, "VMFS: The %s file/device is not part of the LVM\n", filename);
       return(-1);
-   } else if ((lvm->lvm_info.size != vol->vol_info.size) ||
+   } else if ((lvm->lvm_info.size != vol->vol_info.lvm_size) ||
               (lvm->lvm_info.blocks != vol->vol_info.blocks) ||
               (lvm->lvm_info.num_extents != vol->vol_info.num_extents)) {
       fprintf(stderr, "VMFS: LVM information mismatch for the %s"

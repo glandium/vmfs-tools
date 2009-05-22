@@ -121,6 +121,7 @@ static int vmfs_volinfo_read(vmfs_volinfo_t *vol,int fd)
    }
 
    vol->version = read_le32(buf,VMFS_VOLINFO_OFS_VER);
+   vol->size = read_le32(buf,VMFS_VOLINFO_OFS_SIZE);
    vol->lun = buf[VMFS_VOLINFO_OFS_LUN];
 
    vol->name = strndup((char *)buf+VMFS_VOLINFO_OFS_NAME,
@@ -128,7 +129,7 @@ static int vmfs_volinfo_read(vmfs_volinfo_t *vol,int fd)
 
    read_uuid(buf,VMFS_VOLINFO_OFS_UUID,&vol->uuid);
 
-   vol->size    = read_le64(buf,VMFS_LVMINFO_OFS_SIZE);
+   vol->lvm_size = read_le64(buf,VMFS_LVMINFO_OFS_SIZE);
    vol->blocks  = read_le64(buf,VMFS_LVMINFO_OFS_BLKS);
    vol->num_segments = read_le32(buf,VMFS_LVMINFO_OFS_NUM_SEGMENTS);
    vol->first_segment = read_le32(buf,VMFS_LVMINFO_OFS_FIRST_SEGMENT);
@@ -168,6 +169,7 @@ void vmfs_vol_show(const vmfs_volume_t *vol)
    printf("  - LUN     : %d\n",vol->vol_info.lun);
    printf("  - Version : %d\n",vol->vol_info.version);
    printf("  - Name    : %s\n",vol->vol_info.name);
+   printf("  - Size    : %u GB\n",vol->vol_info.size / (4*1048576));
    printf("  - Num. Segments : %u\n",vol->vol_info.num_segments);
    printf("  - First Segment : %u\n",vol->vol_info.first_segment);
    printf("  - Last Segment  : %u\n",vol->vol_info.last_segment);
