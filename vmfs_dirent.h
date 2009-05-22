@@ -40,7 +40,7 @@ struct vmfs_dirent {
    uint32_t type;
    uint32_t block_id;
    uint32_t record_id;
-   char *name;
+   char name[129];
 };
 
 /* Read a file descriptor */
