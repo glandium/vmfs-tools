@@ -76,4 +76,4 @@ install:
 	 echo "*.[ao]"; \
 	 echo "version"; \
 	 $(foreach program, $(PROGRAMS),echo $(program);) \
-	) > .gitignore
+	) > $@
