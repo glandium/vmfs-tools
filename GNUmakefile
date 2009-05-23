@@ -52,7 +52,7 @@ $(OBJS): %.o: %.c $(HEADERS)
 $(PROGRAMS):
 	$(CC) -o $@ $^ $(LDFLAGS)
 
-clean: CLEAN := $(filter libvmfs.a $(PROGRAMS) $(OBJS) $(PACKAGE)-%.tar.gz,$(wildcard *))
+clean: CLEAN := $(wildcard libvmfs.a $(PROGRAMS) $(OBJS) $(PACKAGE)-*.tar.gz)
 clean:
 	$(if $(CLEAN),rm $(CLEAN))
 
