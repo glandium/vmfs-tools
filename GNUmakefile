@@ -1,7 +1,8 @@
 PACKAGE := vmfs-tools
 
 CC := gcc
-CFLAGS := -Wall -O2 -g -D_FILE_OFFSET_BITS=64 $(EXTRA_CFLAGS)
+OPTIMFLAGS := -O2
+CFLAGS := -Wall $(OPTIMFLAGS) -g -D_FILE_OFFSET_BITS=64 $(EXTRA_CFLAGS)
 LDFLAGS := $(shell pkg-config --libs uuid)
 SRC := $(wildcard *.c)
 HEADERS := $(wildcard *.h)
