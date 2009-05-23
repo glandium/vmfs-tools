@@ -18,9 +18,10 @@
 /*
  * Utility functions.
  */
-
+#define _GNU_SOURCE
 #include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
 #include <errno.h>
 #include <string.h>
 #include <time.h>
@@ -181,4 +182,54 @@ u_char *iobuffer_alloc(size_t len)
 void iobuffer_free(u_char *buf)
 {
    free(buf);
+}
+
+/* Read from file descriptor at a given offset */
+ssize_t m_pread(int fd,void *buf,size_t count,off_t offset)
+{
+   u_char *ptr = (u_char *)buf;
+   size_t hlen = 0;
+   ssize_t len;
+
+   while(hlen < count) {
+      len = pread(fd,ptr,count-hlen,offset+hlen);
+      
+      if (len < 0) {
+         if (errno != EINTR)
+            return(-1);
+      } else {
+         if (len == 0)
+            break;
+
+         hlen += len;
+         ptr  += len;
+      }
+   }
+
+   return(hlen);
+}
+
+/* Write to a file descriptor at a given offset */
+ssize_t m_pwrite(int fd,const void *buf,size_t count,off_t offset)
+{
+   u_char *ptr = (u_char *)buf;
+   size_t hlen = 0;
+   ssize_t len;
+
+   while(hlen < count) {
+      len = pwrite(fd,ptr,count-hlen,offset+hlen);
+      
+      if (len < 0) {
+         if (errno != EINTR)
+            return(-1);
+      } else {
+         if (len == 0)
+            break;
+
+         hlen += len;
+         ptr  += len;
+      }
+   }
+
+   return(hlen);
 }

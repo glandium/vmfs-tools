@@ -158,4 +158,10 @@ u_char *iobuffer_alloc(size_t len);
 /* Free a buffer previously allocated by iobuffer_alloc() */
 void iobuffer_free(u_char *buf);
 
+/* Read from file descriptor at a given offset */
+ssize_t m_pread(int fd,void *buf,size_t count,off_t offset);
+
+/* Write to a file descriptor at a given offset */
+ssize_t m_pwrite(int fd,const void *buf,size_t count,off_t offset);
+
 #endif
