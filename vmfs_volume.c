@@ -34,7 +34,7 @@
 static ssize_t vmfs_vol_read_data(const vmfs_volume_t *vol,off_t pos,
                                   u_char *buf,size_t len)
 {
-   return(pread(vol->fd,buf,len,pos));
+   return(m_pread(vol->fd,buf,len,pos));
 }
 
 /* Read a raw block of data on logical volume */
@@ -50,7 +50,7 @@ ssize_t vmfs_vol_read(const vmfs_volume_t *vol,off_t pos,
 static ssize_t vmfs_vol_write_data(const vmfs_volume_t *vol,off_t pos,
                                    const u_char *buf,size_t len)
 {
-   return(pwrite(vol->fd,buf,len,pos));
+   return(m_pwrite(vol->fd,buf,len,pos));
 }
 
 /* Write a raw block of data on logical volume */
@@ -109,7 +109,7 @@ static int vmfs_volinfo_read(vmfs_volinfo_t *vol,int fd)
 {
    DECL_ALIGNED_BUFFER(buf,1024);
 
-   if (pread(fd,buf,buf_len,VMFS_VOLINFO_BASE) != buf_len)
+   if (m_pread(fd,buf,buf_len,VMFS_VOLINFO_BASE) != buf_len)
       return(-1);
 
    vol->magic = read_le32(buf,VMFS_VOLINFO_OFS_MAGIC);
