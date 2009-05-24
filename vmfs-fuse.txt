@@ -1,0 +1,27 @@
+vmfs-fuse(8)
+============
+
+NAME
+----
+vmfs-fuse - mount VMFS file system
+
+
+SYNOPSIS
+--------
+*vmfs-fuse* 'VOLUME'... 'MOUNT_POINT'
+
+
+DESCRIPTION
+-----------
+The *vmfs-fuse* program allows to mount VMFS file systems.
+
+The 'VOLUME' to be opened can be either a block device or an image file.
+When the VMFS spreads accross several extents, all extents must be given.
+
+The 'MOUNT_POINT' indicates where the file system will be attached on the
+system.
+
+
+AUTHORS
+-------
+include::AUTHORS[]
