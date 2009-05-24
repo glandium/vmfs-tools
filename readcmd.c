@@ -148,12 +148,14 @@ static void *dlhandle = NULL;
 
 static __attribute__((constructor)) void init_readline(void)
 {
-   dlhandle = dlopen("libreadline.so.5", RTLD_NOW);
-   if (dlhandle) {
-      readline = dlsym(dlhandle, "readline");
-      add_history = dlsym(dlhandle, "add_history");
-      if (readline && add_history)
-         return;
+   if (isatty(fileno(stdin))) {
+      dlhandle = dlopen("libreadline.so.5", RTLD_NOW);
+      if (dlhandle) {
+         readline = dlsym(dlhandle, "readline");
+         add_history = dlsym(dlhandle, "add_history");
+         if (readline && add_history)
+            return;
+      }
    }
    readline = local_readline;
    add_history = local_add_history;
