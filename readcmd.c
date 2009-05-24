@@ -30,7 +30,8 @@ static const cmd_t empty_cmd = { 0, };
 #define ARGV_INCR 16
 
 /* Return a command after having prompted for it */
-const cmd_t *readcmd(const char *prompt) {
+const cmd_t *readcmd(const char *prompt)
+{
    char *buf;
    int i;
    cmd_t *cmd = NULL;
@@ -92,7 +93,8 @@ const cmd_t *readcmd(const char *prompt) {
 }
 
 /* Free a command */
-void freecmd(const cmd_t *cmd) {
+void freecmd(const cmd_t *cmd)
+{
    if (!cmd || cmd == &empty_cmd)
       return;
 
