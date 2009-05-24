@@ -8,11 +8,16 @@ SRC := $(wildcard *.c)
 HEADERS := $(wildcard *.h)
 OBJS := $(SRC:%.c=%.o)
 PROGRAMS := debugvmfs vmfs-fuse
+MANSRCS := $(wildcard $(PROGRAMS:%=%.txt))
+MANDOCBOOK := $(MANSRCS:%.txt=%.xml)
+MANPAGES := $(foreach man,$(MANSRCS),$(shell sed '1{s/(/./;s/)//;q}' $(man)))
 EXTRA_DIST := LICENSE README TODO AUTHORS
 
 prefix := /usr
 exec_prefix := $(prefix)
 sbindir := $(exec_prefix)/sbin
+datarootdir := $(prefix)/share
+mandir := $(datarootdir)/man
 
 all: $(PROGRAMS) $(wildcard .gitignore)
 
@@ -56,11 +61,11 @@ $(OBJS): %.o: %.c $(HEADERS)
 $(PROGRAMS):
 	$(CC) -o $@ $^ $(LDFLAGS)
 
-clean: CLEAN := $(wildcard libvmfs.a $(PROGRAMS) $(OBJS) $(PACKAGE)-*.tar.gz)
+clean: CLEAN := $(wildcard libvmfs.a $(PROGRAMS) $(OBJS) $(PACKAGE)-*.tar.gz $(MANPAGES) $(MANDOCBOOK))
 clean:
 	$(if $(CLEAN),rm $(CLEAN))
 
-ALL_DIST := $(SRC) $(HEADERS) $(MAKEFILE_LIST) $(EXTRA_DIST)
+ALL_DIST := $(SRC) $(HEADERS) $(MAKEFILE_LIST) $(MANSRCS) $(EXTRA_DIST)
 DIST_DIR := $(PACKAGE)-$(VERSION:v%=%)
 dist: $(ALL_DIST)
 	@rm -rf "$(DIST_DIR)"
@@ -69,21 +74,35 @@ dist: $(ALL_DIST)
 	tar -zcf "$(DIST_DIR).tar.gz" "$(DIST_DIR)"
 	@rm -rf "$(DIST_DIR)"
 
+$(MANSRCS:%.txt=%.xml): %.xml: %.txt
+	asciidoc -a manversion=$(VERSION:v%=%) -a manmanual=$(PACKAGE) -b docbook -d manpage -o $@ $<
+
+$(MANPAGES): %.8: %.xml
+	xsltproc -o $@ --nonet --novalid http://docbook.sourceforge.net/release/xsl/current/manpages/docbook.xsl $<
+
+doc: $(MANPAGES)
+
 $(DESTDIR)/%:
 	install -d -m 0755 $@
 
 installPROGRAMS := $(PROGRAMS:%=$(DESTDIR)$(sbindir)/%)
+installMANPAGES := $(MANPAGES:%=$(DESTDIR)$(mandir)/man8/%)
 
 $(installPROGRAMS): $(DESTDIR)$(sbindir)/%: % $(DESTDIR)$(sbindir)
 	install -m 0755 $< $(dir $@)
 
-install: $(installPROGRAMS)
+$(installMANPAGES): $(DESTDIR)$(mandir)/man8/%: % $(DESTDIR)$(mandir)/man8
+	install -m 0755 $< $(dir $@)
 
-.PHONY: all clean dist install
+install: $(installPROGRAMS) $(installMANPAGES)
+
+.PHONY: all clean dist install doc
 
 .gitignore: $(MAKEFILE_LIST)
 	(echo "*.tar.gz"; \
 	 echo "*.[ao]"; \
+	 echo "*.xml"; \
+	 echo "*.8"; \
 	 echo "version"; \
 	 $(foreach program, $(PROGRAMS),echo $(program);) \
 	) > $@
