@@ -69,9 +69,15 @@ dist: $(ALL_DIST)
 	tar -zcf "$(DIST_DIR).tar.gz" "$(DIST_DIR)"
 	@rm -rf "$(DIST_DIR)"
 
-install:
-	install -d -m 0755 $(DESTDIR)$(sbindir)
-	install -m 0755 $(PROGRAMS) $(DESTDIR)$(sbindir)
+$(DESTDIR)/%:
+	install -d -m 0755 $@
+
+installPROGRAMS := $(PROGRAMS:%=$(DESTDIR)$(sbindir)/%)
+
+$(installPROGRAMS): $(DESTDIR)$(sbindir)/%: % $(DESTDIR)$(sbindir)
+	install -m 0755 $< $(dir $@)
+
+install: $(installPROGRAMS)
 
 .PHONY: all clean dist install
 
