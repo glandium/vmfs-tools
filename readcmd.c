@@ -28,6 +28,45 @@ static const cmd_t empty_cmd = { 0, };
 static char *(*readline)(const char *prompt);
 static void (*add_history)(const char *string);
 
+/* local_readline() buffer allocation increment */
+#define READLINE_INCR 256
+
+static char *local_readline(const char *prompt) {
+   char *buf = NULL, *buf2;
+   size_t len, alloc = READLINE_INCR;
+
+   if (prompt)
+      fprintf(stdout, "%s", prompt);
+
+   buf = malloc(alloc);
+   if (!buf)
+      return NULL;
+   buf2 = buf;
+   do {
+      if (!fgets(buf2, READLINE_INCR, stdin))
+         break;
+
+      len = strlen(buf2);
+      if ((len > 0) && (buf2[len-1] == '\n')) {
+         buf2[--len] = 0;
+         return buf;
+      }
+      len += (buf2 - buf);
+      alloc += READLINE_INCR;
+      if (!(buf2 = realloc(buf, alloc)))
+         break;
+      buf = buf2;
+      buf2 = &buf[len];
+   } while (1);
+
+   free(buf);
+   return NULL;
+}
+
+static void local_add_history(const char *string)
+{
+}
+
 /* Argv allocation increment */
 #define ARGV_INCR 16
 
@@ -116,7 +155,8 @@ static __attribute__((constructor)) void init_readline(void)
       if (readline && add_history)
          return;
    }
-   readline = add_history = NULL; /* This will make the program crash */
+   readline = local_readline;
+   add_history = local_add_history;
 }
 
 static __attribute__((destructor)) void close_readline(void)
