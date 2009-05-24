@@ -8,6 +8,8 @@ SRC := $(wildcard *.c)
 HEADERS := $(wildcard *.h)
 OBJS := $(SRC:%.c=%.o)
 PROGRAMS := debugvmfs vmfs-fuse
+EXTRA_DIST := LICENSE README TODO
+
 prefix := /usr
 
 all: $(PROGRAMS) $(wildcard .gitignore)
@@ -56,7 +58,7 @@ clean: CLEAN := $(wildcard libvmfs.a $(PROGRAMS) $(OBJS) $(PACKAGE)-*.tar.gz)
 clean:
 	$(if $(CLEAN),rm $(CLEAN))
 
-ALL_DIST := $(SRC) $(HEADERS) $(MAKEFILE_LIST) LICENSE README
+ALL_DIST := $(SRC) $(HEADERS) $(MAKEFILE_LIST) $(EXTRA_DIST)
 DIST_DIR := $(PACKAGE)-$(VERSION:v%=%)
 dist: $(ALL_DIST)
 	@rm -rf "$(DIST_DIR)"
