@@ -89,7 +89,7 @@ installPROGRAMS := $(PROGRAMS:%=$(DESTDIR)$(sbindir)/%)
 installMANPAGES := $(MANPAGES:%=$(DESTDIR)$(mandir)/man8/%)
 
 $(installPROGRAMS): $(DESTDIR)$(sbindir)/%: % $(DESTDIR)$(sbindir)
-	install -m 0755 $< $(dir $@)
+	install $(if $(NO_STRIP),,-s )-m 0755 $< $(dir $@)
 
 $(installMANPAGES): $(DESTDIR)$(mandir)/man8/%: % $(DESTDIR)$(mandir)/man8
 	install -m 0755 $< $(dir $@)
