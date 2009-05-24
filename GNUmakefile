@@ -13,7 +13,7 @@ MANDOCBOOK := $(MANSRCS:%.txt=%.xml)
 MANPAGES := $(foreach man,$(MANSRCS),$(shell sed '1{s/(/./;s/)//;q}' $(man)))
 EXTRA_DIST := LICENSE README TODO AUTHORS
 
-prefix := /usr
+prefix := /usr/local
 exec_prefix := $(prefix)
 sbindir := $(exec_prefix)/sbin
 datarootdir := $(prefix)/share
