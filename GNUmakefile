@@ -8,7 +8,7 @@ SRC := $(wildcard *.c)
 HEADERS := $(wildcard *.h)
 OBJS := $(SRC:%.c=%.o)
 PROGRAMS := debugvmfs vmfs-fuse
-EXTRA_DIST := LICENSE README TODO
+EXTRA_DIST := LICENSE README TODO AUTHORS
 
 prefix := /usr
 
