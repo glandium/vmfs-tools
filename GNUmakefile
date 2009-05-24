@@ -11,6 +11,8 @@ PROGRAMS := debugvmfs vmfs-fuse
 EXTRA_DIST := LICENSE README TODO AUTHORS
 
 prefix := /usr
+exec_prefix := $(prefix)
+sbindir := $(exec_prefix)/sbin
 
 all: $(PROGRAMS) $(wildcard .gitignore)
 
@@ -68,8 +70,8 @@ dist: $(ALL_DIST)
 	@rm -rf "$(DIST_DIR)"
 
 install:
-	install -d -m 0755 $(DESTDIR)$(prefix)/sbin
-	install -m 0755 $(PROGRAMS) $(DESTDIR)$(prefix)/sbin
+	install -d -m 0755 $(DESTDIR)$(sbindir)
+	install -m 0755 $(PROGRAMS) $(DESTDIR)$(sbindir)
 
 .PHONY: all clean dist install
 
