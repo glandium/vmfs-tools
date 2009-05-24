@@ -26,6 +26,7 @@
 #include <pwd.h>
 #include <grp.h>
 #include <sys/wait.h>
+#include <libgen.h>
 #include "vmfs.h"
 #include "readcmd.h"
 
@@ -413,11 +414,7 @@ struct cmd cmd_array[] = {
 static void show_usage(char *prog_name) 
 {
    int i;
-   char *name = index(prog_name,'/');
-   if (name)
-      name++;
-   else
-      name = prog_name;
+   char *name = basename(prog_name);
 
    fprintf(stderr,"%s " VERSION "\n",name);
    fprintf(stderr,"Syntax: %s <device_name...> <command> <args...>\n\n",name);
