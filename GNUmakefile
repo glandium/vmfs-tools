@@ -12,6 +12,7 @@ MANSRCS := $(wildcard $(PROGRAMS:%=%.txt))
 MANDOCBOOK := $(MANSRCS:%.txt=%.xml)
 MANPAGES := $(foreach man,$(MANSRCS),$(shell sed '1{s/(/./;s/)//;q}' $(man)))
 EXTRA_DIST := LICENSE README TODO AUTHORS
+LIB := libvmfs.a
 
 prefix := /usr/local
 exec_prefix := $(prefix)
@@ -48,11 +49,11 @@ debugvmfs.o: CFLAGS+=-DVERSION=\"$(VERSION)\"
 define program_template
 $(strip $(1))_EXTRA_OBJS := $$($(strip $(1))_EXTRA_SRCS:%.c=%.o)
 LIBVMFS_EXCLUDE_OBJS += $(1).o $$($(strip $(1))_EXTRA_OBJS)
-$(1): $(1).o $$($(strip $(1))_EXTRA_OBJS) libvmfs.a
+$(1): $(1).o $$($(strip $(1))_EXTRA_OBJS) $(LIB)
 endef
 $(foreach program, $(PROGRAMS), $(eval $(call program_template,$(program))))
 
-libvmfs.a: $(filter-out $(LIBVMFS_EXCLUDE_OBJS),$(OBJS))
+$(LIB): $(filter-out $(LIBVMFS_EXCLUDE_OBJS),$(OBJS))
 	ar -r $@ $^
 	ranlib $@
 
@@ -61,7 +62,7 @@ $(OBJS): %.o: %.c $(HEADERS)
 $(PROGRAMS):
 	$(CC) -o $@ $^ $(LDFLAGS)
 
-clean: CLEAN := $(wildcard libvmfs.a $(PROGRAMS) $(OBJS) $(PACKAGE)-*.tar.gz $(MANPAGES) $(MANDOCBOOK))
+clean: CLEAN := $(wildcard $(LIB) $(PROGRAMS) $(OBJS) $(PACKAGE)-*.tar.gz $(MANPAGES) $(MANDOCBOOK))
 clean:
 	$(if $(CLEAN),rm $(CLEAN))
 
