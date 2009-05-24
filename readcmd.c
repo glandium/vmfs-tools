@@ -20,11 +20,13 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <string.h>
-#include <readline/readline.h>
-#include <readline/history.h>
+#include <dlfcn.h>
 #include "readcmd.h"
 
 static const cmd_t empty_cmd = { 0, };
+
+static char *(*readline)(const char *prompt);
+static void (*add_history)(const char *string);
 
 /* Argv allocation increment */
 #define ARGV_INCR 16
@@ -101,4 +103,24 @@ void freecmd(const cmd_t *cmd)
    free(cmd->argv);
    free(cmd->buf);
    free((cmd_t *)cmd);
+}
+
+static void *dlhandle = NULL;
+
+static __attribute__((constructor)) void init_readline(void)
+{
+   dlhandle = dlopen("libreadline.so.5", RTLD_NOW);
+   if (dlhandle) {
+      readline = dlsym(dlhandle, "readline");
+      add_history = dlsym(dlhandle, "add_history");
+      if (readline && add_history)
+         return;
+   }
+   readline = add_history = NULL; /* This will make the program crash */
+}
+
+static __attribute__((destructor)) void close_readline(void)
+{
+   if (dlhandle)
+      dlclose(dlhandle);
 }

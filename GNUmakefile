@@ -43,7 +43,7 @@ vmfs-fuse: LDFLAGS+=$(shell pkg-config --libs fuse)
 vmfs-fuse.o: CFLAGS+=$(shell pkg-config --cflags fuse)
 
 debugvmfs_EXTRA_SRCS := readcmd.c
-debugvmfs: LDFLAGS+=-lreadline
+debugvmfs: LDFLAGS+=-ldl
 debugvmfs.o: CFLAGS+=-DVERSION=\"$(VERSION)\"
 
 define program_template
