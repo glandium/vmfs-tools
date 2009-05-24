@@ -248,44 +248,6 @@ static int cmd_show_heartbeats(vmfs_fs_t *fs,int argc,char *argv[])
    return(vmfs_heartbeat_show_active(fs));
 }
 
-/* Test heartbeats */
-static int cmd_test_heartbeats(vmfs_fs_t *fs,int argc,char *argv[])
-{
-   vmfs_heartbeat_t hb;
-   u_int id;
-
-   if (argc == 0) {
-      fprintf(stderr,"Usage: test_heartbeats <hb_id>\n");
-      return(-1);
-   }
-
-   id = atoi(argv[0]);
-
-   printf("Initial status (Before vmfs_heartbeat_lock()):\n");
-   vmfs_heartbeat_show_active(fs);
-
-   /* Test lock function */
-   vmfs_heartbeat_lock(fs,id,&hb);
-
-   printf("After vmfs_heartbeat_lock():\n");
-   vmfs_heartbeat_show_active(fs);
-
-   /* Test update function */
-   sleep(1);
-   vmfs_heartbeat_update(fs,&hb);
-
-   printf("After vmfs_heartbeat_update():\n");
-   vmfs_heartbeat_show_active(fs);
-
-   /* Test unlock function */
-   vmfs_heartbeat_unlock(fs,&hb);
-
-   printf("After vmfs_heartbeat_unlock():\n");
-   vmfs_heartbeat_show_active(fs);
-
-   return(0);
-}
-
 /* Convert a raw block ID in human readable form */
 static int cmd_convert_block_id(vmfs_fs_t *fs,int argc,char *argv[])
 {
@@ -420,13 +382,6 @@ static int cmd_show_bitmap_item(vmfs_fs_t *fs,int argc,char *argv[])
    return(0);
 }
 
-/* Show host information */
-static int cmd_show_host(vmfs_fs_t *fs,int argc,char *argv[])
-{
-   vmfs_host_show_info();
-   return(0);
-}
-
 struct cmd {
    char *name;
    char *description;
@@ -448,11 +403,9 @@ struct cmd cmd_array[] = {
    { "show_vol_bitmaps", "Show volume bitmaps", cmd_show_vol_bitmaps },
    { "check_vol_bitmaps", "Check volume bitmaps", cmd_check_vol_bitmaps },
    { "show_heartbeats", "Show active heartbeats", cmd_show_heartbeats },
-   { "test_heartbeats", "Test heartbeats", cmd_test_heartbeats },
    { "convert_block_id", "Convert block ID", cmd_convert_block_id },
    { "read_block", "Read a block", cmd_read_block },
    { "show_bitmap_item", "Show a bitmap item", cmd_show_bitmap_item },
-   { "show_host", "Show host information", cmd_show_host },
    { "shell", "Opens a shell", cmd_shell },
    { NULL, NULL },
 };
