@@ -1,0 +1,7 @@
+*.tar.gz
+*.[ao]
+*.xml
+*.8
+version
+debugvmfs
+vmfs-fuse

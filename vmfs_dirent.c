@@ -30,8 +30,8 @@ int vmfs_dirent_read(vmfs_dirent_t *entry,const u_char *buf)
    entry->type      = read_le32(buf,VMFS_DIRENT_OFS_TYPE);
    entry->block_id  = read_le32(buf,VMFS_DIRENT_OFS_BLK_ID);
    entry->record_id = read_le32(buf,VMFS_DIRENT_OFS_REC_ID);
-   entry->name      = strndup((char *)buf+VMFS_DIRENT_OFS_NAME,
-                              VMFS_DIRENT_OFS_NAME_SIZE);
+   memcpy(entry->name,buf+VMFS_DIRENT_OFS_NAME,sizeof(entry->name));
+   entry->name[128] = 0;
    return(0);
 }
 
@@ -65,8 +65,6 @@ int vmfs_dirent_search(vmfs_file_t *dir_entry,const char *name,
 
       if (!strcmp(rec->name,name))
          return(1);
-
-      free(rec->name);
    }
 
    return(0);

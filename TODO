@@ -1,5 +1,19 @@
+Expected for v0.2.0:
+- Test suite
+- Allow to read VMFS even when not having all extents
+
+Expected for v0.3.0:
+- Make debugvmfs more of a VMFS debugging tool and less of a vmfs-tools testing tool
+- fsck.vmfs
+
+Expected for v0.5.0:
+- Stable internal API
+- mkfs.vmfs
+
+Expected for v1.0.0:
+- Full write support.
+
+Any time:
 - Check if we want to read/update separately metadata header from the metadata
   itself (for example: vmfs_inode_read/vmfs_inode_write)
 - Add locking/unlocking/update functions for metadata headers
-- Avoid strndup() in vmfs_dirent_read() because it causes too many useless 
-  malloc/free in vmfs_dirent_search

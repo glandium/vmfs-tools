@@ -1,0 +1,106 @@
+debugvmfs(8)
+============
+
+NAME
+----
+debugvmfs - VMFS file system debugger
+
+
+SYNOPSIS
+--------
+*debugvmfs* 'VOLUME'... 'COMMAND' [ 'OPTIONS' ]
+
+
+DESCRIPTION
+-----------
+The *debugvmfs* program allows to display various informations about VMFS
+file systems, and to access data within the file systems.
+
+The 'VOLUME' to be opened can be either a block device or an image file.
+When the VMFS spreads accross several extents, all extents must be given.
+
+Please note that most commands are still likely to change in future versions.
+
+COMMANDS
+--------
+*cat* 'file' [ ... ]::
+Outputs the content of the given files from the VMFS.
+
+*ls* [ *-l* ] 'path'::
+Lists files contained at the given location within the VMFS.
++
+With *-l*, gives some more information, much like the output from *ls*(1)
+when given the *-l* option.
+
+*df*::
+Outputs information about file system size.
+
+*show_dirent* 'file'::
+Outputs directory entity information about the given file from the VMFS.
+
+*show_inode* 'file'::
+Outputs inode information about the given file from the VMFS.
+
+*show_file_blocks* 'file'::
+Outputs block_ids for the given file's content blocks.
+
+*show_fs*::
+Outputs information about the file system.
+
+*show_volume*::
+Outputs information about the physical and logical volumes.
+
+*show_vol_bitmaps*::
+Outputs information about the volume bitmaps.
+
+*check_vol_bitmaps*::
+Checks volume bitmaps consistency.
+
+*show_heartbeats*::
+Outputs active heartbeats on the file system.
+
+*convert_block_id* 'block_id' [ ... ]::
+Outputs information about the given block_id, such as block type, entry and
+item numbers.
+
+*read_block* 'block_id'::
+Outputs content within the specified block_id.
+
+*show_bitmap_item* 'block_id'::
+Outputs raw content for the bitmap item corresponding to the given block_id.
+
+*shell*::
+Starts an interactive session. All of the above commands can be executed from
+within the interactive session.
++
+The following output redirections are supported within the shell:
++
+- 'cmd' > 'output_file'
++
+Puts the output of 'cmd' in the 'output_file' file.
++
+- 'cmd' >> 'output_file'
++
+Appends the output of 'cmd' to the 'output_file' file.
++
+- 'cmd' | 'external command'
++
+Sends the output of 'cmd' to the input of 'external command'.
+The 'external command' itself can contain output redirection.
++
+Examples:
++
+** read_block 0x00000681 | less
+** cat /.fdc.sf | hexdump -C
+** cat /.fdc.sf | hexdump -C > /tmp/fdc.hex
+** cat /.fdc.sf | hexdump -C | less
+
+
+AUTHORS
+-------
+include::AUTHORS[]
+
+
+SEE ALSO
+--------
+vmfs-fuse(8)
