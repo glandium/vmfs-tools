@@ -9,8 +9,18 @@ HEADERS := $(wildcard *.h)
 OBJS := $(SRC:%.c=%.o)
 PROGRAMS := debugvmfs vmfs-fuse
 MANSRCS := $(wildcard $(PROGRAMS:%=%.txt))
+
+define PATH_LOOKUP
+$(wildcard $(foreach path,$(subst :, ,$(PATH)),$(path)/$(1)))
+endef
+
+ifneq (,$(call PATH_LOOKUP,asciidoc))
+ifneq (,$(call PATH_LOOKUP,xsltproc))
 MANDOCBOOK := $(MANSRCS:%.txt=%.xml)
 MANPAGES := $(foreach man,$(MANSRCS),$(shell sed '1{s/(/./;s/)//;q}' $(man)))
+endif
+endif
+
 EXTRA_DIST := LICENSE README TODO AUTHORS
 
 prefix := /usr/local
@@ -74,7 +84,7 @@ dist: $(ALL_DIST)
 	tar -zcf "$(DIST_DIR).tar.gz" "$(DIST_DIR)"
 	@rm -rf "$(DIST_DIR)"
 
-$(MANSRCS:%.txt=%.xml): %.xml: %.txt
+$(MANDOCBOOK): %.xml: %.txt
 	asciidoc -a manversion=$(VERSION:v%=%) -a manmanual=$(PACKAGE) -b docbook -d manpage -o $@ $<
 
 $(MANPAGES): %.8: %.xml
