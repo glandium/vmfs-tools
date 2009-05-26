@@ -21,7 +21,7 @@
 /* Block types */
 enum {
    VMFS_BLK_TYPE_COW = 0,/* Copy-on-write for sparse files */
-   VMFS_BLK_TYPE_FB,     /* Full Block */
+   VMFS_BLK_TYPE_FB,     /* File Block */
    VMFS_BLK_TYPE_SB,     /* Sub-Block */
    VMFS_BLK_TYPE_PB,     /* Pointer Block */
    VMFS_BLK_TYPE_FD,     /* File Descriptor */
@@ -31,7 +31,7 @@ enum {
 /* Extract block type from a block ID */
 #define VMFS_BLK_TYPE(blk_id)  ((blk_id) & 0x07)
 
-/* Full-Block - TBZ flag specifies if the block must be zeroed. */
+/* File-Block - TBZ flag specifies if the block must be zeroed. */
 #define VMFS_BLK_FB_ITEM(blk_id)   ((blk_id) >> 6)
 #define VMFS_BLK_FB_TBZ(blk_id)    (((blk_id) >> 5) & 0x1)
 

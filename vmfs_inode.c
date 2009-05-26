@@ -175,7 +175,7 @@ int vmfs_inode_bind(vmfs_file_t *f,const u_char *inode_buf)
             cur_pos = (i + 1) * factor;
             break;
             
-         /* Full-Block/Sub-Block: simply add it to the list */
+         /* File-Block/Sub-Block: simply add it to the list */
          case VMFS_BLK_TYPE_FB:
          case VMFS_BLK_TYPE_SB:
             vmfs_blk_list_add_block(&f->blk_list,cur_pos++,blk_id);

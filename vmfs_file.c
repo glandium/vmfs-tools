@@ -161,7 +161,7 @@ ssize_t vmfs_file_pread(vmfs_file_t *f,u_char *buf,size_t len,off_t pos)
             memset(buf,0,res);
             break;
 
-         /* Full-Block */
+         /* File-Block */
          case VMFS_BLK_TYPE_FB: {
             off_t sub_page,sub_offset;
 

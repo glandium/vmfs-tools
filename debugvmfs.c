@@ -268,7 +268,7 @@ static int cmd_convert_block_id(vmfs_fs_t *fs,int argc,char *argv[])
       
       switch(blk_type) {
          case VMFS_BLK_TYPE_FB:
-            printf("Full-Block, Item=0x%8.8x, TBZ=%d\n",
+            printf("File-Block, Item=0x%8.8x, TBZ=%d\n",
                    VMFS_BLK_FB_ITEM(blk_id),VMFS_BLK_FB_TBZ(blk_id));
             break;
 
@@ -316,7 +316,7 @@ static int cmd_read_block(vmfs_fs_t *fs,int argc,char *argv[])
    blk_type = VMFS_BLK_TYPE(blk_id);
 
    switch(blk_type) {
-      /* Full Block */
+      /* File Block */
       case VMFS_BLK_TYPE_FB:
          vmfs_fs_read(fs,VMFS_BLK_FB_ITEM(blk_id),0,buf,blk_size);
          mem_dump(stdout,buf,blk_size);
