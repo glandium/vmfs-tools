@@ -170,8 +170,8 @@ int vmfs_inode_bind(vmfs_file_t *f,const u_char *inode_buf)
       blk_type = VMFS_BLK_TYPE(blk_id);
 
       switch(blk_type) {
-         /* COW block */
-         case VMFS_BLK_TYPE_COW:
+         /* Unallocated block */
+         case VMFS_BLK_TYPE_NONE:
             cur_pos = (i + 1) * factor;
             break;
             

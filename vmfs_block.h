@@ -20,7 +20,7 @@
 
 /* Block types */
 enum {
-   VMFS_BLK_TYPE_COW = 0,/* Copy-on-write for sparse files */
+   VMFS_BLK_TYPE_NONE = 0,
    VMFS_BLK_TYPE_FB,     /* File Block */
    VMFS_BLK_TYPE_SB,     /* Sub-Block */
    VMFS_BLK_TYPE_PB,     /* Pointer Block */

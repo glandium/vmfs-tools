@@ -149,11 +149,11 @@ ssize_t vmfs_file_pread(vmfs_file_t *f,u_char *buf,size_t len,off_t pos)
 #endif
 
       blk_type = VMFS_BLK_FB_TBZ(blk_id) ?
-                    VMFS_BLK_TYPE_COW : VMFS_BLK_TYPE(blk_id);
+                    VMFS_BLK_TYPE_NONE : VMFS_BLK_TYPE(blk_id);
 
       switch(blk_type) {
-         /* Copy-On-Write block */
-         case VMFS_BLK_TYPE_COW:
+         /* Unallocated block */
+         case VMFS_BLK_TYPE_NONE:
             offset = pos % blk_size;
             blk_len = blk_size - offset;
             exp_len = m_min(blk_len,len);
