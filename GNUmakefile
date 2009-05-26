@@ -19,7 +19,11 @@ SRC := $(wildcard *.c)
 HEADERS := $(wildcard *.h)
 OBJS := $(SRC:%.c=%.o)
 PROGRAMS := debugvmfs vmfs-fuse
-MANSRCS := $(wildcard $(PROGRAMS:%=%.txt))
+buildPROGRAMS := $(PROGRAMS)
+ifeq (,$(FUSE_LDFLAGS))
+buildPROGRAMS := $(filter-out vmfs-fuse,$(buildPROGRAMS))
+endif
+MANSRCS := $(wildcard $(buildPROGRAMS:%=%.txt))
 
 ifneq (,$(call PATH_LOOKUP,asciidoc))
 ifneq (,$(call PATH_LOOKUP,xsltproc))
@@ -36,7 +40,7 @@ sbindir := $(exec_prefix)/sbin
 datarootdir := $(prefix)/share
 mandir := $(datarootdir)/man
 
-all: $(PROGRAMS) $(wildcard .gitignore)
+all: $(buildPROGRAMS) $(wildcard .gitignore)
 
 version: $(MAKEFILE_LIST) $(SRC) $(HEADERS) $(wildcard .git/logs/HEAD .git/refs/tags)
 	(if [ -d .git ]; then \
@@ -67,7 +71,7 @@ $(strip $(1))_EXTRA_OBJS := $$($(strip $(1))_EXTRA_SRCS:%.c=%.o)
 LIBVMFS_EXCLUDE_OBJS += $(1).o $$($(strip $(1))_EXTRA_OBJS)
 $(1): $(1).o $$($(strip $(1))_EXTRA_OBJS) libvmfs.a
 endef
-$(foreach program, $(PROGRAMS), $(eval $(call program_template,$(program))))
+$(foreach program, $(buildPROGRAMS), $(eval $(call program_template,$(program))))
 
 libvmfs.a: $(filter-out $(LIBVMFS_EXCLUDE_OBJS),$(OBJS))
 	ar -r $@ $^
@@ -75,7 +79,7 @@ libvmfs.a: $(filter-out $(LIBVMFS_EXCLUDE_OBJS),$(OBJS))
 
 $(OBJS): %.o: %.c $(HEADERS)
 
-$(PROGRAMS):
+$(buildPROGRAMS):
 	$(CC) -o $@ $^ $(LDFLAGS)
 
 clean: CLEAN := $(wildcard libvmfs.a $(PROGRAMS) $(OBJS) $(PACKAGE)-*.tar.gz $(MANPAGES) $(MANDOCBOOK))
@@ -102,7 +106,7 @@ doc: $(MANPAGES)
 $(DESTDIR)/%:
 	install -d -m 0755 $@
 
-installPROGRAMS := $(PROGRAMS:%=$(DESTDIR)$(sbindir)/%)
+installPROGRAMS := $(buildPROGRAMS:%=$(DESTDIR)$(sbindir)/%)
 installMANPAGES := $(MANPAGES:%=$(DESTDIR)$(mandir)/man8/%)
 
 $(installPROGRAMS): $(DESTDIR)$(sbindir)/%: % $(DESTDIR)$(sbindir)
