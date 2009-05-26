@@ -148,7 +148,8 @@ ssize_t vmfs_file_pread(vmfs_file_t *f,u_char *buf,size_t len,off_t pos)
          printf("vmfs_file_read: reading block 0x%8.8x\n",blk_id);
 #endif
 
-      blk_type = VMFS_BLK_TYPE(blk_id);
+      blk_type = VMFS_BLK_FB_TBZ(blk_id) ?
+                    VMFS_BLK_TYPE_COW : VMFS_BLK_TYPE(blk_id);
 
       switch(blk_type) {
          /* Copy-On-Write block */
