@@ -24,11 +24,14 @@ ifeq (,$(FUSE_LDFLAGS))
 buildPROGRAMS := $(filter-out vmfs-fuse,$(buildPROGRAMS))
 endif
 MANSRCS := $(wildcard $(buildPROGRAMS:%=%.txt))
+DOCBOOK_XSL :=	http://docbook.sourceforge.net/release/xsl/current/manpages/docbook.xsl
 
 ifneq (,$(call PATH_LOOKUP,asciidoc))
 ifneq (,$(call PATH_LOOKUP,xsltproc))
+ifneq (,$(shell xsltproc --nonet --noout $(DOCBOOK_XSL) && echo ok))
 MANDOCBOOK := $(MANSRCS:%.txt=%.xml)
 MANPAGES := $(foreach man,$(MANSRCS),$(shell sed '1{s/(/./;s/)//;q}' $(man)))
+endif
 endif
 endif
 
@@ -99,7 +102,7 @@ $(MANDOCBOOK): %.xml: %.txt
 	asciidoc -a manversion=$(VERSION:v%=%) -a manmanual=$(PACKAGE) -b docbook -d manpage -o $@ $<
 
 $(MANPAGES): %.8: %.xml
-	xsltproc -o $@ --nonet --novalid http://docbook.sourceforge.net/release/xsl/current/manpages/docbook.xsl $<
+	xsltproc -o $@ --nonet --novalid $(DOCBOOK_XSL) $<
 
 doc: $(MANPAGES)
 
