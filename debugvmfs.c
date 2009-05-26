@@ -268,7 +268,8 @@ static int cmd_convert_block_id(vmfs_fs_t *fs,int argc,char *argv[])
       
       switch(blk_type) {
          case VMFS_BLK_TYPE_FB:
-            printf("Full-Block, Item=0x%8.8x\n",VMFS_BLK_FB_ITEM(blk_id));
+            printf("Full-Block, Item=0x%8.8x, TBZ=%d\n",
+                   VMFS_BLK_FB_ITEM(blk_id),VMFS_BLK_FB_TBZ(blk_id));
             break;
 
          case VMFS_BLK_TYPE_SB:

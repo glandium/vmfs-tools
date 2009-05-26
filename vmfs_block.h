@@ -31,8 +31,9 @@ enum {
 /* Extract block type from a block ID */
 #define VMFS_BLK_TYPE(blk_id)  ((blk_id) & 0x07)
 
-/* Full-Block */
+/* Full-Block - TBZ flag specifies if the block must be zeroed. */
 #define VMFS_BLK_FB_ITEM(blk_id)   ((blk_id) >> 6)
+#define VMFS_BLK_FB_TBZ(blk_id)    (((blk_id) >> 5) & 0x1)
 
 /* Sub-Block */
 #define VMFS_BLK_SB_ITEM(blk_id)   (((blk_id) >> 28) & 0x0f)
