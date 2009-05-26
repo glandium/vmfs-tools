@@ -41,6 +41,9 @@ int vmfs_inode_read(vmfs_inode_t *inode,const u_char *buf)
    inode->uid       = read_le32(buf,VMFS_INODE_OFS_UID);
    inode->gid       = read_le32(buf,VMFS_INODE_OFS_GID);
    inode->mode      = read_le32(buf,VMFS_INODE_OFS_MODE);
+   inode->zla       = read_le32(buf,VMFS_INODE_OFS_ZLA);
+   inode->tbz       = read_le32(buf,VMFS_INODE_OFS_TBZ);
+   inode->cow       = read_le32(buf,VMFS_INODE_OFS_COW);
 
    /* "corrected" mode */
    inode->cmode    = inode->mode | vmfs_file_type2mode(inode->type);
@@ -70,6 +73,9 @@ int vmfs_inode_write(const vmfs_inode_t *inode,u_char *buf)
    write_le32(buf,VMFS_INODE_OFS_UID,inode->uid);
    write_le32(buf,VMFS_INODE_OFS_GID,inode->gid);
    write_le32(buf,VMFS_INODE_OFS_MODE,inode->mode);
+   write_le32(buf,VMFS_INODE_OFS_ZLA,inode->zla);
+   write_le32(buf,VMFS_INODE_OFS_TBZ,inode->tbz);
+   write_le32(buf,VMFS_INODE_OFS_COW,inode->cow);
    return(0);
 }
 
@@ -93,6 +99,9 @@ void vmfs_inode_show(const vmfs_inode_t *inode)
           inode->mode,m_fmode_to_str(inode->mode,tbuf));
    printf("  - CMode        : 0%o (%s)\n",
           inode->cmode,m_fmode_to_str(inode->cmode,tbuf));
+   printf("  - ZLA          : 0x%8.8x\n",inode->zla);
+   printf("  - TBZ          : 0x%8.8x\n",inode->tbz);
+   printf("  - COW          : 0x%8.8x\n",inode->cow);
 
    printf("  - Access Time  : %s\n",m_ctime(&inode->atime,tbuf,sizeof(tbuf)));
    printf("  - Modify Time  : %s\n",m_ctime(&inode->mtime,tbuf,sizeof(tbuf)));

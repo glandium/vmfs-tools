@@ -40,7 +40,10 @@ struct vmfs_inode_raw {
    uint32_t uid;
    uint32_t gid;
    uint32_t mode;
-   u_char _unknown2[444];
+   uint32_t zla;
+   uint32_t tbz;
+   uint32_t cow;
+   u_char _unknown2[432];
    union {
       uint32_t blocks[VMFS_INODE_BLK_COUNT];
       uint32_t rdm_id;
@@ -61,6 +64,9 @@ struct vmfs_inode_raw {
 #define VMFS_INODE_OFS_UID        offsetof(struct vmfs_inode_raw, uid)
 #define VMFS_INODE_OFS_GID        offsetof(struct vmfs_inode_raw, gid)
 #define VMFS_INODE_OFS_MODE       offsetof(struct vmfs_inode_raw, mode)
+#define VMFS_INODE_OFS_ZLA        offsetof(struct vmfs_inode_raw, zla)
+#define VMFS_INODE_OFS_TBZ        offsetof(struct vmfs_inode_raw, tbz)
+#define VMFS_INODE_OFS_COW        offsetof(struct vmfs_inode_raw, cow)
 
 #define VMFS_INODE_OFS_BLK_ARRAY  offsetof(struct vmfs_inode_raw, blocks)
 #define VMFS_INODE_OFS_RDM_ID     offsetof(struct vmfs_inode_raw, rdm_id)
@@ -77,6 +83,7 @@ struct vmfs_inode {
    time_t  mtime,ctime,atime;
    uint32_t uid,gid;
    uint32_t mode,cmode;
+   uint32_t zla,tbz,cow;
    uint32_t rdm_id;
 };
 
