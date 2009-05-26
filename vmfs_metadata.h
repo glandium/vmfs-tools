@@ -30,7 +30,8 @@ struct vmfs_metadata_hdr_raw {
    uint64_t obj_seq;       /* Object sequence */
    uint32_t hb_lock;       /* Heartbeat lock flag */
    uuid_t hb_uuid;         /* UUID of locking server */
-   u_char pad1[0x1c8];     /* Padding/unknown */
+   uint64_t mtime;
+   u_char pad1[0x1c0];     /* Padding/unknown */
 } __attribute__((packed));
 
 #define VMFS_MDH_OFS_MAGIC    offsetof(struct vmfs_metadata_hdr_raw, magic)
@@ -40,6 +41,7 @@ struct vmfs_metadata_hdr_raw {
 #define VMFS_MDH_OFS_OBJ_SEQ  offsetof(struct vmfs_metadata_hdr_raw, obj_seq)
 #define VMFS_MDH_OFS_HB_LOCK  offsetof(struct vmfs_metadata_hdr_raw, hb_lock)
 #define VMFS_MDH_OFS_HB_UUID  offsetof(struct vmfs_metadata_hdr_raw, hb_uuid)
+#define VMFS_MDH_OFS_MTIME    offsetof(struct vmfs_metadata_hdr_raw, mtime)
 
 struct vmfs_metadata_hdr {
    uint32_t magic;
@@ -49,6 +51,7 @@ struct vmfs_metadata_hdr {
    uint64_t obj_seq;
    uint32_t hb_lock;
    uuid_t  hb_uuid;
+   uint64_t mtime;
 };
 
 static inline bool vmfs_metadata_is_locked(vmfs_metadata_hdr_t *mdh)

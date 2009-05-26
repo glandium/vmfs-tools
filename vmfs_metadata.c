@@ -33,6 +33,7 @@ int vmfs_metadata_hdr_read(vmfs_metadata_hdr_t *mdh,const u_char *buf)
    mdh->hb_seq    = read_le64(buf,VMFS_MDH_OFS_HB_SEQ);
    mdh->obj_seq   = read_le64(buf,VMFS_MDH_OFS_OBJ_SEQ);
    mdh->hb_lock   = read_le32(buf,VMFS_MDH_OFS_HB_LOCK);
+   mdh->mtime     = read_le64(buf,VMFS_MDH_OFS_MTIME);
    read_uuid(buf,VMFS_MDH_OFS_HB_UUID,&mdh->hb_uuid);
    return(0);
 }
@@ -46,6 +47,7 @@ int vmfs_metadata_hdr_write(const vmfs_metadata_hdr_t *mdh,u_char *buf)
    write_le64(buf,VMFS_MDH_OFS_HB_SEQ,mdh->hb_seq);
    write_le64(buf,VMFS_MDH_OFS_OBJ_SEQ,mdh->obj_seq);
    write_le32(buf,VMFS_MDH_OFS_HB_LOCK,mdh->hb_lock);
+   write_le64(buf,VMFS_MDH_OFS_MTIME,mdh->mtime);
    write_uuid(buf,VMFS_MDH_OFS_HB_UUID,&mdh->hb_uuid);
    return(0);
 }
@@ -60,6 +62,7 @@ void vmfs_metadata_hdr_show(const vmfs_metadata_hdr_t *mdh)
           mdh->hb_lock,(mdh->hb_lock > 0) ? "LOCKED":"UNLOCKED");
    printf("  - HB Sequence  : 0x%"PRIx64"\n",mdh->hb_seq);
    printf("  - Obj Sequence : 0x%"PRIx64"\n",mdh->obj_seq);
+   printf("  - MTime        : %"PRId64"\n",mdh->mtime);
 }
 
 /* Lock and read metadata at specified position */
