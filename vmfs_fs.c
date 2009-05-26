@@ -163,7 +163,11 @@ static int vmfs_read_fdc_base(vmfs_fs_t *fs)
    inode.size = read_le64((u_char *)&fs->fs_info.block_size,0);
    tmp = VMFS_FILE_TYPE_META;
    inode.type = read_le32((u_char *)&tmp,0);
-   tmp = VMFS_BLK_TYPE_FB + ((fdc_base / fs->fs_info.block_size) << 6);
+   tmp = 1;
+   inode.blk_count = read_le32((u_char *)&tmp,0);
+   tmp = VMFS_BLK_TYPE_FB;
+   inode.zla = read_le32((u_char *)&tmp,0);
+   tmp += (fdc_base / fs->fs_info.block_size) << 6;
    inode.blocks[0] = read_le32((u_char *)&tmp,0);
 
    fs->fdc = vmfs_bitmap_open_from_inode(fs,(u_char *)&inode);
