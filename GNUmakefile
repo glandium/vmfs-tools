@@ -1,18 +1,25 @@
 PACKAGE := vmfs-tools
 
+define PATH_LOOKUP
+$(wildcard $(foreach path,$(subst :, ,$(PATH)),$(path)/$(1)))
+endef
+
 CC := gcc
 OPTIMFLAGS := -O2
 CFLAGS := -Wall $(OPTIMFLAGS) -g -D_FILE_OFFSET_BITS=64 $(EXTRA_CFLAGS)
-LDFLAGS := $(shell pkg-config --libs uuid)
+ifneq (,$(call PATH_LOOKUP,pkg-config))
+UUID_LDFLAGS := $(shell pkg-config --libs uuid)
+FUSE_LDFLAGS := $(shell pkg-config --libs fuse)
+FUSE_CFLAGS := $(shell pkg-config --cflags fuse)
+else
+UUID_LDFLAGS := -luuid
+endif
+LDFLAGS := $(UUID_LDFLAGS)
 SRC := $(wildcard *.c)
 HEADERS := $(wildcard *.h)
 OBJS := $(SRC:%.c=%.o)
 PROGRAMS := debugvmfs vmfs-fuse
 MANSRCS := $(wildcard $(PROGRAMS:%=%.txt))
-
-define PATH_LOOKUP
-$(wildcard $(foreach path,$(subst :, ,$(PATH)),$(path)/$(1)))
-endef
 
 ifneq (,$(call PATH_LOOKUP,asciidoc))
 ifneq (,$(call PATH_LOOKUP,xsltproc))
@@ -48,8 +55,8 @@ version: $(MAKEFILE_LIST) $(SRC) $(HEADERS) $(wildcard .git/logs/HEAD .git/refs/
 	echo VERSION := $${VER}) > $@ 2> /dev/null
 -include version
 
-vmfs-fuse: LDFLAGS+=$(shell pkg-config --libs fuse)
-vmfs-fuse.o: CFLAGS+=$(shell pkg-config --cflags fuse)
+vmfs-fuse: LDFLAGS+=$(FUSE_LDFLAGS)
+vmfs-fuse.o: CFLAGS+=$(FUSE_CFLAGS)
 
 debugvmfs_EXTRA_SRCS := readcmd.c
 debugvmfs: LDFLAGS+=-lreadline
