@@ -8,3 +8,35 @@ the help of the FUSE framework.
 
 While it is still work in progress and is not destined for production use
 yet, it can be of some help for some people.
+
+Build and install instructions
+------------------------------
+
+To get a full build of vmfs-tools, you need the following prerequisites:
+- gcc
+- GNU make
+- libuuid's development files
+- pkg-config
+- libfuse's development files
+- asciidoc
+- xsltproc
+- docbook-xsl
+
+From the above list, only the first three are strictly required.
+
+The lack of libfuse's development files will result in the vmfs-fuse
+program not being built.
+
+The lack of asciidoc, xsltproc or docbook-xsl will result in no
+manual pages (though you can still look at the .txt files within the
+source tarball).
+
+Building vmfs-tools should be as simple as running `make' or `gmake`,
+depending on how GNU make's binary is named on your system.
+
+To install vmfs-tools, just run `make install' (or `gmake install').
+The install location for the binaries is $prefix/sbin, $prefix/share/man
+for the manual pages, where $prefix is /usr/local by default.
+
+If you wish to install to some other place, you can override $prefix with
+the command `make install prefix=/some/where'.
