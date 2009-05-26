@@ -1,16 +1,40 @@
 PACKAGE := vmfs-tools
 
+define PATH_LOOKUP
+$(wildcard $(foreach path,$(subst :, ,$(PATH)),$(path)/$(1)))
+endef
+
 CC := gcc
 OPTIMFLAGS := -O2
 CFLAGS := -Wall $(OPTIMFLAGS) -g -D_FILE_OFFSET_BITS=64 $(EXTRA_CFLAGS)
-LDFLAGS := $(shell pkg-config --libs uuid)
+ifneq (,$(call PATH_LOOKUP,pkg-config))
+UUID_LDFLAGS := $(shell pkg-config --libs uuid)
+FUSE_LDFLAGS := $(shell pkg-config --libs fuse)
+FUSE_CFLAGS := $(shell pkg-config --cflags fuse)
+else
+UUID_LDFLAGS := -luuid
+endif
+LDFLAGS := $(UUID_LDFLAGS)
 SRC := $(wildcard *.c)
 HEADERS := $(wildcard *.h)
 OBJS := $(SRC:%.c=%.o)
 PROGRAMS := debugvmfs vmfs-fuse
-MANSRCS := $(wildcard $(PROGRAMS:%=%.txt))
+buildPROGRAMS := $(PROGRAMS)
+ifeq (,$(FUSE_LDFLAGS))
+buildPROGRAMS := $(filter-out vmfs-fuse,$(buildPROGRAMS))
+endif
+MANSRCS := $(wildcard $(buildPROGRAMS:%=%.txt))
+DOCBOOK_XSL :=	http://docbook.sourceforge.net/release/xsl/current/manpages/docbook.xsl
+
+ifneq (,$(call PATH_LOOKUP,asciidoc))
+ifneq (,$(call PATH_LOOKUP,xsltproc))
+ifneq (,$(shell xsltproc --nonet --noout $(DOCBOOK_XSL) && echo ok))
 MANDOCBOOK := $(MANSRCS:%.txt=%.xml)
 MANPAGES := $(foreach man,$(MANSRCS),$(shell sed '1{s/(/./;s/)//;q}' $(man)))
+endif
+endif
+endif
+
 EXTRA_DIST := LICENSE README TODO AUTHORS
 LIB := libvmfs.a
 
@@ -20,7 +44,7 @@ sbindir := $(exec_prefix)/sbin
 datarootdir := $(prefix)/share
 mandir := $(datarootdir)/man
 
-all: $(PROGRAMS) $(wildcard .gitignore)
+all: $(buildPROGRAMS) $(wildcard .gitignore)
 
 version: $(MAKEFILE_LIST) $(SRC) $(HEADERS) $(wildcard .git/logs/HEAD .git/refs/tags)
 	(if [ -d .git ]; then \
@@ -39,8 +63,8 @@ version: $(MAKEFILE_LIST) $(SRC) $(HEADERS) $(wildcard .git/logs/HEAD .git/refs/
 	echo VERSION := $${VER}) > $@ 2> /dev/null
 -include version
 
-vmfs-fuse: LDFLAGS+=$(shell pkg-config --libs fuse)
-vmfs-fuse.o: CFLAGS+=$(shell pkg-config --cflags fuse)
+vmfs-fuse: LDFLAGS+=$(FUSE_LDFLAGS)
+vmfs-fuse.o: CFLAGS+=$(FUSE_CFLAGS)
 
 debugvmfs_EXTRA_SRCS := readcmd.c
 debugvmfs: LDFLAGS+=-ldl
@@ -51,7 +75,7 @@ $(strip $(1))_EXTRA_OBJS := $$($(strip $(1))_EXTRA_SRCS:%.c=%.o)
 LIBVMFS_EXCLUDE_OBJS += $(1).o $$($(strip $(1))_EXTRA_OBJS)
 $(1): $(1).o $$($(strip $(1))_EXTRA_OBJS) $(LIB)
 endef
-$(foreach program, $(PROGRAMS), $(eval $(call program_template,$(program))))
+$(foreach program, $(buildPROGRAMS), $(eval $(call program_template,$(program))))
 
 $(LIB): $(filter-out $(LIBVMFS_EXCLUDE_OBJS),$(OBJS))
 	ar -r $@ $^
@@ -59,7 +83,7 @@ $(LIB): $(filter-out $(LIBVMFS_EXCLUDE_OBJS),$(OBJS))
 
 $(OBJS): %.o: %.c $(HEADERS)
 
-$(PROGRAMS):
+$(buildPROGRAMS):
 	$(CC) -o $@ $^ $(LDFLAGS)
 
 clean: CLEAN := $(wildcard $(LIB) $(PROGRAMS) $(OBJS) $(PACKAGE)-*.tar.gz $(MANPAGES) $(MANDOCBOOK))
@@ -75,18 +99,18 @@ dist: $(ALL_DIST)
 	tar -zcf "$(DIST_DIR).tar.gz" "$(DIST_DIR)"
 	@rm -rf "$(DIST_DIR)"
 
-$(MANSRCS:%.txt=%.xml): %.xml: %.txt
+$(MANDOCBOOK): %.xml: %.txt
 	asciidoc -a manversion=$(VERSION:v%=%) -a manmanual=$(PACKAGE) -b docbook -d manpage -o $@ $<
 
 $(MANPAGES): %.8: %.xml
-	xsltproc -o $@ --nonet --novalid http://docbook.sourceforge.net/release/xsl/current/manpages/docbook.xsl $<
+	xsltproc -o $@ --nonet --novalid $(DOCBOOK_XSL) $<
 
 doc: $(MANPAGES)
 
 $(DESTDIR)/%:
 	install -d -m 0755 $@
 
-installPROGRAMS := $(PROGRAMS:%=$(DESTDIR)$(sbindir)/%)
+installPROGRAMS := $(buildPROGRAMS:%=$(DESTDIR)$(sbindir)/%)
 installMANPAGES := $(MANPAGES:%=$(DESTDIR)$(mandir)/man8/%)
 
 $(installPROGRAMS): $(DESTDIR)$(sbindir)/%: % $(DESTDIR)$(sbindir)
