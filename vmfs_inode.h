@@ -30,7 +30,7 @@ struct vmfs_inode_raw {
    uint32_t id2;              /* seems to be VMFS_BLK_FD_ITEM(id) + 1 */
    uint32_t nlink;
    uint32_t type;
-   uint32_t _unknown1;
+   uint32_t flags;
    uint64_t size;
    uint64_t blk_size;
    uint64_t blk_count;
@@ -51,6 +51,7 @@ struct vmfs_inode_raw {
 #define VMFS_INODE_OFS_ID2        offsetof(struct vmfs_inode_raw, id2)
 #define VMFS_INODE_OFS_NLINK      offsetof(struct vmfs_inode_raw, nlink)
 #define VMFS_INODE_OFS_TYPE       offsetof(struct vmfs_inode_raw, type)
+#define VMFS_INODE_OFS_FLAGS      offsetof(struct vmfs_inode_raw, flags)
 #define VMFS_INODE_OFS_SIZE       offsetof(struct vmfs_inode_raw, size)
 #define VMFS_INODE_OFS_BLK_SIZE   offsetof(struct vmfs_inode_raw, blk_size)
 #define VMFS_INODE_OFS_BLK_COUNT  offsetof(struct vmfs_inode_raw, blk_count)
@@ -69,6 +70,7 @@ struct vmfs_inode {
    uint32_t id,id2;
    uint32_t nlink;
    uint32_t type;
+   uint32_t flags;
    uint64_t size;
    uint64_t blk_size;
    uint64_t blk_count;

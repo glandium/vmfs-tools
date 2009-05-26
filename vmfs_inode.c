@@ -31,6 +31,7 @@ int vmfs_inode_read(vmfs_inode_t *inode,const u_char *buf)
    inode->id2       = read_le32(buf,VMFS_INODE_OFS_ID2);
    inode->nlink     = read_le32(buf,VMFS_INODE_OFS_NLINK);
    inode->type      = read_le32(buf,VMFS_INODE_OFS_TYPE);
+   inode->flags     = read_le32(buf,VMFS_INODE_OFS_FLAGS);
    inode->size      = read_le64(buf,VMFS_INODE_OFS_SIZE);
    inode->blk_size  = read_le64(buf,VMFS_INODE_OFS_BLK_SIZE);
    inode->blk_count = read_le64(buf,VMFS_INODE_OFS_BLK_COUNT);
@@ -59,6 +60,7 @@ int vmfs_inode_write(const vmfs_inode_t *inode,u_char *buf)
    write_le32(buf,VMFS_INODE_OFS_ID2,inode->id2);
    write_le32(buf,VMFS_INODE_OFS_NLINK,inode->nlink);
    write_le32(buf,VMFS_INODE_OFS_TYPE,inode->type);
+   write_le32(buf,VMFS_INODE_OFS_FLAGS,inode->flags);
    write_le64(buf,VMFS_INODE_OFS_SIZE,inode->size);
    write_le64(buf,VMFS_INODE_OFS_BLK_SIZE,inode->blk_size);
    write_le64(buf,VMFS_INODE_OFS_BLK_COUNT,inode->blk_count);
@@ -82,6 +84,7 @@ void vmfs_inode_show(const vmfs_inode_t *inode)
    printf("  - ID2          : 0x%8.8x\n",inode->id2);
    printf("  - Links        : %u\n",inode->nlink);
    printf("  - Type         : 0x%8.8x\n",inode->type);
+   printf("  - Flags        : 0x%8.8x\n",inode->flags);
    printf("  - Size         : 0x%8.8"PRIx64"\n",inode->size);
    printf("  - Block size   : 0x%"PRIx64"\n",inode->blk_size);
    printf("  - Block count  : 0x%"PRIx64"\n",inode->blk_count);
