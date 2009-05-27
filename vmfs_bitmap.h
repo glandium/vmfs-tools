@@ -57,7 +57,7 @@ struct vmfs_bitmap_entry {
    uint32_t total;
    uint32_t free;
    uint32_t ffree;
-   uint8_t bitmap[0];
+   uint8_t bitmap[VMFS_BITMAP_BMP_MAX_SIZE];
 };
 
 /* A bitmap file instance */
