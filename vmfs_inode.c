@@ -154,13 +154,14 @@ int vmfs_inode_bind(vmfs_file_t *f,const u_char *inode_buf)
          DECL_ALIGNED_BUFFER_WOL(buf,f->fs->pbc->bmh.data_size);
          uint32_t blk_per_pb = f->fs->pbc->bmh.data_size / sizeof(uint32_t);
          uint32_t pb_num, blk_in_pb;
-         for(i=0,pb_num=0,blk_in_pb=0;i<blk_count;i++) {
+         for(i=0,pb_num=0,blk_in_pb=0;i<blk_count;) {
             uint32_t blk_id2;
             if (blk_in_pb == 0) {
                blk_id = read_le32(inode_buf,
                           VMFS_INODE_OFS_BLK_ARRAY+(pb_num*sizeof(uint32_t)));
                if (blk_id == 0) {
                   pb_num++;
+                  i += blk_per_pb;
                   continue;
                }
                if (!vmfs_bitmap_get_item(f->fs->pbc,VMFS_BLK_PB_ENTRY(blk_id),
@@ -173,6 +174,7 @@ int vmfs_inode_bind(vmfs_file_t *f,const u_char *inode_buf)
                blk_in_pb = 0;
                pb_num++;
             }
+            i++;
          }
          break;
       }
