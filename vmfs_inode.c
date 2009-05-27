@@ -137,7 +137,7 @@ int vmfs_inode_bind(vmfs_file_t *f,const u_char *inode_buf)
    if (f->inode.type == VMFS_FILE_TYPE_RDM)
       return(0);
 
-   blk_size = vmfs_fs_get_blocksize(f->fs);
+   blk_size = f->inode.blk_size;
    blk_count = (f->inode.size + blk_size - 1) / blk_size;
    vmfs_blk_list_init(&f->blk_list,blk_count);
 

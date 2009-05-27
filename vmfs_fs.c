@@ -163,6 +163,7 @@ static int vmfs_read_fdc_base(vmfs_fs_t *fs)
    inode.size = read_le64((u_char *)&fs->fs_info.block_size,0);
    tmp = VMFS_FILE_TYPE_META;
    inode.type = read_le32((u_char *)&tmp,0);
+   inode.blk_size = read_le64((u_char *)&fs->fs_info.block_size,0);
    tmp = 1;
    inode.blk_count = read_le32((u_char *)&tmp,0);
    tmp = VMFS_BLK_TYPE_FB;
