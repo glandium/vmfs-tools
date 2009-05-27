@@ -143,14 +143,11 @@ int vmfs_inode_bind(vmfs_file_t *f,const u_char *inode_buf)
 
    switch(f->inode.zla) {
    case VMFS_BLK_TYPE_FB:
+   case VMFS_BLK_TYPE_SB:
       for(i=0;i<blk_count;i++) {
          blk_id = read_le32(inode_buf,VMFS_INODE_OFS_BLK_ARRAY+(i*sizeof(uint32_t)));
          vmfs_blk_list_add_block(&f->blk_list,i,blk_id);
       }
-      break;
-   case VMFS_BLK_TYPE_SB:
-      blk_id = read_le32(inode_buf,VMFS_INODE_OFS_BLK_ARRAY);
-      vmfs_blk_list_add_block(&f->blk_list,0,blk_id);
       break;
    case VMFS_BLK_TYPE_PB:
       {
