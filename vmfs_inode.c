@@ -124,6 +124,11 @@ int vmfs_inode_get(const vmfs_fs_t *fs,const vmfs_dirent_t *rec,u_char *buf)
                                VMFS_BLK_FD_ITEM(blk_id), buf) ? 0 : -1);
 }
 
+static inline uint32_t vmfs_inode_read_blk_id(const u_char *buf,u_int index)
+{
+   return(read_le32(buf,VMFS_INODE_OFS_BLK_ARRAY+(index*sizeof(uint32_t))));
+}
+
 /* Bind inode info to a file */
 int vmfs_inode_bind(vmfs_file_t *f,const u_char *inode_buf)
 {
@@ -142,42 +147,51 @@ int vmfs_inode_bind(vmfs_file_t *f,const u_char *inode_buf)
    vmfs_blk_list_init(&f->blk_list,blk_count);
 
    switch(f->inode.zla) {
-   case VMFS_BLK_TYPE_FB:
-   case VMFS_BLK_TYPE_SB:
-      for(i=0;i<blk_count;i++) {
-         blk_id = read_le32(inode_buf,VMFS_INODE_OFS_BLK_ARRAY+(i*sizeof(uint32_t)));
-         vmfs_blk_list_add_block(&f->blk_list,i,blk_id);
-      }
-      break;
-   case VMFS_BLK_TYPE_PB:
-      {
-         DECL_ALIGNED_BUFFER_WOL(buf,f->fs->pbc->bmh.data_size);
-         uint32_t blk_per_pb = f->fs->pbc->bmh.data_size / sizeof(uint32_t);
-         uint32_t pb_num, blk_in_pb;
-         for(i=0,pb_num=0,blk_in_pb=0;i<blk_count;) {
-            uint32_t blk_id2;
-            if (blk_in_pb == 0) {
-               blk_id = read_le32(inode_buf,
-                          VMFS_INODE_OFS_BLK_ARRAY+(pb_num*sizeof(uint32_t)));
-               if (blk_id == 0) {
-                  pb_num++;
-                  i += blk_per_pb;
-                  continue;
-               }
-               if (!vmfs_bitmap_get_item(f->fs->pbc,VMFS_BLK_PB_ENTRY(blk_id),
-                                      VMFS_BLK_PB_ITEM(blk_id),buf))
-                  goto error;
-            }
-            blk_id2 = read_le32(buf,blk_in_pb*sizeof(uint32_t));
-            vmfs_blk_list_add_block(&f->blk_list,i,blk_id2);
-            if (++blk_in_pb == blk_per_pb) {
-               blk_in_pb = 0;
-               pb_num++;
-            }
-            i++;
+      case VMFS_BLK_TYPE_FB:
+      case VMFS_BLK_TYPE_SB:
+         for(i=0;i<blk_count;i++) {
+            blk_id = vmfs_inode_read_blk_id(inode_buf,i);
+            vmfs_blk_list_add_block(&f->blk_list,i,blk_id);
          }
          break;
-      }
+
+      case VMFS_BLK_TYPE_PB:
+         {
+            DECL_ALIGNED_BUFFER_WOL(buf,f->fs->pbc->bmh.data_size);
+            uint32_t blk_per_pb = f->fs->pbc->bmh.data_size / sizeof(uint32_t);
+            uint32_t pb_num, blk_in_pb;
+
+            for(i=0,pb_num=0,blk_in_pb=0;i<blk_count;) 
+            {
+               if (blk_in_pb == 0) {
+                  blk_id = vmfs_inode_read_blk_id(inode_buf,pb_num);
+
+                  if (blk_id == 0) {
+                     pb_num++;
+                     i += blk_per_pb;
+                     continue;
+                  }
+
+                  if (!vmfs_bitmap_get_item(f->fs->pbc,
+                                            VMFS_BLK_PB_ENTRY(blk_id),
+                                            VMFS_BLK_PB_ITEM(blk_id),
+                                            buf))
+                     goto error;
+               }
+
+               blk_id = read_le32(buf,blk_in_pb * sizeof(uint32_t));
+               vmfs_blk_list_add_block(&f->blk_list,i,blk_id);
+
+               if (++blk_in_pb == blk_per_pb) {
+                  blk_in_pb = 0;
+                  pb_num++;
+               }
+
+               i++;
+            }
+            break;
+         }
+
    default:
       fprintf(stderr, "vmfs_inode_bind: "
               "unexpected zla 0x%2.2x!\n", f->inode.zla);
