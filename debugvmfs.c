@@ -337,6 +337,72 @@ static int cmd_read_block(vmfs_fs_t *fs,int argc,char *argv[])
    return(0);
 }
 
+/* Get block status */
+static int cmd_get_block_status(vmfs_fs_t *fs,int argc,char *argv[])
+{
+   vmfs_bitmap_entry_t entry;
+   vmfs_bitmap_t *bmp;
+   uint32_t blk_id,blk_type;
+   u_int32_t blk_entry,blk_item,addr;
+   int status;
+
+   if (argc == 0) {
+      fprintf(stderr,"Usage: get_block_status blk_id\n");
+      return(-1);
+   }
+
+   blk_id = (uint32_t)strtoul(argv[0],NULL,16);
+   blk_type = VMFS_BLK_TYPE(blk_id);
+
+   switch(blk_type) {
+      /* File Block */
+      case VMFS_BLK_TYPE_FB:
+         bmp       = fs->fbb;
+         blk_entry = 0;
+         blk_item  = VMFS_BLK_FB_ITEM(blk_id);
+         break;
+
+      /* Sub-Block */
+      case VMFS_BLK_TYPE_SB:
+         bmp       = fs->sbc;
+         blk_entry = VMFS_BLK_SB_ENTRY(blk_id);
+         blk_item  = VMFS_BLK_SB_ITEM(blk_id);
+         break;
+
+      /* Pointer Block */
+      case VMFS_BLK_TYPE_PB:
+         bmp       = fs->pbc;
+         blk_entry = VMFS_BLK_PB_ENTRY(blk_id);
+         blk_item  = VMFS_BLK_PB_ITEM(blk_id);
+         break;
+
+      /* Inode */
+      case VMFS_BLK_TYPE_FD:
+         bmp       = fs->fdc;
+         blk_entry = VMFS_BLK_FD_ENTRY(blk_id);
+         blk_item  = VMFS_BLK_FD_ITEM(blk_id);
+         break;
+
+      default:
+         fprintf(stderr,"Unsupported block type 0x%2.2x\n",blk_type);
+         return(-1);
+   }
+
+   addr = (blk_entry * bmp->bmh.items_per_bitmap_entry) + blk_item;
+
+   if (vmfs_bitmap_get_entry(bmp,addr,&entry) == -1) {
+      fprintf(stderr,"Unable to read bitmap info\n");
+      return(-1);
+   }
+
+   status = vmfs_bitmap_get_item_status(&bmp->bmh,&entry,addr);
+
+   printf("Block 0x%8.8x status: %s\n",
+          blk_id,(status) ? "allocated" : "free");
+
+   return(0);
+}
+
 /* Show a bitmap item */
 static int cmd_show_bitmap_item(vmfs_fs_t *fs,int argc,char *argv[])
 {   
@@ -407,6 +473,7 @@ struct cmd cmd_array[] = {
    { "show_heartbeats", "Show active heartbeats", cmd_show_heartbeats },
    { "convert_block_id", "Convert block ID", cmd_convert_block_id },
    { "read_block", "Read a block", cmd_read_block },
+   { "get_block_status", "Get block status", cmd_get_block_status },
    { "show_bitmap_item", "Show a bitmap item", cmd_show_bitmap_item },
    { "shell", "Opens a shell", cmd_shell },
    { NULL, NULL },
