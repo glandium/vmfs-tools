@@ -190,6 +190,9 @@ int vmfs_inode_get_block(const vmfs_fs_t *fs,const vmfs_inode_t *inode,
 
          pb_blk_id = inode->blocks[pb_index];
 
+         if (!pb_blk_id)
+            break;
+
          if (!vmfs_bitmap_get_item(fs->pbc,
                                    VMFS_BLK_PB_ENTRY(pb_blk_id),
                                    VMFS_BLK_PB_ITEM(pb_blk_id),
