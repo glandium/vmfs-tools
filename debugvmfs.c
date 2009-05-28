@@ -418,6 +418,30 @@ static int cmd_get_block_status(vmfs_fs_t *fs,int argc,char *argv[])
    return(0);
 }
 
+/* Allocate a block */
+static int cmd_alloc_block(vmfs_fs_t *fs,int argc,char *argv[])
+{
+   uint32_t blk_id;
+   int res;
+
+   if (argc == 0) {
+      fprintf(stderr,"Usage: alloc_block blk_id\n");
+      return(-1);
+   }
+
+   blk_id = (uint32_t)strtoul(argv[0],NULL,16);
+
+   res = vmfs_block_alloc_specified(fs,blk_id);
+
+   if (res == 0) {
+      printf("Block 0x%8.8x allocated.\n",blk_id);
+   } else {
+      fprintf(stderr,"Unable to allocate block 0x%8.8x\n",blk_id);
+   }
+
+   return(0);
+}
+
 /* Show a bitmap item */
 static int cmd_show_bitmap_item(vmfs_fs_t *fs,int argc,char *argv[])
 {   
@@ -491,6 +515,7 @@ struct cmd cmd_array[] = {
    { "convert_block_id", "Convert block ID", cmd_convert_block_id },
    { "read_block", "Read a block", cmd_read_block },
    { "get_block_status", "Get block status", cmd_get_block_status },
+   { "alloc_block", "Allocate block", cmd_alloc_block },
    { "show_bitmap_item", "Show a bitmap item", cmd_show_bitmap_item },
    { "shell", "Opens a shell", cmd_shell },
    { NULL, NULL },
