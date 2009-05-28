@@ -88,7 +88,7 @@ int vmfs_bme_write(const vmfs_bitmap_entry_t *bme,u_char *buf)
 
 /* Get number of items per area */
 static inline u_int
-vmfs_bitmap_get_items_per_area(const vmfs_bitmap_header_t *bmh,u_int id)
+vmfs_bitmap_get_items_per_area(const vmfs_bitmap_header_t *bmh)
 {
    return(bmh->bmp_entries_per_area * bmh->items_per_bitmap_entry);
 }
@@ -109,7 +109,7 @@ int vmfs_bitmap_get_entry(vmfs_bitmap_t *b,u_int blk,
    u_int entry_idx,area;
    off_t addr;
 
-   items_per_area = vmfs_bitmap_get_items_per_area(&b->bmh,blk);
+   items_per_area = vmfs_bitmap_get_items_per_area(&b->bmh);
    area = blk / items_per_area;
 
    entry_idx = (blk % items_per_area) / b->bmh.items_per_bitmap_entry;
@@ -135,7 +135,7 @@ bool vmfs_bitmap_get_item(vmfs_bitmap_t *b, uint32_t entry, uint32_t item,
 
    addr = (entry * b->bmh.items_per_bitmap_entry) + item;
 
-   items_per_area = b->bmh.bmp_entries_per_area * b->bmh.items_per_bitmap_entry;
+   items_per_area = vmfs_bitmap_get_items_per_area(&b->bmh);
    area = addr / items_per_area;
 
    pos  = b->bmh.hdr_size + (area * b->bmh.area_size);
