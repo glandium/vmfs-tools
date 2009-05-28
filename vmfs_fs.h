@@ -29,7 +29,7 @@ struct vmfs_fsinfo_raw {
    uint32_t volver;
    u_char ver;
    uuid_t uuid;
-   uint32_t _unknown0;
+   uint32_t mode;
    char label[128];
    uint32_t dev_blocksize;
    uint64_t blocksize;
@@ -46,6 +46,7 @@ struct vmfs_fsinfo_raw {
 #define VMFS_FSINFO_OFS_VOLVER   offsetof(struct vmfs_fsinfo_raw, volver)
 #define VMFS_FSINFO_OFS_VER      offsetof(struct vmfs_fsinfo_raw, ver)
 #define VMFS_FSINFO_OFS_UUID     offsetof(struct vmfs_fsinfo_raw, uuid)
+#define VMFS_FSINFO_OFS_MODE     offsetof(struct vmfs_fsinfo_raw, mode)
 #define VMFS_FSINFO_OFS_LABEL    offsetof(struct vmfs_fsinfo_raw, label)
 #define VMFS_FSINFO_OFS_BLKSIZE  offsetof(struct vmfs_fsinfo_raw, blocksize)
 #define VMFS_FSINFO_OFS_CTIME    offsetof(struct vmfs_fsinfo_raw, ctime)
@@ -64,6 +65,7 @@ struct vmfs_fsinfo {
    uint32_t magic;
    uint32_t vol_version;
    uint32_t version;
+   uint32_t mode;
    uuid_t uuid;
    char *label;
    time_t ctime;

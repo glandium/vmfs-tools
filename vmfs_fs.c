@@ -72,6 +72,7 @@ static int vmfs_fsinfo_read(vmfs_fs_t *fs)
 
    fsi->vol_version      = read_le32(buf,VMFS_FSINFO_OFS_VOLVER);
    fsi->version          = buf[VMFS_FSINFO_OFS_VER];
+   fsi->mode             = read_le32(buf,VMFS_FSINFO_OFS_MODE);
    fsi->block_size       = read_le64(buf,VMFS_FSINFO_OFS_BLKSIZE);
    fsi->subblock_size    = read_le32(buf,VMFS_FSINFO_OFS_SBSIZE);
    fsi->fdc_header_size  = read_le32(buf,VMFS_FSINFO_OFS_FDC_HEADER_SIZE);
@@ -86,6 +87,24 @@ static int vmfs_fsinfo_read(vmfs_fs_t *fs)
    return(0);
 }
 
+/* Get string corresponding to specified mode */
+static char *vmfs_fs_mode_to_str(uint32_t mode)
+{
+   /* only two lower bits seem to be significant */
+   switch(mode & 0x03) {
+      case 0x00:
+         return "private";
+      case 0x01:
+      case 0x03:
+         return "shared";
+      case 0x02:
+         return "public";        
+   }
+   
+   /* should not happen */
+   return NULL;
+}
+
 /* Show FS information */
 void vmfs_fs_show(const vmfs_fs_t *fs)
 {  
@@ -97,6 +116,7 @@ void vmfs_fs_show(const vmfs_fs_t *fs)
    printf("  - Volume Version   : %d\n",fs->fs_info.vol_version);
    printf("  - Version          : %d\n",fs->fs_info.version);
    printf("  - Label            : %s\n",fs->fs_info.label);
+   printf("  - Mode             : %s\n",vmfs_fs_mode_to_str(fs->fs_info.mode));
    printf("  - UUID             : %s\n",
           m_uuid_to_str(fs->fs_info.uuid,uuid_str));
    printf("  - Creation time    : %s\n",
