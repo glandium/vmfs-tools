@@ -30,7 +30,7 @@
 #include "vmfs.h"
 
 /* Get bitmap info (bitmap pointer,entry and item) from a block ID */
-int vmfs_block_get_bitmap_info(vmfs_fs_t *fs,uint32_t blk_id,
+int vmfs_block_get_bitmap_info(const vmfs_fs_t *fs,uint32_t blk_id,
                                vmfs_bitmap_t **bmp,
                                uint32_t *entry,uint32_t *item)
 {
@@ -75,7 +75,7 @@ int vmfs_block_get_bitmap_info(vmfs_fs_t *fs,uint32_t blk_id,
 }
 
 /* Get block status (allocated or free) */
-int vmfs_block_get_status(vmfs_fs_t *fs,uint32_t blk_id)
+int vmfs_block_get_status(const vmfs_fs_t *fs,uint32_t blk_id)
 {
    vmfs_bitmap_entry_t entry;
    vmfs_bitmap_t *bmp;
