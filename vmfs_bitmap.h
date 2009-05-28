@@ -76,8 +76,8 @@ int vmfs_bme_read(vmfs_bitmap_entry_t *bme,const u_char *buf,int copy_bitmap);
 int vmfs_bme_write(const vmfs_bitmap_entry_t *bme,u_char *buf);
 
 /* Read a bitmap entry given a block id */
-int vmfs_bitmap_get_entry(vmfs_bitmap_t *b,u_int blk,
-                          vmfs_bitmap_entry_t *entry);
+int vmfs_bitmap_get_entry(vmfs_bitmap_t *b,uint32_t entry,uint32_t item,
+                          vmfs_bitmap_entry_t *bmp_entry);
 
 /* Read a bitmap item from its entry and item numbers */
 bool vmfs_bitmap_get_item(vmfs_bitmap_t *b, uint32_t entry, uint32_t item,
@@ -85,12 +85,14 @@ bool vmfs_bitmap_get_item(vmfs_bitmap_t *b, uint32_t entry, uint32_t item,
 
 /* Mark an item as free or allocated */
 int vmfs_bitmap_set_item_status(const vmfs_bitmap_header_t *bmh,
-                                vmfs_bitmap_entry_t *entry,
-                                u_int blk,int status);
+                                vmfs_bitmap_entry_t *bmp_entry,
+                                uint32_t entry,uint32_t item,
+                                int status);
 
 /* Get the status of an item (0=free,1=allocated) */
 int vmfs_bitmap_get_item_status(const vmfs_bitmap_header_t *bmh,
-                                vmfs_bitmap_entry_t *entry,u_int blk);
+                                vmfs_bitmap_entry_t *bmp_entry,
+                                uint32_t entry,uint32_t item);
 
 /* Find a bitmap entry with at least "num_items" free in the specified area */
 int vmfs_bitmap_area_find_free_items(vmfs_bitmap_t *b,

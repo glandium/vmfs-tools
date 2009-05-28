@@ -101,18 +101,20 @@ vmfs_bitmap_get_area_addr(const vmfs_bitmap_header_t *bmh,u_int area)
 }
 
 /* Read a bitmap entry given a block id */
-int vmfs_bitmap_get_entry(vmfs_bitmap_t *b,u_int blk,
-                          vmfs_bitmap_entry_t *entry)
+int vmfs_bitmap_get_entry(vmfs_bitmap_t *b,uint32_t entry,uint32_t item,
+                          vmfs_bitmap_entry_t *bmp_entry)
 {   
    u_char buf[VMFS_BITMAP_ENTRY_SIZE];
    uint32_t items_per_area;
    u_int entry_idx,area;
    off_t addr;
 
-   items_per_area = vmfs_bitmap_get_items_per_area(&b->bmh);
-   area = blk / items_per_area;
+   addr = (entry * b->bmh.items_per_bitmap_entry) + item;
 
-   entry_idx = (blk % items_per_area) / b->bmh.items_per_bitmap_entry;
+   items_per_area = vmfs_bitmap_get_items_per_area(&b->bmh);
+   area = addr / items_per_area;
+
+   entry_idx = (addr % items_per_area) / b->bmh.items_per_bitmap_entry;
 
    addr = vmfs_bitmap_get_area_addr(&b->bmh,area);
    addr += entry_idx * VMFS_BITMAP_ENTRY_SIZE;
@@ -120,7 +122,7 @@ int vmfs_bitmap_get_entry(vmfs_bitmap_t *b,u_int blk,
    if (vmfs_file_pread(b->f,buf,sizeof(buf),addr) != sizeof(buf))
       return(-1);
 
-   vmfs_bme_read(entry,buf,1);
+   vmfs_bme_read(bmp_entry,buf,1);
    return(0);
 }
 
@@ -147,12 +149,12 @@ bool vmfs_bitmap_get_item(vmfs_bitmap_t *b, uint32_t entry, uint32_t item,
 
 /* Get offset of an item in a bitmap entry */
 static void 
-vmfs_bitmap_get_item_offset(const vmfs_bitmap_header_t *bmh,u_int blk,
+vmfs_bitmap_get_item_offset(const vmfs_bitmap_header_t *bmh,u_int addr,
                             u_int *array_idx,u_int *bit_idx)
 {
    u_int idx;
 
-   idx = blk % bmh->items_per_bitmap_entry;
+   idx = addr % bmh->items_per_bitmap_entry;
    *array_idx = idx >> 3;
    *bit_idx   = idx & 0x07;
 }
@@ -178,46 +180,54 @@ static void vmfs_bitmap_update_ffree(vmfs_bitmap_entry_t *entry)
 
 /* Mark an item as free or allocated */
 int vmfs_bitmap_set_item_status(const vmfs_bitmap_header_t *bmh,
-                                vmfs_bitmap_entry_t *entry,
-                                u_int blk,int status)
+                                vmfs_bitmap_entry_t *bmp_entry,
+                                uint32_t entry,uint32_t item,
+                                int status)
 {
    u_int array_idx,bit_idx;
    u_int bit_mask;
+   uint32_t addr;
 
-   vmfs_bitmap_get_item_offset(bmh,blk,&array_idx,&bit_idx);
+   addr = (entry * bmh->items_per_bitmap_entry) + item;
+
+   vmfs_bitmap_get_item_offset(bmh,addr,&array_idx,&bit_idx);
    bit_mask = 1 << bit_idx;
 
    if (status == 0) {
       /* item is already freed */
-      if (entry->bitmap[array_idx] & bit_mask)
+      if (bmp_entry->bitmap[array_idx] & bit_mask)
          return(-1);
 
-      entry->bitmap[array_idx] |= bit_mask;
-      entry->free++;
+      bmp_entry->bitmap[array_idx] |= bit_mask;
+      bmp_entry->free++;
    } else {
       /* item is already allocated */
-      if (!(entry->bitmap[array_idx] & bit_mask))
+      if (!(bmp_entry->bitmap[array_idx] & bit_mask))
          return(-1);
       
-      entry->bitmap[array_idx] &= ~bit_mask;
-      entry->free--;
+      bmp_entry->bitmap[array_idx] &= ~bit_mask;
+      bmp_entry->free--;
    }
 
-   vmfs_bitmap_update_ffree(entry);
+   vmfs_bitmap_update_ffree(bmp_entry);
    return(0);
 }
 
 /* Get the status of an item (0=free,1=allocated) */
 int vmfs_bitmap_get_item_status(const vmfs_bitmap_header_t *bmh,
-                                vmfs_bitmap_entry_t *entry,u_int blk)
+                                vmfs_bitmap_entry_t *bmp_entry,
+                                uint32_t entry,uint32_t item)
 {
    u_int array_idx,bit_idx;
    u_int bit_mask;
+   uint32_t addr;
 
-   vmfs_bitmap_get_item_offset(bmh,blk,&array_idx,&bit_idx);
+   addr = (entry * bmh->items_per_bitmap_entry) + item;
+
+   vmfs_bitmap_get_item_offset(bmh,addr,&array_idx,&bit_idx);
    bit_mask = 1 << bit_idx;
 
-   return((entry->bitmap[array_idx] & bit_mask) ? 0 : 1);
+   return((bmp_entry->bitmap[array_idx] & bit_mask) ? 0 : 1);
 }
 
 /* Find a bitmap entry with at least "num_items" free in the specified area */

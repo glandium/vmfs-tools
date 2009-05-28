@@ -80,15 +80,12 @@ int vmfs_block_get_status(const vmfs_fs_t *fs,uint32_t blk_id)
    vmfs_bitmap_entry_t entry;
    vmfs_bitmap_t *bmp;
    uint32_t blk_entry,blk_item;
-   uint32_t addr;
 
    if (vmfs_block_get_bitmap_info(fs,blk_id,&bmp,&blk_entry,&blk_item) == -1)
       return(-1);
 
-   addr = (blk_entry * bmp->bmh.items_per_bitmap_entry) + blk_item;
-
-   if (vmfs_bitmap_get_entry(bmp,addr,&entry) == -1)
+   if (vmfs_bitmap_get_entry(bmp,blk_entry,blk_item,&entry) == -1)
       return(-1);
 
-   return(vmfs_bitmap_get_item_status(&bmp->bmh,&entry,addr));
+   return(vmfs_bitmap_get_item_status(&bmp->bmh,&entry,blk_entry,blk_item));
 }
