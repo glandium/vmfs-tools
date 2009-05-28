@@ -76,6 +76,7 @@ static int vmfs_fsinfo_read(vmfs_fs_t *fs)
    fsi->subblock_size    = read_le32(buf,VMFS_FSINFO_OFS_SBSIZE);
    fsi->fdc_header_size  = read_le32(buf,VMFS_FSINFO_OFS_FDC_HEADER_SIZE);
    fsi->fdc_bitmap_count = read_le32(buf,VMFS_FSINFO_OFS_FDC_BITMAP_COUNT);
+   fsi->ctime            = (time_t)read_le32(buf,VMFS_FSINFO_OFS_CTIME);
 
    read_uuid(buf,VMFS_FSINFO_OFS_UUID,&fsi->uuid);
    fsi->label = strndup((char *)buf+VMFS_FSINFO_OFS_LABEL,
@@ -89,6 +90,7 @@ static int vmfs_fsinfo_read(vmfs_fs_t *fs)
 void vmfs_fs_show(const vmfs_fs_t *fs)
 {  
    char uuid_str[M_UUID_BUFLEN];
+   char tbuf[64];
 
    printf("VMFS FS Information:\n");
 
@@ -97,6 +99,8 @@ void vmfs_fs_show(const vmfs_fs_t *fs)
    printf("  - Label            : %s\n",fs->fs_info.label);
    printf("  - UUID             : %s\n",
           m_uuid_to_str(fs->fs_info.uuid,uuid_str));
+   printf("  - Creation time    : %s\n",
+          m_ctime(&fs->fs_info.ctime,tbuf,sizeof(tbuf)));
    printf("  - Block size       : %"PRIu64" (0x%"PRIx64")\n",
           fs->fs_info.block_size,fs->fs_info.block_size);
    printf("  - Subblock size    : %u (0x%x)\n",
