@@ -104,7 +104,7 @@ vmfs_bitmap_get_area_addr(const vmfs_bitmap_header_t *bmh,u_int area)
 int vmfs_bitmap_get_entry(vmfs_bitmap_t *b,uint32_t entry,uint32_t item,
                           vmfs_bitmap_entry_t *bmp_entry)
 {   
-   u_char buf[VMFS_BITMAP_ENTRY_SIZE];
+   DECL_ALIGNED_BUFFER(buf,VMFS_BITMAP_ENTRY_SIZE);
    uint32_t items_per_area;
    u_int entry_idx,area;
    off_t addr;
@@ -119,7 +119,7 @@ int vmfs_bitmap_get_entry(vmfs_bitmap_t *b,uint32_t entry,uint32_t item,
    addr = vmfs_bitmap_get_area_addr(&b->bmh,area);
    addr += entry_idx * VMFS_BITMAP_ENTRY_SIZE;
 
-   if (vmfs_file_pread(b->f,buf,sizeof(buf),addr) != sizeof(buf))
+   if (vmfs_file_pread(b->f,buf,buf_len,addr) != buf_len)
       return(-1);
 
    vmfs_bme_read(bmp_entry,buf,1);
