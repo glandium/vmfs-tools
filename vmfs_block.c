@@ -89,3 +89,29 @@ int vmfs_block_get_status(const vmfs_fs_t *fs,uint32_t blk_id)
 
    return(vmfs_bitmap_get_item_status(&bmp->bmh,&entry,blk_entry,blk_item));
 }
+
+/* Allocate the specified block */
+int vmfs_block_alloc_specified(const vmfs_fs_t *fs,uint32_t blk_id)
+{ 
+   DECL_ALIGNED_BUFFER(buf,VMFS_BITMAP_ENTRY_SIZE);
+   vmfs_bitmap_entry_t entry;
+   vmfs_bitmap_t *bmp;
+   uint32_t blk_entry,blk_item;
+
+   if (vmfs_block_get_bitmap_info(fs,blk_id,&bmp,&blk_entry,&blk_item) == -1)
+      return(-1);
+
+   if (vmfs_bitmap_get_entry(bmp,blk_entry,blk_item,&entry) == -1)
+      return(-1);
+
+   if (vmfs_bitmap_set_item_status(&bmp->bmh,&entry,
+                                   blk_entry,blk_item,1) == -1)
+      return(-1);
+   
+   vmfs_bme_write(&entry,buf);
+
+   if (vmfs_lvm_write(fs->lvm,entry.mdh.position,buf,buf_len) != buf_len)
+      return(-1);
+
+   return(0);
+}
