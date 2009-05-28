@@ -168,7 +168,7 @@ static int cmd_show_inode(vmfs_fs_t *fs,int argc,char *argv[])
    vmfs_file_t *f;
 
    if (argc == 0) {
-      fprintf(stderr,"Usage: show_dirent <filename>\n");
+      fprintf(stderr,"Usage: show_inode <filename>\n");
       return(-1);
    }
 
