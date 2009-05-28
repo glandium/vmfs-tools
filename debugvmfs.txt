@@ -79,6 +79,11 @@ Get status (allocated or free) of the specified block_id.
 Allocate the specified block_id. R/W support must be enabled.
 Warning: can cause damage since no heartbeat is used at this time.
 
+*free_block* 'block_id'::
+Free the specified block_id. R/W support must be enabled.
+Warning: can cause damage since no heartbeat is used at this time and a block
+used by a file can be freed.
+
 *show_bitmap_item* 'block_id'::
 Outputs raw content for the bitmap item corresponding to the given block_id.
 
