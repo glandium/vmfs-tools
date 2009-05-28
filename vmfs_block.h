@@ -47,4 +47,12 @@ enum {
 #define VMFS_BLK_FD_ITEM(blk_id)   (((blk_id) >> 22) & 0x3ff)
 #define VMFS_BLK_FD_ENTRY(blk_id)  (((blk_id) >> 6)  & 0x7fff)
 
+/* Get bitmap info (bitmap pointer,entry and item) from a block ID */
+int vmfs_block_get_bitmap_info(vmfs_fs_t *fs,uint32_t blk_id,
+                               vmfs_bitmap_t **bmp,
+                               uint32_t *entry,uint32_t *item);
+
+/* Get block status (allocated or free) */
+int vmfs_block_get_status(vmfs_fs_t *fs,uint32_t blk_id);
+
 #endif

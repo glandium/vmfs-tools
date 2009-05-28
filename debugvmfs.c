@@ -369,10 +369,7 @@ static int cmd_read_block(vmfs_fs_t *fs,int argc,char *argv[])
 /* Get block status */
 static int cmd_get_block_status(vmfs_fs_t *fs,int argc,char *argv[])
 {
-   vmfs_bitmap_entry_t entry;
-   vmfs_bitmap_t *bmp;
-   uint32_t blk_id,blk_type;
-   u_int32_t blk_entry,blk_item,addr;
+   uint32_t blk_id;
    int status;
 
    if (argc == 0) {
@@ -381,50 +378,12 @@ static int cmd_get_block_status(vmfs_fs_t *fs,int argc,char *argv[])
    }
 
    blk_id = (uint32_t)strtoul(argv[0],NULL,16);
-   blk_type = VMFS_BLK_TYPE(blk_id);
+   status = vmfs_block_get_status(fs,blk_id);
 
-   switch(blk_type) {
-      /* File Block */
-      case VMFS_BLK_TYPE_FB:
-         bmp       = fs->fbb;
-         blk_entry = 0;
-         blk_item  = VMFS_BLK_FB_ITEM(blk_id);
-         break;
-
-      /* Sub-Block */
-      case VMFS_BLK_TYPE_SB:
-         bmp       = fs->sbc;
-         blk_entry = VMFS_BLK_SB_ENTRY(blk_id);
-         blk_item  = VMFS_BLK_SB_ITEM(blk_id);
-         break;
-
-      /* Pointer Block */
-      case VMFS_BLK_TYPE_PB:
-         bmp       = fs->pbc;
-         blk_entry = VMFS_BLK_PB_ENTRY(blk_id);
-         blk_item  = VMFS_BLK_PB_ITEM(blk_id);
-         break;
-
-      /* Inode */
-      case VMFS_BLK_TYPE_FD:
-         bmp       = fs->fdc;
-         blk_entry = VMFS_BLK_FD_ENTRY(blk_id);
-         blk_item  = VMFS_BLK_FD_ITEM(blk_id);
-         break;
-
-      default:
-         fprintf(stderr,"Unsupported block type 0x%2.2x\n",blk_type);
-         return(-1);
-   }
-
-   addr = (blk_entry * bmp->bmh.items_per_bitmap_entry) + blk_item;
-
-   if (vmfs_bitmap_get_entry(bmp,addr,&entry) == -1) {
-      fprintf(stderr,"Unable to read bitmap info\n");
+   if (status == -1) {
+      fprintf(stderr,"Block 0x%8.8x: unable to get status\n",blk_id);
       return(-1);
    }
-
-   status = vmfs_bitmap_get_item_status(&bmp->bmh,&entry,addr);
 
    printf("Block 0x%8.8x status: %s\n",
           blk_id,(status) ? "allocated" : "free");

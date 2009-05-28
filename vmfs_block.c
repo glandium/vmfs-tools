@@ -29,3 +29,66 @@
 #include "utils.h"
 #include "vmfs.h"
 
+/* Get bitmap info (bitmap pointer,entry and item) from a block ID */
+int vmfs_block_get_bitmap_info(vmfs_fs_t *fs,uint32_t blk_id,
+                               vmfs_bitmap_t **bmp,
+                               uint32_t *entry,uint32_t *item)
+{
+   uint32_t blk_type;
+
+   blk_type = VMFS_BLK_TYPE(blk_id);
+
+   switch(blk_type) {
+      /* File Block */
+      case VMFS_BLK_TYPE_FB:
+         *bmp   = fs->fbb;
+         *entry = 0;
+         *item  = VMFS_BLK_FB_ITEM(blk_id);
+         break;
+
+      /* Sub-Block */
+      case VMFS_BLK_TYPE_SB:
+         *bmp   = fs->sbc;
+         *entry = VMFS_BLK_SB_ENTRY(blk_id);
+         *item  = VMFS_BLK_SB_ITEM(blk_id);
+         break;
+
+      /* Pointer Block */
+      case VMFS_BLK_TYPE_PB:
+         *bmp   = fs->pbc;
+         *entry = VMFS_BLK_PB_ENTRY(blk_id);
+         *item  = VMFS_BLK_PB_ITEM(blk_id);
+         break;
+
+      /* Inode */
+      case VMFS_BLK_TYPE_FD:
+         *bmp   = fs->fdc;
+         *entry = VMFS_BLK_FD_ENTRY(blk_id);
+         *item  = VMFS_BLK_FD_ITEM(blk_id);
+         break;
+
+      default:
+         return(-1);
+   }
+
+   return(0);
+}
+
+/* Get block status (allocated or free) */
+int vmfs_block_get_status(vmfs_fs_t *fs,uint32_t blk_id)
+{
+   vmfs_bitmap_entry_t entry;
+   vmfs_bitmap_t *bmp;
+   uint32_t blk_entry,blk_item;
+   uint32_t addr;
+
+   if (vmfs_block_get_bitmap_info(fs,blk_id,&bmp,&blk_entry,&blk_item) == -1)
+      return(-1);
+
+   addr = (blk_entry * bmp->bmh.items_per_bitmap_entry) + blk_item;
+
+   if (vmfs_bitmap_get_entry(bmp,addr,&entry) == -1)
+      return(-1);
+
+   return(vmfs_bitmap_get_item_status(&bmp->bmh,&entry,addr));
+}
