@@ -90,9 +90,10 @@ int vmfs_block_get_status(const vmfs_fs_t *fs,uint32_t blk_id)
    return(vmfs_bitmap_get_item_status(&bmp->bmh,&entry,blk_entry,blk_item));
 }
 
-/* Allocate the specified block */
-int vmfs_block_alloc_specified(const vmfs_fs_t *fs,uint32_t blk_id)
-{ 
+/* Allocate or free the specified block */
+static int vmfs_block_set_status(const vmfs_fs_t *fs,uint32_t blk_id,
+                                 int status)
+{
    DECL_ALIGNED_BUFFER(buf,VMFS_BITMAP_ENTRY_SIZE);
    vmfs_bitmap_entry_t entry;
    vmfs_bitmap_t *bmp;
@@ -105,7 +106,7 @@ int vmfs_block_alloc_specified(const vmfs_fs_t *fs,uint32_t blk_id)
       return(-1);
 
    if (vmfs_bitmap_set_item_status(&bmp->bmh,&entry,
-                                   blk_entry,blk_item,1) == -1)
+                                   blk_entry,blk_item,status) == -1)
       return(-1);
    
    vmfs_bme_write(&entry,buf);
@@ -114,4 +115,16 @@ int vmfs_block_alloc_specified(const vmfs_fs_t *fs,uint32_t blk_id)
       return(-1);
 
    return(0);
+}
+
+/* Allocate the specified block */
+int vmfs_block_alloc_specified(const vmfs_fs_t *fs,uint32_t blk_id)
+{ 
+   return(vmfs_block_set_status(fs,blk_id,1));
+}
+
+/* Free the specified block */
+int vmfs_block_free(const vmfs_fs_t *fs,uint32_t blk_id)
+{
+   return(vmfs_block_set_status(fs,blk_id,0));
 }

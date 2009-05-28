@@ -58,4 +58,7 @@ int vmfs_block_get_status(const vmfs_fs_t *fs,uint32_t blk_id);
 /* Allocate the specified block */
 int vmfs_block_alloc_specified(const vmfs_fs_t *fs,uint32_t blk_id);
 
+/* Free the specified block */
+int vmfs_block_free(const vmfs_fs_t *fs,uint32_t blk_id);
+
 #endif
