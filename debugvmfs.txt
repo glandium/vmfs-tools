@@ -66,6 +66,9 @@ item numbers.
 *read_block* 'block_id'::
 Outputs content within the specified block_id.
 
+*get_block_status* 'block_id'::
+Get status (allocated of free) of the specified block_id.
+
 *show_bitmap_item* 'block_id'::
 Outputs raw content for the bitmap item corresponding to the given block_id.
 
