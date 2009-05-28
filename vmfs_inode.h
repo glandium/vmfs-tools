@@ -110,6 +110,9 @@ int vmfs_inode_get_block(const vmfs_fs_t *fs,const vmfs_inode_t *inode,
 /* Show block list of an inode */
 void vmfs_inode_show_blocks(const vmfs_fs_t *fs,const vmfs_inode_t *inode);
 
+/* Check that all blocks bound to an inode are allocated */
+int vmfs_inode_check_blocks(const vmfs_fs_t *fs,const vmfs_inode_t *inode);
+
 /* Get inode status */
 int vmfs_inode_stat(const vmfs_inode_t *inode,struct stat *buf);
 

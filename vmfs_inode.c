@@ -235,6 +235,74 @@ void vmfs_inode_show_blocks(const vmfs_fs_t *fs,const vmfs_inode_t *inode)
    printf("\n");
 }
 
+/* Check that all blocks bound to an inode are allocated */
+int vmfs_inode_check_blocks(const vmfs_fs_t *fs,const vmfs_inode_t *inode)
+{         
+   uint64_t blk_size;
+   uint32_t blk_per_pb;
+   uint32_t blk_id;
+   u_int blk_total;
+   u_int blk_count;
+   int i,j,err_count;
+
+   err_count = 0;
+   blk_total = 0;
+   blk_per_pb = 0;
+
+   blk_size = inode->blk_size;
+   blk_count = (inode->size + blk_size - 1) / blk_size;
+
+   if (inode->zla == VMFS_BLK_TYPE_PB) {
+      blk_per_pb = fs->pbc->bmh.data_size / sizeof(uint32_t);
+      blk_total = blk_count;
+      blk_count = (blk_count + blk_per_pb - 1) / blk_per_pb;
+   }
+
+   for(i=0;i<blk_count;i++) {
+      blk_id = inode->blocks[i];
+
+      if (!blk_id)
+         continue;
+
+      if (vmfs_block_get_status(fs,blk_id) <= 0) {
+         fprintf(stderr,"Block 0x%8.8x is not allocated\n",blk_id);
+         err_count++;
+      }
+
+      /* Analyze pointer block */
+      if (inode->zla == VMFS_BLK_TYPE_PB) 
+      {
+         DECL_ALIGNED_BUFFER_WOL(buf,fs->pbc->bmh.data_size);
+         uint32_t blk_id2;
+         u_int blk_rem;
+
+         if (!vmfs_bitmap_get_item(fs->pbc,
+                                   VMFS_BLK_PB_ENTRY(blk_id),
+                                   VMFS_BLK_PB_ITEM(blk_id),
+                                   buf))
+            return(-1);
+
+         /* Compute remaining blocks */
+         blk_rem = m_min(blk_total - (i * blk_per_pb),blk_per_pb);
+
+         for(j=0;j<blk_rem;j++) {
+            blk_id2 = read_le32(buf,j*sizeof(uint32_t));
+
+            if (!blk_id2)
+               continue;
+
+            if (vmfs_block_get_status(fs,blk_id2) <= 0) {
+               fprintf(stderr,"Block 0x%8.8x in PB 0x%8.8x is not allocated\n",
+                       blk_id2,blk_id2);
+               err_count++;
+            }
+         }
+      }
+   }
+
+   return(err_count);
+}
+
 /* Get inode status */
 int vmfs_inode_stat(const vmfs_inode_t *inode,struct stat *buf)
 {
