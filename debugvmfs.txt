@@ -44,6 +44,9 @@ Outputs inode information about the given file from the VMFS.
 *show_file_blocks* 'file'::
 Outputs block_ids for the given file's content blocks.
 
+*get_file_block* 'file' 'position'::
+Get file block corresponding to position in the specified file.
+
 *show_fs*::
 Outputs information about the file system.
 

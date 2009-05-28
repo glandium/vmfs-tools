@@ -202,6 +202,35 @@ static int cmd_show_file_blocks(vmfs_fs_t *fs,int argc,char *argv[])
    return(0);
 }
 
+/* Get file block corresponding to specified position */
+static int cmd_get_file_block(vmfs_fs_t *fs,int argc,char *argv[])
+{
+   vmfs_file_t *f;
+   uint32_t blk_id;
+   off_t pos;
+
+   if (argc < 2) {
+      fprintf(stderr,"Usage: get_file_block <filename> <position>\n");
+      return(-1);
+   }
+
+   if (!(f = vmfs_file_open_from_path(fs,argv[0]))) {
+      fprintf(stderr,"Unable to open file '%s'\n",argv[0]);
+      return(-1);
+   }
+
+   pos = (off_t)strtoul(argv[1],NULL,16);
+
+   if (!vmfs_inode_get_block(f->fs,&f->inode,pos,&blk_id)) {
+      printf("0x%8.8x\n",blk_id);
+   } else {
+      fprintf(stderr,"Unable to get block info\n");
+   }
+
+   vmfs_file_close(f);
+   return(0);
+}
+
 /* Show filesystem information */
 static int cmd_show_fs(vmfs_fs_t *fs,int argc,char *argv[])
 {
@@ -466,6 +495,7 @@ struct cmd cmd_array[] = {
    { "show_dirent", "Show directory entry", cmd_show_dirent },
    { "show_inode", "Show inode", cmd_show_inode },
    { "show_file_blocks", "Show file blocks", cmd_show_file_blocks },
+   { "get_file_block", "Get file block", cmd_get_file_block },
    { "show_fs", "Show file system info", cmd_show_fs },
    { "show_volume", "Show volume general info", cmd_show_volume },
    { "show_vol_bitmaps", "Show volume bitmaps", cmd_show_vol_bitmaps },
