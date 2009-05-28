@@ -231,6 +231,33 @@ static int cmd_get_file_block(vmfs_fs_t *fs,int argc,char *argv[])
    return(0);
 }
 
+/* Check file blocks */
+static int cmd_check_file_blocks(vmfs_fs_t *fs,int argc,char *argv[])
+{
+   vmfs_file_t *f;
+   int res;
+
+   if (argc == 0) {
+      fprintf(stderr,"Usage: check_file_blocks <filename>\n");
+      return(-1);
+   }
+
+   if (!(f = vmfs_file_open_from_path(fs,argv[0]))) {
+      fprintf(stderr,"Unable to open file '%s'\n",argv[0]);
+      return(-1);
+   }
+
+   res = vmfs_inode_check_blocks(fs,&f->inode);
+
+   if (res > 0)
+      fprintf(stderr,"%d allocation errors detected.\n",res);
+   else
+      fprintf(stderr,"No error detected.\n");
+
+   vmfs_file_close(f);
+   return(0);
+}
+
 /* Show filesystem information */
 static int cmd_show_fs(vmfs_fs_t *fs,int argc,char *argv[])
 {
@@ -455,6 +482,7 @@ struct cmd cmd_array[] = {
    { "show_inode", "Show inode", cmd_show_inode },
    { "show_file_blocks", "Show file blocks", cmd_show_file_blocks },
    { "get_file_block", "Get file block", cmd_get_file_block },
+   { "check_file_blocks", "Check file blocks", cmd_check_file_blocks },
    { "show_fs", "Show file system info", cmd_show_fs },
    { "show_volume", "Show volume general info", cmd_show_volume },
    { "show_vol_bitmaps", "Show volume bitmaps", cmd_show_vol_bitmaps },

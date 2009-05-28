@@ -47,6 +47,9 @@ Outputs block_ids for the given file's content blocks.
 *get_file_block* 'file' 'position'::
 Get file block corresponding to position in the specified file.
 
+*check_file_blocks* 'file'::
+Check that all blocks used by a file are correctly allocated.
+
 *show_fs*::
 Outputs information about the file system.
 
