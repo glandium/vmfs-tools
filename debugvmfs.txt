@@ -62,6 +62,9 @@ Outputs information about the volume bitmaps.
 *check_vol_bitmaps*::
 Checks volume bitmaps consistency.
 
+*bitmaps_usage*::
+Show statistics about bitmaps usage.
+
 *show_heartbeats*::
 Outputs active heartbeats on the file system.
 

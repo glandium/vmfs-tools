@@ -299,6 +299,38 @@ static int cmd_check_vol_bitmaps(vmfs_fs_t *fs,int argc,char *argv[])
    return(errors);
 }
 
+/* Bitmaps usage statistics */
+static int cmd_show_bitmaps_usage(vmfs_fs_t *fs,int argc,char *argv[])
+{
+   u_int total,alloc;
+
+   /* File Blocks */
+   total = fs->fbb->bmh.total_items;
+   alloc = vmfs_bitmap_allocated_items(fs->fbb);
+   printf("File Blocks (total/alloc/free): %u/%u/%u\n",
+          total,alloc,total-alloc);
+
+   /* Sub-Blocks */
+   total = fs->sbc->bmh.total_items;
+   alloc = vmfs_bitmap_allocated_items(fs->sbc);
+   printf("Sub Blocks (total/alloc/free): %u/%u/%u\n",
+          total,alloc,total-alloc);
+
+   /* Pointer Blocks */
+   total = fs->pbc->bmh.total_items;
+   alloc = vmfs_bitmap_allocated_items(fs->pbc);
+   printf("Pointer Blocks (total/alloc/free): %u/%u/%u\n",
+          total,alloc,total-alloc);
+
+   /* File descriptors */
+   total = fs->fdc->bmh.total_items;
+   alloc = vmfs_bitmap_allocated_items(fs->fdc);
+   printf("File Descriptors (total/alloc/free): %u/%u/%u\n",
+          total,alloc,total-alloc);
+
+   return(0);
+}
+
 /* Show active heartbeats */
 static int cmd_show_heartbeats(vmfs_fs_t *fs,int argc,char *argv[])
 {
@@ -535,6 +567,8 @@ struct cmd cmd_array[] = {
    { "show_volume", "Show volume general info", cmd_show_volume },
    { "show_vol_bitmaps", "Show volume bitmaps", cmd_show_vol_bitmaps },
    { "check_vol_bitmaps", "Check volume bitmaps", cmd_check_vol_bitmaps },
+   { "show_bitmaps_usage", "Show bitmaps usage statistics", 
+     cmd_show_bitmaps_usage },
    { "show_heartbeats", "Show active heartbeats", cmd_show_heartbeats },
    { "convert_block_id", "Convert block ID", cmd_convert_block_id },
    { "read_block", "Read a block", cmd_read_block },
