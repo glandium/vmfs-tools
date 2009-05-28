@@ -47,26 +47,4 @@ enum {
 #define VMFS_BLK_FD_ITEM(blk_id)   (((blk_id) >> 22) & 0x3ff)
 #define VMFS_BLK_FD_ENTRY(blk_id)  (((blk_id) >> 6)  & 0x7fff)
 
-/* === VMFS block list === */
-struct vmfs_blk_list {
-   uint32_t total,last_pos;
-   uint32_t *blk_id;
-};
-
-/* Initialize a block list */
-int vmfs_blk_list_init(vmfs_blk_list_t *list,uint32_t blk_count);
-
-/* Free a block list */
-void vmfs_blk_list_free(vmfs_blk_list_t *list);
-
-/* Set a block at the specified position */
-int vmfs_blk_list_add_block(vmfs_blk_list_t *list,u_int pos,uint32_t blk_id);
-
-/* Get a block ID from a block list, given its position */
-int vmfs_blk_list_get_block(const vmfs_blk_list_t *list,u_int pos,
-                            uint32_t *blk_id);
-
-/* Show a block list */
-void vmfs_blk_list_show(const vmfs_blk_list_t *list);
-
 #endif
