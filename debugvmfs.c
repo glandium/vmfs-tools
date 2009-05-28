@@ -197,7 +197,7 @@ static int cmd_show_file_blocks(vmfs_fs_t *fs,int argc,char *argv[])
       return(-1);
    }
 
-   vmfs_blk_list_show(&f->blk_list);
+   vmfs_inode_show_blocks(f->fs,&f->inode);
    vmfs_file_close(f);
    return(0);
 }

@@ -35,8 +35,8 @@ vmfs_file_t *vmfs_file_open_from_inode(const vmfs_fs_t *fs,
 
    f->fs = fs;
 
-   /* Bind the associated inode */
-   if (vmfs_inode_bind(f,inode_buf) == -1) {
+   /* Read the associated inode */
+   if (vmfs_inode_read(&f->inode,inode_buf) == -1) {
       vmfs_file_close(f);
       return NULL;
    }
@@ -85,9 +85,6 @@ int vmfs_file_close(vmfs_file_t *f)
    if (f == NULL)
       return(-1);
 
-   /* Free the block list */
-   vmfs_blk_list_free(&f->blk_list);
-
    free(f);
    return(0);
 }
@@ -121,7 +118,6 @@ int vmfs_file_seek(vmfs_file_t *f,off_t pos,int whence)
 /* Read data from a file at the specified position */
 ssize_t vmfs_file_pread(vmfs_file_t *f,u_char *buf,size_t len,off_t pos)
 {
-   u_int blk_pos;
    uint32_t blk_id,blk_type;
    uint64_t blk_size,blk_len;
    uint64_t file_size,offset;
@@ -138,9 +134,10 @@ ssize_t vmfs_file_pread(vmfs_file_t *f,u_char *buf,size_t len,off_t pos)
    file_size = vmfs_file_get_size(f);
 
    while(len > 0) {
-      blk_pos = pos / blk_size;
+      if (pos >= file_size)
+         break;
 
-      if (vmfs_blk_list_get_block(&f->blk_list,blk_pos,&blk_id) == -1)
+      if (vmfs_inode_get_block(f->fs,&f->inode,pos,&blk_id) == -1)
          break;
 
 #if 0

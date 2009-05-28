@@ -85,6 +85,7 @@ struct vmfs_inode {
    uint32_t mode,cmode;
    uint32_t zla,tbz,cow;
    uint32_t rdm_id;
+   uint32_t blocks[VMFS_INODE_BLK_COUNT];
 };
 
 /* Read an inode */
@@ -99,8 +100,15 @@ void vmfs_inode_show(const vmfs_inode_t *inode);
 /* Get inode associated to a directory entry */
 int vmfs_inode_get(const vmfs_fs_t *fs,const vmfs_dirent_t *rec,u_char *buf);
 
-/* Bind inode info to a file */
-int vmfs_inode_bind(vmfs_file_t *f,const u_char *inode_buf);
+/* 
+ * Get block ID corresponding the specified position. Pointer block
+ * resolution is transparently done here.
+ */
+int vmfs_inode_get_block(const vmfs_fs_t *fs,const vmfs_inode_t *inode,
+                         off_t pos,uint32_t *blk_id);
+
+/* Show block list of an inode */
+void vmfs_inode_show_blocks(const vmfs_fs_t *fs,const vmfs_inode_t *inode);
 
 /* Get inode status */
 int vmfs_inode_stat(const vmfs_inode_t *inode,struct stat *buf);

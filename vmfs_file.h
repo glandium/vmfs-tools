@@ -30,7 +30,6 @@
 /* === VMFS file abstraction === */
 struct vmfs_file {
    const vmfs_fs_t *fs;
-   vmfs_blk_list_t blk_list;
    vmfs_inode_t inode;
 
    /* Current position in file */
