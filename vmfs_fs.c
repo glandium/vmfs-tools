@@ -135,12 +135,28 @@ void vmfs_fs_show(const vmfs_fs_t *fs)
 static int vmfs_open_all_meta_files(vmfs_fs_t *fs)
 {
    vmfs_bitmap_t *fdc = fs->fdc;
-   fs->fbb = vmfs_bitmap_open_from_path(fs,VMFS_FBB_FILENAME);
-   fs->fdc = vmfs_bitmap_open_from_path(fs,VMFS_FDC_FILENAME);
-   fs->pbc = vmfs_bitmap_open_from_path(fs,VMFS_PBC_FILENAME);
-   fs->sbc = vmfs_bitmap_open_from_path(fs,VMFS_SBC_FILENAME);
-   vmfs_bitmap_close(fdc);
 
+   if (!(fs->fbb = vmfs_bitmap_open_from_path(fs,VMFS_FBB_FILENAME))) {
+      fprintf(stderr,"Unable to open file-block bitmap (FBB).\n");
+      return(-1);
+   }
+
+   if (!(fs->fdc = vmfs_bitmap_open_from_path(fs,VMFS_FDC_FILENAME))) {
+      fprintf(stderr,"Unable to open file descriptor bitmap (FDC).\n");
+      return(-1);
+   }
+
+   if (!(fs->pbc = vmfs_bitmap_open_from_path(fs,VMFS_PBC_FILENAME))) {
+      fprintf(stderr,"Unable to open pointer block bitmap (PBC).\n");
+      return(-1);
+   }
+
+   if (!(fs->sbc = vmfs_bitmap_open_from_path(fs,VMFS_SBC_FILENAME))) {
+      fprintf(stderr,"Unable to open sub-block bitmap (SBC).\n");
+      return(-1);
+   }
+
+   vmfs_bitmap_close(fdc);
    return(0);
 }
 
@@ -214,7 +230,8 @@ static int vmfs_read_fdc_base(vmfs_fs_t *fs)
    }
 
    /* Read the meta files */
-   vmfs_open_all_meta_files(fs);
+   if (vmfs_open_all_meta_files(fs) == -1)
+      return(-1);
 
    /* Dump bitmap info */
    if (fs->debug_level > 0)
