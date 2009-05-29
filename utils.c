@@ -187,6 +187,7 @@ void iobuffer_free(u_char *buf)
 /* Read from file descriptor at a given offset */
 ssize_t m_pread(int fd,void *buf,size_t count,off_t offset)
 {
+   int max_retries = 10;
    u_char *ptr = (u_char *)buf;
    size_t hlen = 0;
    ssize_t len;
@@ -195,6 +196,13 @@ ssize_t m_pread(int fd,void *buf,size_t count,off_t offset)
       len = pread(fd,ptr,count-hlen,offset+hlen);
       
       if (len < 0) {
+         if (errno == EIO) {
+            if (max_retries-- == 0)
+               return(-1);
+
+            continue;
+         }
+
          if (errno != EINTR)
             return(-1);
       } else {
@@ -211,7 +219,8 @@ ssize_t m_pread(int fd,void *buf,size_t count,off_t offset)
 
 /* Write to a file descriptor at a given offset */
 ssize_t m_pwrite(int fd,const void *buf,size_t count,off_t offset)
-{
+{   
+   int max_retries = 10;
    u_char *ptr = (u_char *)buf;
    size_t hlen = 0;
    ssize_t len;
@@ -220,6 +229,13 @@ ssize_t m_pwrite(int fd,const void *buf,size_t count,off_t offset)
       len = pwrite(fd,ptr,count-hlen,offset+hlen);
       
       if (len < 0) {
+         if (errno == EIO) {
+            if (max_retries-- == 0)
+               return(-1);
+
+            continue;
+         }
+
          if (errno != EINTR)
             return(-1);
       } else {
