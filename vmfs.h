@@ -41,6 +41,7 @@ union vmfs_flags {
    struct {
       unsigned int debug_level:4;
       unsigned int read_write:1;
+      unsigned int allow_missing_extents:1;
    };
 };
 

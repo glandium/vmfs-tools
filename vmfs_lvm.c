@@ -173,10 +173,13 @@ int vmfs_lvm_add_extent(vmfs_lvm_t *lvm, const char *filename)
 /* Open an LVM */
 int vmfs_lvm_open(vmfs_lvm_t *lvm)
 {
-   if (lvm->loaded_extents != lvm->lvm_info.num_extents) {
+   if (!lvm->flags.allow_missing_extents && 
+       (lvm->loaded_extents != lvm->lvm_info.num_extents)) 
+   {
       fprintf(stderr, "VMFS: Missing extents\n");
       return(-1);
    }
+
    return(0);
 }
 
