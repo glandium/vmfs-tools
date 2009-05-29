@@ -160,6 +160,9 @@ int vmfs_inode_get_block(const vmfs_fs_t *fs,const vmfs_inode_t *inode,
 
    *blk_id = 0;
 
+   if (!inode->blk_size)
+      return(-1);
+
    switch(inode->zla) {
       case VMFS_BLK_TYPE_FB:
       case VMFS_BLK_TYPE_SB:
@@ -220,6 +223,10 @@ void vmfs_inode_show_blocks(const vmfs_fs_t *fs,const vmfs_inode_t *inode)
    int i;
 
    blk_size = inode->blk_size;
+   
+   if (!blk_size)
+      return;
+
    blk_count = (inode->size + blk_size - 1) / blk_size;
 
    if (inode->zla == VMFS_BLK_TYPE_PB) {
@@ -250,6 +257,10 @@ int vmfs_inode_check_blocks(const vmfs_fs_t *fs,const vmfs_inode_t *inode)
    blk_per_pb = 0;
 
    blk_size = inode->blk_size;
+
+   if (!blk_size)
+      return(-1);
+
    blk_count = (inode->size + blk_size - 1) / blk_size;
 
    if (inode->zla == VMFS_BLK_TYPE_PB) {
