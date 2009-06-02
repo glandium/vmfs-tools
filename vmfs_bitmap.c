@@ -437,6 +437,8 @@ vmfs_bitmap_t *vmfs_bitmap_open_from_inode(const vmfs_fs_t *fs,
 /* Close a bitmap file */
 void vmfs_bitmap_close(vmfs_bitmap_t *b)
 {
-   vmfs_file_close(b->f);
-   free(b);
+   if (b != NULL) {
+      vmfs_file_close(b->f);
+      free(b);
+   }
 }
