@@ -42,6 +42,19 @@ int vmfs_bmh_read(vmfs_bitmap_header_t *bmh,const u_char *buf)
    return(0);
 }
 
+/* Write a bitmap header */
+int vmfs_bmh_write(const vmfs_bitmap_header_t *bmh,u_char *buf)
+{
+   write_le32(buf,0x0,bmh->items_per_bitmap_entry);
+   write_le32(buf,0x4,bmh->bmp_entries_per_area);
+   write_le32(buf,0x8,bmh->hdr_size);
+   write_le32(buf,0xc,bmh->data_size);
+   write_le32(buf,0x10,bmh->area_size);
+   write_le32(buf,0x14,bmh->total_items);
+   write_le32(buf,0x18,bmh->area_count);
+   return(0);
+}
+
 /* Show bitmap information */
 void vmfs_bmh_show(const vmfs_bitmap_header_t *bmh)
 {
