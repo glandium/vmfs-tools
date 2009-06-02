@@ -40,6 +40,10 @@ int vmfs_inode_read(vmfs_inode_t *inode,const u_char *buf)
    int i;
 
    vmfs_metadata_hdr_read(&inode->mdh,buf);
+
+   if (inode->mdh.magic != VMFS_INODE_MAGIC)
+      return(-1);
+
    inode->id        = read_le32(buf,VMFS_INODE_OFS_ID);
    inode->id2       = read_le32(buf,VMFS_INODE_OFS_ID2);
    inode->nlink     = read_le32(buf,VMFS_INODE_OFS_NLINK);
