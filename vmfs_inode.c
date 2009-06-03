@@ -246,8 +246,16 @@ void vmfs_inode_show_blocks(const vmfs_fs_t *fs,const vmfs_inode_t *inode)
    printf("\n");
 }
 
-/* Check that all blocks bound to an inode are allocated */
-int vmfs_inode_check_blocks(const vmfs_fs_t *fs,const vmfs_inode_t *inode)
+/* Callback for vmfs_inode_foreach_block */
+typedef void (*vmfs_inode_foreach_block_cbk_t)(const vmfs_fs_t *fs,
+                                               const vmfs_inode_t *inode,
+                                               uint32_t pb_blk,
+                                               uint32_t blk_id,
+                                               void *opt_arg);
+
+/* Call a function for each allocated block of an inode */
+int vmfs_inode_foreach_block(const vmfs_fs_t *fs,const vmfs_inode_t *inode,
+                             vmfs_inode_foreach_block_cbk_t cbk,void *opt_arg)
 {         
    uint64_t blk_size;
    uint32_t blk_per_pb;
@@ -279,10 +287,7 @@ int vmfs_inode_check_blocks(const vmfs_fs_t *fs,const vmfs_inode_t *inode)
       if (!blk_id)
          continue;
 
-      if (vmfs_block_get_status(fs,blk_id) <= 0) {
-         fprintf(stderr,"Block 0x%8.8x is not allocated\n",blk_id);
-         err_count++;
-      }
+      cbk(fs,inode,0,blk_id,opt_arg);
 
       /* Analyze pointer block */
       if (inode->zla == VMFS_BLK_TYPE_PB) 
@@ -306,14 +311,44 @@ int vmfs_inode_check_blocks(const vmfs_fs_t *fs,const vmfs_inode_t *inode)
             if (!blk_id2)
                continue;
 
-            if (vmfs_block_get_status(fs,blk_id2) <= 0) {
-               fprintf(stderr,"Block 0x%8.8x in PB 0x%8.8x is not allocated\n",
-                       blk_id2,blk_id2);
-               err_count++;
-            }
+            cbk(fs,inode,blk_id,blk_id2,opt_arg);
          }
       }
    }
+
+   return(0);
+}
+
+/* Check that an inode block is allocated */
+static void vmfs_inode_check_block_alloc(const vmfs_fs_t *fs,
+                                         const vmfs_inode_t *inode,
+                                         uint32_t pb_blk,
+                                         uint32_t blk_id,
+                                         void *opt_arg)
+{
+   int *err_count = opt_arg;
+
+   if (vmfs_block_get_status(fs,blk_id) <= 0) {
+      if (!pb_blk)
+         fprintf(stderr,"Block 0x%8.8x is not allocated\n",blk_id);
+      else
+         fprintf(stderr,"Block 0x%8.8x in PB 0x%8.8x is not allocated\n",
+                 blk_id,pb_blk);
+
+      (*err_count)++;
+   }
+}
+
+/* Check that all blocks bound to an inode are allocated */
+int vmfs_inode_check_blocks(const vmfs_fs_t *fs,const vmfs_inode_t *inode)
+{
+   int status,err_count = 0;
+
+   status = vmfs_inode_foreach_block(fs,inode,vmfs_inode_check_block_alloc,
+                                     &err_count);
+
+   if (status == -1)
+      return(-1);
 
    return(err_count);
 }
