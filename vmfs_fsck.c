@@ -156,7 +156,6 @@ int vmfs_fsck_get_all_block_mappings(const vmfs_fs_t *fs)
       if ((vmfs_inode_read(&inode,inode_buf) == -1) || !inode.nlink)
          continue;
 
-      blk_count[VMFS_BLK_TYPE_FD]++;
       vmfs_fsck_store_inode(fs,ht,&inode);
       vmfs_inode_foreach_block(fs,&inode,vmfs_fsck_store_block,ht);
    }
