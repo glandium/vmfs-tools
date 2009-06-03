@@ -246,13 +246,6 @@ void vmfs_inode_show_blocks(const vmfs_fs_t *fs,const vmfs_inode_t *inode)
    printf("\n");
 }
 
-/* Callback for vmfs_inode_foreach_block */
-typedef void (*vmfs_inode_foreach_block_cbk_t)(const vmfs_fs_t *fs,
-                                               const vmfs_inode_t *inode,
-                                               uint32_t pb_blk,
-                                               uint32_t blk_id,
-                                               void *opt_arg);
-
 /* Call a function for each allocated block of an inode */
 int vmfs_inode_foreach_block(const vmfs_fs_t *fs,const vmfs_inode_t *inode,
                              vmfs_inode_foreach_block_cbk_t cbk,void *opt_arg)
