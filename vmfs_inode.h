@@ -90,6 +90,13 @@ struct vmfs_inode {
    uint32_t blocks[VMFS_INODE_BLK_COUNT];
 };
 
+/* Callback function for vmfs_inode_foreach_block() */
+typedef void (*vmfs_inode_foreach_block_cbk_t)(const vmfs_fs_t *fs,
+                                               const vmfs_inode_t *inode,
+                                               uint32_t pb_blk,
+                                               uint32_t blk_id,
+                                               void *opt_arg);
+
 /* Read an inode */
 int vmfs_inode_read(vmfs_inode_t *inode,const u_char *buf);
 
@@ -111,6 +118,10 @@ int vmfs_inode_get_block(const vmfs_fs_t *fs,const vmfs_inode_t *inode,
 
 /* Show block list of an inode */
 void vmfs_inode_show_blocks(const vmfs_fs_t *fs,const vmfs_inode_t *inode);
+
+/* Call a function for each allocated block of an inode */
+int vmfs_inode_foreach_block(const vmfs_fs_t *fs,const vmfs_inode_t *inode,
+                             vmfs_inode_foreach_block_cbk_t cbk,void *opt_arg);
 
 /* Check that all blocks bound to an inode are allocated */
 int vmfs_inode_check_blocks(const vmfs_fs_t *fs,const vmfs_inode_t *inode);
