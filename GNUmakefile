@@ -18,7 +18,7 @@ LDFLAGS := $(UUID_LDFLAGS)
 SRC := $(wildcard *.c)
 HEADERS := $(wildcard *.h)
 OBJS := $(SRC:%.c=%.o)
-PROGRAMS := debugvmfs vmfs-fuse
+PROGRAMS := debugvmfs vmfs_fsck vmfs-fuse
 buildPROGRAMS := $(PROGRAMS)
 ifeq (,$(FUSE_LDFLAGS))
 buildPROGRAMS := $(filter-out vmfs-fuse,$(buildPROGRAMS))
@@ -69,6 +69,9 @@ vmfs-fuse.o: CFLAGS+=$(FUSE_CFLAGS)
 debugvmfs_EXTRA_SRCS := readcmd.c
 debugvmfs: LDFLAGS+=-ldl
 debugvmfs.o: CFLAGS+=-DVERSION=\"$(VERSION)\"
+
+vmfs_fsck: LDFLAGS+=-ldl
+vmfs_fsck.o: CFLAGS+=-DVERSION=\"$(VERSION)\"
 
 define program_template
 $(strip $(1))_EXTRA_OBJS := $$($(strip $(1))_EXTRA_SRCS:%.c=%.o)
