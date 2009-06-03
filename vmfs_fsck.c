@@ -45,6 +45,7 @@ struct vmfs_blk_map {
       vmfs_inode_t inode;
    };
    u_int ref_count;
+   u_int nlink;
    int status;
    vmfs_blk_map_t *prev,*next;
 };
@@ -56,6 +57,9 @@ struct vmfs_fsck_info {
 
    /* Inodes referenced in directory structure but not in FDC */
    u_int undef_inodes;
+
+   /* Inodes present in FDC but not in directory structure */
+   u_int orphaned_inodes;
 };
 
 /* Hash function for a block ID */
@@ -237,6 +241,13 @@ int vmfs_fsck_walk_dir(const vmfs_fs_t *fs,
 
       vmfs_dirent_read(&rec,buf);
 
+      if (!(map = vmfs_block_map_find(fi->blk_map,rec.block_id))) {
+         fi->undef_inodes++;
+         continue;
+      }
+
+      map->nlink++;
+
       if (rec.type == VMFS_FILE_TYPE_DIR) {
          if (strcmp(rec.name,".") && strcmp(rec.name,"..")) {
             if (!(sub_dir = vmfs_file_open_from_rec(fs,&rec)))
@@ -249,13 +260,28 @@ int vmfs_fsck_walk_dir(const vmfs_fs_t *fs,
                return(-1);
          }
       }
-
-      if (!(map = vmfs_block_map_find(fi->blk_map,rec.block_id))) {
-         fi->undef_inodes++;
-      }
    }
 
    return(0);
+}
+
+/* Display orphaned inodes (ie present in FDC but not in directories) */
+void vmfs_fsck_show_orphaned_inodes(vmfs_fsck_info_t *fi)
+{   
+   vmfs_blk_map_t *map;
+   int i;
+
+   for(i=0;i<VMFS_BLK_MAP_BUCKETS;i++) {
+      for(map=fi->blk_map[i];map;map=map->next) {
+         if (VMFS_BLK_TYPE(map->blk_id) != VMFS_BLK_TYPE_FD)
+            continue;
+
+         if (map->nlink == 0) {
+            printf("Orphaned inode 0x%8.8x\n",map->inode.id);
+            fi->orphaned_inodes++;
+         }
+      }
+   }
 }
 
 /* Initialize fsck structures */
@@ -314,8 +340,10 @@ int main(int argc,char *argv[])
    vmfs_fsck_walk_dir(fs,&fsck_info,fs->root_dir);
 
    vmfs_fsck_count_blocks(&fsck_info);
+   vmfs_fsck_show_orphaned_inodes(&fsck_info);
 
-   printf("Undefined inodes: %u\n",fsck_info.undef_inodes);
+   printf("Undefined inodes : %u\n",fsck_info.undef_inodes);
+   printf("Orphaned inodes  : %u\n",fsck_info.orphaned_inodes);
 
    vmfs_fs_close(fs);
    return(0);
