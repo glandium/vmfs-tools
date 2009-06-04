@@ -37,11 +37,11 @@ enum {
 
 /* Sub-Block */
 #define VMFS_BLK_SB_ITEM(blk_id)   (((blk_id) >> 28) & 0x0f)
-#define VMFS_BLK_SB_ENTRY(blk_id)  (((blk_id) & 0xfffffff) >> 6)
+#define VMFS_BLK_SB_ENTRY(blk_id)  (((blk_id) >> 6)  & 0x3fffff)
 
 /* Pointer-Block */
 #define VMFS_BLK_PB_ITEM(blk_id)   (((blk_id) >> 28) & 0x0f)
-#define VMFS_BLK_PB_ENTRY(blk_id)  (((blk_id) & 0xfffffff) >> 6)
+#define VMFS_BLK_PB_ENTRY(blk_id)  (((blk_id) >> 6)  & 0x3fffff)
 
 /* File Descriptor */
 #define VMFS_BLK_FD_ITEM(blk_id)   (((blk_id) >> 22) & 0x3ff)
