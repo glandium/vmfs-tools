@@ -417,6 +417,20 @@ static int cmd_read_block(vmfs_fs_t *fs,int argc,char *argv[])
          mem_dump(stdout,buf,fs->sbc->bmh.data_size);
          break;
 
+      /* Pointer Block */
+      case VMFS_BLK_TYPE_PB:
+         vmfs_bitmap_get_item(fs->pbc,VMFS_BLK_PB_ENTRY(blk_id),
+                              VMFS_BLK_PB_ITEM(blk_id),buf);
+         mem_dump(stdout,buf,fs->pbc->bmh.data_size);
+         break;
+
+      /* File Descriptor / Inode */
+      case VMFS_BLK_TYPE_FD:
+         vmfs_bitmap_get_item(fs->fdc,VMFS_BLK_FD_ENTRY(blk_id),
+                              VMFS_BLK_FD_ITEM(blk_id),buf);
+         mem_dump(stdout,buf,fs->fdc->bmh.data_size);
+         break;
+
       default:
          fprintf(stderr,"Unsupported block type 0x%2.2x\n",blk_type);
    }
