@@ -34,9 +34,11 @@ enum {
 /* File-Block - TBZ flag specifies if the block must be zeroed. */
 #define VMFS_BLK_FB_ITEM_SHIFT  6
 #define VMFS_BLK_FB_TBZ_SHIFT   5
+#defnie VMFS_BLK_FB_TBZ_MASK    0x1
 
 #define VMFS_BLK_FB_ITEM(blk_id)   ((blk_id) >> VMFS_BLK_FB_ITEM_SHIFT)
-#define VMFS_BLK_FB_TBZ(blk_id)    (((blk_id) >> VMFS_BLK_FB_TBZ_SHIFT) & 0x1)
+#define VMFS_BLK_FB_TBZ(blk_id) \
+   (((blk_id) >> VMFS_BLK_FB_TBZ_SHIFT) & VMFS_BLK_FB_TBZ_MASK)
 
 /* Sub-Block */
 #define VMFS_BLK_SB_ITEM_SHIFT   28
