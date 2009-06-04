@@ -63,6 +63,9 @@ struct vmfs_fsck_info {
 
    /* Blocks present in inodes but not marked as allocated */
    u_int unallocated_blocks;
+
+   /* Lost blocks (ie allocated but not used) */
+   u_int lost_blocks;
 };
 
 /* Hash function for a block ID */
@@ -294,6 +297,56 @@ void vmfs_fsck_show_orphaned_inodes(vmfs_fsck_info_t *fi)
    }
 }
 
+/* Check if a File Block is lost */
+void vmfs_fsck_check_fb_lost(vmfs_bitmap_t *b,uint32_t addr,void *opt)
+{
+   vmfs_fsck_info_t *fi = opt;
+   uint32_t blk_id;
+
+   blk_id = VMFS_BLK_FB_BUILD(addr);
+
+   if (!vmfs_block_map_find(fi->blk_map,blk_id)) {
+      printf("File Block 0x%8.8x is lost.\n",blk_id);
+      fi->lost_blocks++;
+   }
+}
+
+/* Check if a Sub-Block is lost */
+void vmfs_fsck_check_sb_lost(vmfs_bitmap_t *b,uint32_t addr,void *opt)
+{
+   vmfs_fsck_info_t *fi = opt;
+   uint32_t entry,item;
+   uint32_t blk_id;
+
+   entry = addr / b->bmh.items_per_bitmap_entry;
+   item  = addr % b->bmh.items_per_bitmap_entry;
+
+   blk_id = VMFS_BLK_SB_BUILD(entry,item);
+
+   if (!vmfs_block_map_find(fi->blk_map,blk_id)) {
+      printf("Sub-Block 0x%8.8x is lost.\n",blk_id);
+      fi->lost_blocks++;
+   }
+}
+
+/* Check if a Pointer Block is lost */
+void vmfs_fsck_check_pb_lost(vmfs_bitmap_t *b,uint32_t addr,void *opt)
+{
+   vmfs_fsck_info_t *fi = opt;
+   uint32_t entry,item;
+   uint32_t blk_id;
+
+   entry = addr / b->bmh.items_per_bitmap_entry;
+   item  = addr % b->bmh.items_per_bitmap_entry;
+
+   blk_id = VMFS_BLK_PB_BUILD(entry,item);
+
+   if (!vmfs_block_map_find(fi->blk_map,blk_id)) {
+      printf("Pointer Block 0x%8.8x is lost.\n",blk_id);
+      fi->lost_blocks++;
+   }
+}
+
 /* Initialize fsck structures */
 static void vmfs_fsck_init(vmfs_fsck_info_t *fi)
 {
@@ -352,7 +405,12 @@ int main(int argc,char *argv[])
    vmfs_fsck_count_blocks(&fsck_info);
    vmfs_fsck_show_orphaned_inodes(&fsck_info);
 
+   vmfs_bitmap_foreach(fs->fbb,vmfs_fsck_check_fb_lost,&fsck_info);
+   vmfs_bitmap_foreach(fs->sbc,vmfs_fsck_check_sb_lost,&fsck_info);
+   vmfs_bitmap_foreach(fs->pbc,vmfs_fsck_check_pb_lost,&fsck_info);
+
    printf("Unallocated blocks : %u\n",fsck_info.unallocated_blocks);
+   printf("Lost blocks        : %u\n",fsck_info.lost_blocks);
    printf("Undefined inodes   : %u\n",fsck_info.undef_inodes);
    printf("Orphaned inodes    : %u\n",fsck_info.orphaned_inodes);
 
