@@ -60,6 +60,9 @@ struct vmfs_fsck_info {
 
    /* Inodes present in FDC but not in directory structure */
    u_int orphaned_inodes;
+
+   /* Blocks present in inodes but not marked as allocated */
+   u_int unallocated_blocks;
 };
 
 /* Hash function for a block ID */
@@ -136,6 +139,7 @@ static int vmfs_fsck_store_inode(const vmfs_fs_t *fs,vmfs_blk_map_t **ht,
       return(-1);
    
    memcpy(&map->inode,inode,sizeof(*inode));
+   map->status = vmfs_block_get_status(fs,inode->id);
    return(0);
 }
 
@@ -205,6 +209,12 @@ void vmfs_fsck_count_blocks(vmfs_fsck_info_t *fi)
 
          if (blk_type < VMFS_BLK_TYPE_MAX)
             fi->blk_count[blk_type]++;
+
+         /* Check that block is allocated */
+         if (map->status <= 0) {
+            printf("Block 0x%8.8x is used but not allocated.\n",map->blk_id);
+            fi->unallocated_blocks++;
+         }
       }
    }
    
@@ -342,8 +352,9 @@ int main(int argc,char *argv[])
    vmfs_fsck_count_blocks(&fsck_info);
    vmfs_fsck_show_orphaned_inodes(&fsck_info);
 
-   printf("Undefined inodes : %u\n",fsck_info.undef_inodes);
-   printf("Orphaned inodes  : %u\n",fsck_info.orphaned_inodes);
+   printf("Unallocated blocks : %u\n",fsck_info.unallocated_blocks);
+   printf("Undefined inodes   : %u\n",fsck_info.undef_inodes);
+   printf("Orphaned inodes    : %u\n",fsck_info.orphaned_inodes);
 
    vmfs_fs_close(fs);
    return(0);
