@@ -72,8 +72,11 @@ Outputs active heartbeats on the file system.
 Outputs information about the given block_id, such as block type, entry and
 item numbers.
 
-*read_block* 'block_id'::
-Outputs content within the specified block_id.
+*read_block* 'block_id' [ ... ]::
+Outputs content within the specified block_id in binary
+
+*dump_block* 'block_id' [ ... ]::
+Outputs content within the specified block_id in hex
 
 *get_block_status* 'block_id'::
 Get status (allocated or free) of the specified block_id.

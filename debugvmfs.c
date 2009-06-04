@@ -383,15 +383,17 @@ static int cmd_convert_block_id(vmfs_fs_t *fs,int argc,char *argv[])
    return(0);
 }
 
-/* Read a block */
-static int cmd_read_block(vmfs_fs_t *fs,int argc,char *argv[])
+/* Read/Dump a block */
+static int read_dump_block(vmfs_fs_t *fs,int argc,char *argv[],int action)
 {    
    uint32_t blk_id,blk_type;
    uint64_t blk_size;
    u_char *buf;
+   size_t len;
+   int i;
 
    if (argc == 0) {
-      fprintf(stderr,"Usage: read_block blk_id\n");
+      fprintf(stderr,"Usage: read_block blk1 ... blkN\n");
       return(-1);
    }
 
@@ -400,43 +402,67 @@ static int cmd_read_block(vmfs_fs_t *fs,int argc,char *argv[])
    if (posix_memalign((void **)&buf,M_SECTOR_SIZE,blk_size))
       return(-1);
 
-   blk_id = (uint32_t)strtoul(argv[0],NULL,16);
-   blk_type = VMFS_BLK_TYPE(blk_id);
+   for(i=0;i<argc;i++) {
+      blk_id = (uint32_t)strtoul(argv[0],NULL,16);
+      blk_type = VMFS_BLK_TYPE(blk_id);
+      len = 0;
 
-   switch(blk_type) {
-      /* File Block */
-      case VMFS_BLK_TYPE_FB:
-         vmfs_fs_read(fs,VMFS_BLK_FB_ITEM(blk_id),0,buf,blk_size);
-         mem_dump(stdout,buf,blk_size);
-         break;
+      switch(blk_type) {
+         /* File Block */
+         case VMFS_BLK_TYPE_FB:
+            vmfs_fs_read(fs,VMFS_BLK_FB_ITEM(blk_id),0,buf,blk_size);
+            len = blk_size;
+            break;
 
-      /* Sub-Block */
-      case VMFS_BLK_TYPE_SB:
-         vmfs_bitmap_get_item(fs->sbc,VMFS_BLK_SB_ENTRY(blk_id),
-                              VMFS_BLK_SB_ITEM(blk_id),buf);
-         mem_dump(stdout,buf,fs->sbc->bmh.data_size);
-         break;
+         /* Sub-Block */
+         case VMFS_BLK_TYPE_SB:
+            vmfs_bitmap_get_item(fs->sbc,VMFS_BLK_SB_ENTRY(blk_id),
+                                 VMFS_BLK_SB_ITEM(blk_id),buf);
+            len = fs->sbc->bmh.data_size;
+            break;
 
-      /* Pointer Block */
-      case VMFS_BLK_TYPE_PB:
-         vmfs_bitmap_get_item(fs->pbc,VMFS_BLK_PB_ENTRY(blk_id),
-                              VMFS_BLK_PB_ITEM(blk_id),buf);
-         mem_dump(stdout,buf,fs->pbc->bmh.data_size);
-         break;
+         /* Pointer Block */
+         case VMFS_BLK_TYPE_PB:
+            vmfs_bitmap_get_item(fs->pbc,VMFS_BLK_PB_ENTRY(blk_id),
+                                 VMFS_BLK_PB_ITEM(blk_id),buf);
+            len = fs->pbc->bmh.data_size;
+            break;
 
-      /* File Descriptor / Inode */
-      case VMFS_BLK_TYPE_FD:
-         vmfs_bitmap_get_item(fs->fdc,VMFS_BLK_FD_ENTRY(blk_id),
-                              VMFS_BLK_FD_ITEM(blk_id),buf);
-         mem_dump(stdout,buf,fs->fdc->bmh.data_size);
-         break;
+         /* File Descriptor / Inode */
+         case VMFS_BLK_TYPE_FD:
+            vmfs_bitmap_get_item(fs->fdc,VMFS_BLK_FD_ENTRY(blk_id),
+                                 VMFS_BLK_FD_ITEM(blk_id),buf);
+            len = fs->fdc->bmh.data_size;
+            break;
 
-      default:
-         fprintf(stderr,"Unsupported block type 0x%2.2x\n",blk_type);
+         default:
+            fprintf(stderr,"Unsupported block type 0x%2.2x\n",blk_type);
+      }
+
+      if (len != 0) {
+         if (action == 0) {
+            if (fwrite(buf,1,len,stdout) != len)
+               fprintf(stderr,"Block 0x%8.8x: incomplete write.\n",blk_id);
+         } else {
+            mem_dump(stdout,buf,len);
+         }
+      }
    }
 
    free(buf);
    return(0);
+}
+
+/* Read a block */
+static int cmd_read_block(vmfs_fs_t *fs,int argc,char *argv[])
+{
+   return(read_dump_block(fs,argc,argv,0));
+}
+
+/* Dump a block */
+static int cmd_dump_block(vmfs_fs_t *fs,int argc,char *argv[])
+{
+   return(read_dump_block(fs,argc,argv,1));
 }
 
 /* Get block status */
@@ -586,6 +612,7 @@ struct cmd cmd_array[] = {
    { "show_heartbeats", "Show active heartbeats", cmd_show_heartbeats },
    { "convert_block_id", "Convert block ID", cmd_convert_block_id },
    { "read_block", "Read a block", cmd_read_block },
+   { "dump_block", "Dump a block in hex", cmd_dump_block },
    { "get_block_status", "Get block status", cmd_get_block_status },
    { "alloc_block", "Allocate block", cmd_alloc_block },
    { "free_block", "Free block", cmd_free_block },
