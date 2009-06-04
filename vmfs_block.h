@@ -34,11 +34,14 @@ enum {
 /* File-Block - TBZ flag specifies if the block must be zeroed. */
 #define VMFS_BLK_FB_ITEM_SHIFT  6
 #define VMFS_BLK_FB_TBZ_SHIFT   5
-#defnie VMFS_BLK_FB_TBZ_MASK    0x1
+#define VMFS_BLK_FB_TBZ_MASK    0x1
 
 #define VMFS_BLK_FB_ITEM(blk_id)   ((blk_id) >> VMFS_BLK_FB_ITEM_SHIFT)
 #define VMFS_BLK_FB_TBZ(blk_id) \
    (((blk_id) >> VMFS_BLK_FB_TBZ_SHIFT) & VMFS_BLK_FB_TBZ_MASK)
+
+#define VMFS_BLK_FB_BUILD(item) \
+   (((item) << VMFS_BLK_FB_ITEM_SHIFT) | VMFS_BLK_TYPE_FB)
 
 /* Sub-Block */
 #define VMFS_BLK_SB_ITEM_SHIFT   28
@@ -52,6 +55,11 @@ enum {
 #define VMFS_BLK_SB_ENTRY(blk_id) \
    (((blk_id) >> VMFS_BLK_SB_ENTRY_SHIFT) & VMFS_BLK_SB_ENTRY_MASK)
 
+#define VMFS_BLK_SB_BUILD(entry,item) \
+   ( ((entry) << VMFS_BLK_SB_ENTRY_SHIFT) | \
+     ((item) << VMFS_BLK_SB_ITEM_SHIFT) | \
+     VMFS_BLK_TYPE_SB )
+
 /* Pointer-Block */
 #define VMFS_BLK_PB_ITEM_SHIFT   28
 #define VMFS_BLK_PB_ITEM_MASK    0x0f
@@ -64,6 +72,11 @@ enum {
 #define VMFS_BLK_PB_ENTRY(blk_id) \
    (((blk_id) >> VMFS_BLK_PB_ENTRY_SHIFT) & VMFS_BLK_PB_ENTRY_MASK)
 
+#define VMFS_BLK_PB_BUILD(entry,item) \
+   ( ((entry) << VMFS_BLK_PB_ENTRY_SHIFT) | \
+     ((item) << VMFS_BLK_PB_ITEM_SHIFT) | \
+     VMFS_BLK_TYPE_PB )
+
 /* File Descriptor */
 #define VMFS_BLK_FD_ITEM_SHIFT   22
 #define VMFS_BLK_FD_ITEM_MASK    0x3ff
@@ -75,6 +88,11 @@ enum {
 
 #define VMFS_BLK_FD_ENTRY(blk_id) \
    (((blk_id) >> VMFS_BLK_FD_ENTRY_SHIFT) & VMFS_BLK_FD_ENTRY_MASK)
+
+#define VMFS_BLK_FD_BUILD(entry,item) \
+   ( ((entry) << VMFS_BLK_FD_ENTRY_SHIFT) | \
+     ((item) << VMFS_BLK_FD_ITEM_SHIFT) | \
+     VMFS_BLK_TYPE_FD )
 
 /* Get bitmap info (bitmap pointer,entry and item) from a block ID */
 int vmfs_block_get_bitmap_info(const vmfs_fs_t *fs,uint32_t blk_id,
