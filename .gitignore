@@ -4,4 +4,5 @@
 *.8
 version
 debugvmfs
+vmfs_fsck
 vmfs-fuse
