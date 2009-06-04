@@ -325,6 +325,52 @@ uint32_t vmfs_bitmap_allocated_items(vmfs_bitmap_t *b)
    return(count);
 }
 
+/* Call a user function for each allocated item in a bitmap */
+void vmfs_bitmap_area_foreach(vmfs_bitmap_t *b,u_int area,
+                              vmfs_bitmap_foreach_cbk_t cbk,
+                              void *opt_arg)
+{
+   DECL_ALIGNED_BUFFER(buf,VMFS_BITMAP_ENTRY_SIZE);
+   vmfs_bitmap_entry_t entry;
+   off_t pos;
+   uint32_t addr;
+   u_int array_idx,bit_idx;
+   u_int i,j;
+
+   pos = vmfs_bitmap_get_area_addr(&b->bmh,area);
+
+   for(i=0;i<b->bmh.bmp_entries_per_area;i++) {
+      if (vmfs_file_pread(b->f,buf,buf_len,pos) != buf_len)
+         break;
+
+      vmfs_bme_read(&entry,buf,1);
+
+      for(j=0;j<entry.total;j++) {
+         array_idx = j >> 3;
+         bit_idx   = j & 0x07;
+         
+         addr =  area * vmfs_bitmap_get_items_per_area(&b->bmh);
+         addr += i * b->bmh.items_per_bitmap_entry;
+         addr += j;
+
+         if (!(entry.bitmap[array_idx] & (1 << bit_idx)))
+            cbk(b,addr,opt_arg);
+      }
+
+      pos += buf_len;
+   }
+}
+
+/* Call a user function for each allocated item in a bitmap */
+void vmfs_bitmap_foreach(vmfs_bitmap_t *b,vmfs_bitmap_foreach_cbk_t cbk,
+                         void *opt_arg)
+{
+   u_int i;
+   
+   for(i=0;i<b->bmh.area_count;i++)
+      vmfs_bitmap_area_foreach(b,i,cbk,opt_arg);
+}
+
 /* Check coherency of a bitmap file */
 int vmfs_bitmap_check(vmfs_bitmap_t *b)
 {  

@@ -72,6 +72,10 @@ struct vmfs_bitmap {
    vmfs_bitmap_header_t bmh;
 };
 
+/* Callback prototype for vmfs_bitmap_foreach() */
+typedef void (*vmfs_bitmap_foreach_cbk_t)(vmfs_bitmap_t *b,uint32_t addr,
+                                          void *opt_arg);
+
 /* Show bitmap information */
 void vmfs_bmh_show(const vmfs_bitmap_header_t *bmh);
 
@@ -114,6 +118,15 @@ uint32_t vmfs_bitmap_area_allocated_items(vmfs_bitmap_t *b,u_int area);
 
 /* Count the total number of allocated items in a bitmap */
 uint32_t vmfs_bitmap_allocated_items(vmfs_bitmap_t *b);
+
+/* Call a user function for each allocated item in a bitmap */
+void vmfs_bitmap_area_foreach(vmfs_bitmap_t *b,u_int area,
+                              vmfs_bitmap_foreach_cbk_t cbk,
+                              void *opt_arg);
+
+/* Call a user function for each allocated item in a bitmap */
+void vmfs_bitmap_foreach(vmfs_bitmap_t *b,vmfs_bitmap_foreach_cbk_t cbk,
+                         void *opt_arg);
 
 /* Check coherency of a bitmap file */
 int vmfs_bitmap_check(vmfs_bitmap_t *b);
