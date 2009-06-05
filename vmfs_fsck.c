@@ -30,6 +30,23 @@
 #include "vmfs.h"
 #include "readcmd.h"
 
+/* Forward declarations */
+typedef struct vmfs_dir_map vmfs_dir_map_t;
+typedef struct vmfs_blk_map vmfs_blk_map_t;
+
+/* Directory mapping */
+struct vmfs_dir_map {
+   char *name;
+   uint32_t blk_id;
+   int is_dir;
+   
+   vmfs_blk_map_t *blk_map;
+
+   vmfs_dir_map_t *parent;
+   vmfs_dir_map_t *next;
+   vmfs_dir_map_t *child_list,*child_last;
+};
+
 /* 
  * Block mapping, which allows to keep track of inodes given a block number.
  * Used for troubleshooting/debugging/future fsck.
@@ -37,13 +54,13 @@
 #define VMFS_BLK_MAP_BUCKETS     512
 #define VMFS_BLK_MAP_MAX_INODES  32
 
-typedef struct vmfs_blk_map vmfs_blk_map_t;
 struct vmfs_blk_map {
    uint32_t blk_id;
    union {
       uint32_t inode_id[VMFS_BLK_MAP_MAX_INODES];
       vmfs_inode_t inode;
    };
+   vmfs_dir_map_t *dir_map;
    u_int ref_count;
    u_int nlink;
    int status;
@@ -54,6 +71,8 @@ typedef struct vmfs_fsck_info vmfs_fsck_info_t;
 struct vmfs_fsck_info {
    vmfs_blk_map_t *blk_map[VMFS_BLK_MAP_BUCKETS];
    u_int blk_count[VMFS_BLK_TYPE_MAX];
+
+   vmfs_dir_map_t *dir_map;
 
    /* Inodes referenced in directory structure but not in FDC */
    u_int undef_inodes;
@@ -66,7 +85,111 @@ struct vmfs_fsck_info {
 
    /* Lost blocks (ie allocated but not used) */
    u_int lost_blocks;
+
+   /* Directory structure errors */
+   u_int dir_struct_errors;
 };
+
+/* Allocate a directory map structure */
+vmfs_dir_map_t *vmfs_dir_map_alloc(char *name,uint32_t blk_id)
+{
+   vmfs_dir_map_t *map;
+
+   if (!(map = calloc(1,sizeof(*map))))
+      return NULL;
+
+   if (!(map->name = strdup(name))) {
+      free(map);
+      return NULL;
+   }
+
+   map->blk_id = blk_id;
+
+   return map;
+}
+
+/* Create the root directory mapping */
+vmfs_dir_map_t *vmfs_dir_map_alloc_root(void)
+{
+   vmfs_dir_map_t *map;
+   uint32_t root_blk_id;
+
+   root_blk_id = VMFS_BLK_FD_BUILD(0,0);
+
+   if (!(map = vmfs_dir_map_alloc("/",root_blk_id)))
+      return NULL;
+
+   map->parent = map;
+   return map;
+}
+
+/* Add a child entry */
+void vmfs_dir_map_add_child(vmfs_dir_map_t *parent,vmfs_dir_map_t *child)
+{
+   child->parent = parent;
+
+   if (parent->child_last != NULL)
+      parent->child_last->next = child;
+   else
+      parent->child_list = child;
+
+   parent->child_last = child;
+   child->next = NULL;
+}
+
+/* Display a directory map */
+void vmfs_dir_map_show_entry(vmfs_dir_map_t *map,int level)
+{
+   vmfs_dir_map_t *child;
+   int i;
+
+   for(i=0;i<level;i++)
+      printf("   ");
+
+   printf("%s (0x%8.8x)\n",map->name,map->blk_id);
+
+   for(child=map->child_list;child;child=child->next)
+      vmfs_dir_map_show_entry(child,level+1);
+}
+
+/* Display the directory hierarchy */
+void vmfs_dir_map_show(vmfs_fsck_info_t *fi)
+{
+   vmfs_dir_map_show_entry(fi->dir_map,0);
+}
+
+/* Get directory full path */
+static char *vmfs_dir_map_get_path_internal(vmfs_dir_map_t *map,
+                                            char *buffer,size_t len)
+{
+   char *ptr;
+   size_t plen;
+   
+   if (map->parent != map) {
+      ptr = vmfs_dir_map_get_path_internal(map->parent,buffer,len);
+      plen = len - (ptr - buffer);
+
+      ptr += snprintf(ptr,plen,"%s/",map->name);
+   } else {
+      ptr = buffer;
+      ptr += snprintf(buffer,len,"%s",map->name);
+   }
+
+   return ptr;
+}
+
+/* Get directory full path */
+char *vmfs_dir_map_get_path(vmfs_dir_map_t *map,char *buffer,size_t len)
+{
+   char *p;
+
+   p = vmfs_dir_map_get_path_internal(map,buffer,len);
+
+   if ((--p > buffer) && (*p == '/'))
+      *p = 0;
+
+   return buffer;
+}
 
 /* Hash function for a block ID */
 static inline u_int vmfs_block_map_hash(uint32_t blk_id)
@@ -234,12 +357,14 @@ void vmfs_fsck_count_blocks(vmfs_fsck_info_t *fi)
  */
 int vmfs_fsck_walk_dir(const vmfs_fs_t *fs,
                        vmfs_fsck_info_t *fi,
+                       vmfs_dir_map_t *dir_map,
                        vmfs_file_t *dir_entry)
 {   
    u_char buf[VMFS_DIRENT_SIZE];
    vmfs_dirent_t rec;
    vmfs_file_t *sub_dir;
    vmfs_blk_map_t *map;
+   vmfs_dir_map_t *dm;
    int i,res,dir_count;
    ssize_t len;
 
@@ -259,14 +384,21 @@ int vmfs_fsck_walk_dir(const vmfs_fs_t *fs,
          continue;
       }
 
+      if (!(dm = vmfs_dir_map_alloc(rec.name,rec.block_id)))
+         return(-1);
+
+      vmfs_dir_map_add_child(dir_map,dm);
+      map->dir_map = dm;
       map->nlink++;
 
       if (rec.type == VMFS_FILE_TYPE_DIR) {
+         dm->is_dir = 1;
+
          if (strcmp(rec.name,".") && strcmp(rec.name,"..")) {
             if (!(sub_dir = vmfs_file_open_from_rec(fs,&rec)))
                return(-1);
 
-            res = vmfs_fsck_walk_dir(fs,fi,sub_dir);
+            res = vmfs_fsck_walk_dir(fs,fi,dm,sub_dir);
             vmfs_file_close(sub_dir);
          
             if (res == -1)
@@ -347,10 +479,59 @@ void vmfs_fsck_check_pb_lost(vmfs_bitmap_t *b,uint32_t addr,void *opt)
    }
 }
 
+/* Check the directory has minimal . and .. entries with correct inode IDs */
+void vmfs_fsck_check_dir(vmfs_fsck_info_t *fi,vmfs_dir_map_t *dir)
+{      
+   char buffer[256];
+   vmfs_dir_map_t *child;
+   int cdir,pdir;
+
+   cdir = pdir = 0;
+
+   for(child=dir->child_list;child;child=child->next) {
+      if (!strcmp(child->name,".")) {
+         cdir++;
+
+         if (child->blk_id != dir->blk_id) {
+            printf("Invalid . entry in %s\n",
+                   vmfs_dir_map_get_path(dir,buffer,sizeof(buffer)));
+            fi->dir_struct_errors++;
+         }
+
+         continue;
+      }
+
+      if (!strcmp(child->name,"..")) {
+         pdir++;
+
+         if (child->blk_id != dir->parent->blk_id) {
+            printf("Invalid .. entry in %s\n",
+                   vmfs_dir_map_get_path(dir,buffer,sizeof(buffer)));
+            fi->dir_struct_errors++;
+         }
+
+         continue;
+      }
+
+      if (child->is_dir)
+         vmfs_fsck_check_dir(fi,child);
+   }
+
+   if ((cdir != 1) || (pdir != 1))
+      fi->dir_struct_errors++;
+}
+
+/* Check the directory structure */
+void vmfs_fsck_check_dir_all(vmfs_fsck_info_t *fi)
+{
+   vmfs_fsck_check_dir(fi,fi->dir_map);
+}
+
 /* Initialize fsck structures */
 static void vmfs_fsck_init(vmfs_fsck_info_t *fi)
 {
    memset(fi,0,sizeof(*fi));
+   fi->dir_map = vmfs_dir_map_alloc_root();
 }
 
 static void show_usage(char *prog_name) 
@@ -400,7 +581,7 @@ int main(int argc,char *argv[])
 
    vmfs_fsck_init(&fsck_info);
    vmfs_fsck_get_all_block_mappings(fs,&fsck_info);
-   vmfs_fsck_walk_dir(fs,&fsck_info,fs->root_dir);
+   vmfs_fsck_walk_dir(fs,&fsck_info,fsck_info.dir_map,fs->root_dir);
 
    vmfs_fsck_count_blocks(&fsck_info);
    vmfs_fsck_show_orphaned_inodes(&fsck_info);
@@ -409,10 +590,13 @@ int main(int argc,char *argv[])
    vmfs_bitmap_foreach(fs->sbc,vmfs_fsck_check_sb_lost,&fsck_info);
    vmfs_bitmap_foreach(fs->pbc,vmfs_fsck_check_pb_lost,&fsck_info);
 
+   vmfs_fsck_check_dir_all(&fsck_info);
+
    printf("Unallocated blocks : %u\n",fsck_info.unallocated_blocks);
    printf("Lost blocks        : %u\n",fsck_info.lost_blocks);
    printf("Undefined inodes   : %u\n",fsck_info.undef_inodes);
    printf("Orphaned inodes    : %u\n",fsck_info.orphaned_inodes);
+   printf("Directory errors   : %u\n",fsck_info.dir_struct_errors);
 
    vmfs_fs_close(fs);
    return(0);
