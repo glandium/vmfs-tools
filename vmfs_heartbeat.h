@@ -55,6 +55,9 @@ struct vmfs_heartbeat {
    uint32_t journal_blk;  /* Journal block */
 };
 
+/* Delay for heartbeat expiration when not referenced anymore */
+#define VMFS_HEARTBEAT_EXPIRE_DELAY  (3 * 1000000)
+
 static inline bool vmfs_heartbeat_active(vmfs_heartbeat_t *hb)
 {
    return(hb->magic == VMFS_HB_MAGIC_ON);
@@ -83,5 +86,8 @@ int vmfs_heartbeat_update(vmfs_fs_t *fs,vmfs_heartbeat_t *hb);
 
 /* Acquire an heartbeat (ID is chosen automatically) */
 int vmfs_heartbeat_acquire(vmfs_fs_t *fs);
+
+/* Release an heartbeat */
+int vmfs_heartbeat_release(vmfs_fs_t *fs);
 
 #endif

@@ -100,6 +100,7 @@ struct vmfs_fs {
    u_int hb_id;
    uint64_t hb_seq;
    u_int hb_refcount;
+   uint64_t hb_expire;
 };
 
 /* Get block size of a volume */

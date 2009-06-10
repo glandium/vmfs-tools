@@ -183,6 +183,13 @@ int vmfs_heartbeat_acquire(vmfs_fs_t *fs)
    size_t buf_len;
    int i,res = -1;
 
+   /* Heartbeat already active ? */
+   if (fs->hb_refcount > 0) {
+      fs->hb_refcount++;
+      fs->hb_expire = vmfs_host_get_uptime() + VMFS_HEARTBEAT_EXPIRE_DELAY;
+      return(0);
+   }
+
    /* Try to reuse the current ID */
    if (!vmfs_heartbeat_lock(fs,fs->hb_id,&fs->hb))
       return(0);
@@ -210,6 +217,8 @@ int vmfs_heartbeat_acquire(vmfs_fs_t *fs)
       if (!vmfs_heartbeat_lock(fs,i,&fs->hb)) {
          fs->hb_id  = i;
          fs->hb_seq = fs->hb.seq;
+         fs->hb_refcount = 1;
+         fs->hb_expire = vmfs_host_get_uptime() + VMFS_HEARTBEAT_EXPIRE_DELAY;
          res = 0;
          break;
       }
@@ -217,4 +226,15 @@ int vmfs_heartbeat_acquire(vmfs_fs_t *fs)
 
    iobuffer_free(buf);
    return(res);
+}
+
+/* Release an heartbeat */
+int vmfs_heartbeat_release(vmfs_fs_t *fs)
+{
+   if (fs->hb_refcount == 0)
+      return(-1);
+
+   /* The heartbeat will be eventually released by the background process */
+   fs->hb_refcount--;
+   return(0);
 }
