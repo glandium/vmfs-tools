@@ -44,9 +44,9 @@ static int vmfs_lvm_get_extent_from_offset(const vmfs_lvm_t *lvm,off_t pos)
 }
 
 /* Get extent size */
-static inline size_t vmfs_lvm_extent_size(const vmfs_lvm_t *lvm,int extent)
+static inline uint64_t vmfs_lvm_extent_size(const vmfs_lvm_t *lvm,int extent)
 {
-   return((size_t)lvm->extents[extent]->vol_info.num_segments * VMFS_LVM_SEGMENT_SIZE);
+   return((uint64_t)lvm->extents[extent]->vol_info.num_segments * VMFS_LVM_SEGMENT_SIZE);
 }
 
 typedef ssize_t (*vmfs_vol_io_func)(const vmfs_volume_t *,off_t,u_char *,size_t);
@@ -60,7 +60,7 @@ static inline ssize_t vmfs_lvm_io(const vmfs_lvm_t *lvm,off_t pos,u_char *buf,
    if (extent < 0)
       return(-1);
 
-   pos -= (size_t)lvm->extents[extent]->vol_info.first_segment * VMFS_LVM_SEGMENT_SIZE;
+   pos -= (uint64_t)lvm->extents[extent]->vol_info.first_segment * VMFS_LVM_SEGMENT_SIZE;
    if ((pos + len) > vmfs_lvm_extent_size(lvm,extent)) {
       /* TODO: Handle this case */
       fprintf(stderr,"VMFS: i/o spanned over several extents is unsupported\n");
