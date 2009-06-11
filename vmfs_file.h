@@ -80,7 +80,7 @@ ssize_t vmfs_file_pread(vmfs_file_t *f,u_char *buf,size_t len,off_t pos);
 ssize_t vmfs_file_read(vmfs_file_t *f,u_char *buf,size_t len);
 
 /* Dump a file */
-int vmfs_file_dump(vmfs_file_t *f,off_t pos,size_t len,FILE *fd_out);
+int vmfs_file_dump(vmfs_file_t *f,off_t pos,uint64_t len,FILE *fd_out);
 
 /* Get file status */
 int vmfs_file_fstat(const vmfs_file_t *f,struct stat *buf);
