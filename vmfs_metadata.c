@@ -69,28 +69,26 @@ void vmfs_metadata_hdr_show(const vmfs_metadata_hdr_t *mdh)
 int vmfs_metadata_lock(vmfs_fs_t *fs,off_t pos,u_char *buf,size_t buf_len,
                        vmfs_metadata_hdr_t *mdh)
 {
-   int res = -1;
-
-   /* We must have an active heartbeat to lock metadata */
-   if (!vmfs_heartbeat_active(&fs->hb))
+   /* Acquire heartbeat */
+   if (vmfs_heartbeat_acquire(fs) == -1)
       return(-1);
 
    /* Reserve volume */
    if (vmfs_lvm_reserve(fs->lvm,pos) == -1) {
       fprintf(stderr,"VMFS: unable to reserve volume.\n");
-      return(-1);
+      goto err_reserve;
    }
 
    /* Read the complete metadata for the caller */
    if (vmfs_lvm_read(fs->lvm,pos,buf,buf_len) != buf_len) {
       fprintf(stderr,"VMFS: unable to read metadata.\n");
-      goto done;
+      goto err_io;
    }
 
    vmfs_metadata_hdr_read(mdh,buf);
    
    if (mdh->hb_lock != 0)
-      goto done;
+      goto err_io;
 
    /* Update metadata information */
    mdh->obj_seq++;
@@ -105,22 +103,23 @@ int vmfs_metadata_lock(vmfs_fs_t *fs,off_t pos,u_char *buf,size_t buf_len,
        != VMFS_METADATA_HDR_SIZE)
    {
       fprintf(stderr,"VMFS: unable to write metadata header.\n");
-      goto done;
+      goto err_io;
    }
 
-   res = 0;
- done:
    vmfs_lvm_release(fs->lvm,pos);
-   return(res);
+   return(0);
+
+ err_io:
+   vmfs_lvm_release(fs->lvm,pos);
+ err_reserve:
+   vmfs_heartbeat_release(fs);
+   return(-1);
 }
 
 /* Unlock metadata */
-int vmfs_metadata_unlock(vmfs_fs_t *fs,off_t pos,u_char *buf,size_t buf_len,
+int vmfs_metadata_unlock(vmfs_fs_t *fs,off_t pos,u_char *buf,
                          vmfs_metadata_hdr_t *mdh)
 {
-   if (buf_len < VMFS_METADATA_HDR_SIZE)
-      return(-1);
-
    mdh->hb_lock = 0;
    uuid_clear(mdh->hb_uuid);
    vmfs_metadata_hdr_write(mdh,buf);
@@ -133,5 +132,5 @@ int vmfs_metadata_unlock(vmfs_fs_t *fs,off_t pos,u_char *buf,size_t buf_len,
       return(-1);
    }
 
-   return(0);
+   return(vmfs_heartbeat_release(fs));
 }
