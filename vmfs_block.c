@@ -55,19 +55,18 @@ int vmfs_blk_list_add_block(vmfs_blk_list_t *list,u_int pos,uint32_t blk_id)
    uint32_t new_total;
    void *ptr;
    
-   if (pos < list->total) {
-      list->blk_id[pos] = blk_id;
-      return(0);
+   if (pos >= list->total) {
+      new_total = pos + 128;
+      new_size  = new_total * sizeof(uint32_t);
+
+      if (!(ptr = realloc(list->blk_id,new_size)))
+         return(-1);
+
+      list->blk_id   = ptr;
+      list->total    = new_total;
    }
 
-   new_total = pos + 128;
-   new_size  = new_total * sizeof(uint32_t);
-
-   if (!(ptr = realloc(list->blk_id,new_size)))
-      return(-1);
-
-   list->blk_id   = ptr;
-   list->total    = new_total;
+   list->blk_id[pos] = blk_id;
    list->last_pos = pos + 1;
    return(0);
 }
