@@ -108,4 +108,7 @@ int vmfs_block_alloc_specified(const vmfs_fs_t *fs,uint32_t blk_id);
 /* Free the specified block */
 int vmfs_block_free(const vmfs_fs_t *fs,uint32_t blk_id);
 
+/* Allocate a single block */
+int vmfs_block_alloc(const vmfs_fs_t *fs,uint32_t blk_type,uint32_t *blk_id);
+
 #endif

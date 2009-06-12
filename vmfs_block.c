@@ -122,3 +122,57 @@ int vmfs_block_free(const vmfs_fs_t *fs,uint32_t blk_id)
 {
    return(vmfs_block_set_status(fs,blk_id,0));
 }
+
+/* Allocate a single block */
+int vmfs_block_alloc(const vmfs_fs_t *fs,uint32_t blk_type,uint32_t *blk_id)
+{
+   vmfs_bitmap_t *bmp;
+   vmfs_bitmap_entry_t entry;
+   uint32_t item,addr;
+
+   switch(blk_type) {
+      case VMFS_BLK_TYPE_FB:
+         bmp = fs->fbb;
+         break;
+      case VMFS_BLK_TYPE_SB:
+         bmp = fs->sbc;
+         break;
+      case VMFS_BLK_TYPE_PB:
+         bmp = fs->pbc;
+         break;
+      case VMFS_BLK_TYPE_FD:
+         bmp = fs->fdc;
+         break;
+      default:
+         return(-1);
+   }
+
+   if (vmfs_bitmap_find_free_items(bmp,1,&entry) == -1)
+      return(-1);
+
+   if (vmfs_bitmap_alloc_item(&entry,&item) == -1) {
+      vmfs_metadata_unlock((vmfs_fs_t *)fs,&entry.mdh);
+      return(-1);
+   }
+
+   vmfs_bme_update(fs,&entry);
+   vmfs_metadata_unlock((vmfs_fs_t *)fs,&entry.mdh);
+
+   switch(blk_type) {
+      case VMFS_BLK_TYPE_FB:
+         addr = (entry.id * bmp->bmh.items_per_bitmap_entry) + item;
+         *blk_id = VMFS_BLK_FB_BUILD(addr);
+         break;
+      case VMFS_BLK_TYPE_SB:
+         *blk_id = VMFS_BLK_SB_BUILD(entry.id,item);
+         break;
+      case VMFS_BLK_TYPE_PB:
+         *blk_id = VMFS_BLK_PB_BUILD(entry.id,item);
+         break;
+      case VMFS_BLK_TYPE_FD:
+         *blk_id = VMFS_BLK_FD_BUILD(entry.id,item);
+         break;
+   }
+
+   return(0);
+}
