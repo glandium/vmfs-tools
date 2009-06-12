@@ -317,7 +317,7 @@ int vmfs_bitmap_area_find_free_items(vmfs_bitmap_t *b,
       ptr = buf + (i * VMFS_BITMAP_ENTRY_SIZE);
       vmfs_bme_read(entry,ptr,1);
 
-      if (vmfs_metadata_is_locked(&entry->mdh) && (entry->free < num_items))
+      if (vmfs_metadata_is_locked(&entry->mdh) || (entry->free < num_items))
          continue;
 
       /* We now have to re-read the bitmap entry with the reservation taken */
