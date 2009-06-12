@@ -585,6 +585,31 @@ static int cmd_show_bitmap_item(vmfs_fs_t *fs,int argc,char *argv[])
    return(0);
 }
 
+/* Show a bitmap entry */
+static int cmd_show_bitmap_entry(vmfs_fs_t *fs,int argc,char *argv[])
+{   
+   vmfs_bitmap_entry_t bmp_entry;
+   uint32_t blk_id;
+   uint32_t entry,item;
+   vmfs_bitmap_t *bmp;
+
+   if (argc == 0) {
+      fprintf(stderr,"Usage: show_bitmap_entry blk_id\n");
+      return(-1);
+   }
+
+   blk_id = (uint32_t)strtoul(argv[0],NULL,16);
+
+   if (vmfs_block_get_bitmap_info(fs,blk_id,&bmp,&entry,&item) == -1) {
+      fprintf(stderr,"Invalid block ID 0x%8.8x\n",blk_id);
+      return(-1);
+   }
+
+   vmfs_bitmap_get_entry(bmp,entry,item,&bmp_entry);
+   vmfs_bme_show(&bmp_entry);
+   return(0);
+}
+
 struct cmd {
    char *name;
    char *description;
@@ -617,6 +642,7 @@ struct cmd cmd_array[] = {
    { "alloc_block", "Allocate block", cmd_alloc_block },
    { "free_block", "Free block", cmd_free_block },
    { "show_bitmap_item", "Show a bitmap item", cmd_show_bitmap_item },
+   { "show_bitmap_entry", "Show a bitmap entry", cmd_show_bitmap_entry },
    { "shell", "Opens a shell", cmd_shell },
    { NULL, NULL },
 };
