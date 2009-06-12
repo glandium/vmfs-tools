@@ -117,16 +117,16 @@ int vmfs_metadata_lock(vmfs_fs_t *fs,off_t pos,u_char *buf,size_t buf_len,
 }
 
 /* Unlock metadata */
-int vmfs_metadata_unlock(vmfs_fs_t *fs,off_t pos,u_char *buf,
-                         vmfs_metadata_hdr_t *mdh)
+int vmfs_metadata_unlock(vmfs_fs_t *fs,vmfs_metadata_hdr_t *mdh)
 {
+   DECL_ALIGNED_BUFFER(buf,VMFS_METADATA_HDR_SIZE);
+
    mdh->hb_lock = 0;
    uuid_clear(mdh->hb_uuid);
    vmfs_metadata_hdr_write(mdh,buf);
 
    /* Rewrite the metadata header only */
-   if (vmfs_lvm_write(fs->lvm,pos,buf,VMFS_METADATA_HDR_SIZE) 
-       != VMFS_METADATA_HDR_SIZE) 
+   if (vmfs_lvm_write(fs->lvm,mdh->pos,buf,buf_len) != buf_len) 
    {
       fprintf(stderr,"VMFS: unable to write metadata header.\n");
       return(-1);

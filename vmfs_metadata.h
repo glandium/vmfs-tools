@@ -73,7 +73,6 @@ int vmfs_metadata_lock(vmfs_fs_t *fs,off_t pos,u_char *buf,size_t buf_len,
                        vmfs_metadata_hdr_t *mdh);
 
 /* Unlock metadata */
-int vmfs_metadata_unlock(vmfs_fs_t *fs,off_t pos,u_char *buf,
-                         vmfs_metadata_hdr_t *mdh);
+int vmfs_metadata_unlock(vmfs_fs_t *fs,vmfs_metadata_hdr_t *mdh);
 
 #endif
