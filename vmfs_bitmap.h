@@ -88,6 +88,9 @@ int vmfs_bme_write(const vmfs_bitmap_entry_t *bme,u_char *buf);
 /* Show bitmap entry information */
 void vmfs_bme_show(const vmfs_bitmap_entry_t *bme);
 
+/* Update a bitmap entry on disk */
+int vmfs_bme_update(const vmfs_fs_t *fs,const vmfs_bitmap_entry_t *bme);
+
 /* Read a bitmap entry given a block id */
 int vmfs_bitmap_get_entry(vmfs_bitmap_t *b,uint32_t entry,uint32_t item,
                           vmfs_bitmap_entry_t *bmp_entry);

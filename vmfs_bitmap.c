@@ -99,6 +99,19 @@ int vmfs_bme_write(const vmfs_bitmap_entry_t *bme,u_char *buf)
    return(0);
 }
 
+/* Update a bitmap entry on disk */
+int vmfs_bme_update(const vmfs_fs_t *fs,const vmfs_bitmap_entry_t *bme)
+{
+   DECL_ALIGNED_BUFFER(buf,VMFS_BITMAP_ENTRY_SIZE);
+
+   vmfs_bme_write(bme,buf);
+
+   if (vmfs_lvm_write(fs->lvm,bme->mdh.pos,buf,buf_len) != buf_len)
+      return(-1);
+
+   return(0);
+}
+
 /* Show bitmap entry information */
 void vmfs_bme_show(const vmfs_bitmap_entry_t *bme)
 {
