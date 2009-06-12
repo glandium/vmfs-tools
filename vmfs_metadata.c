@@ -28,7 +28,7 @@
 int vmfs_metadata_hdr_read(vmfs_metadata_hdr_t *mdh,const u_char *buf)
 {
    mdh->magic     = read_le32(buf,VMFS_MDH_OFS_MAGIC);
-   mdh->position  = read_le64(buf,VMFS_MDH_OFS_POS);
+   mdh->pos       = read_le64(buf,VMFS_MDH_OFS_POS);
    mdh->hb_pos    = read_le64(buf,VMFS_MDH_OFS_HB_POS);
    mdh->hb_seq    = read_le64(buf,VMFS_MDH_OFS_HB_SEQ);
    mdh->obj_seq   = read_le64(buf,VMFS_MDH_OFS_OBJ_SEQ);
@@ -42,7 +42,7 @@ int vmfs_metadata_hdr_read(vmfs_metadata_hdr_t *mdh,const u_char *buf)
 int vmfs_metadata_hdr_write(const vmfs_metadata_hdr_t *mdh,u_char *buf)
 {
    write_le32(buf,VMFS_MDH_OFS_MAGIC,mdh->magic);
-   write_le64(buf,VMFS_MDH_OFS_POS,mdh->position);
+   write_le64(buf,VMFS_MDH_OFS_POS,mdh->pos);
    write_le64(buf,VMFS_MDH_OFS_HB_POS,mdh->hb_pos);
    write_le64(buf,VMFS_MDH_OFS_HB_SEQ,mdh->hb_seq);
    write_le64(buf,VMFS_MDH_OFS_OBJ_SEQ,mdh->obj_seq);
@@ -56,7 +56,7 @@ int vmfs_metadata_hdr_write(const vmfs_metadata_hdr_t *mdh,u_char *buf)
 void vmfs_metadata_hdr_show(const vmfs_metadata_hdr_t *mdh)
 {
    printf("  - Magic        : 0x%8.8x\n",mdh->magic);
-   printf("  - Position     : 0x%"PRIx64"\n",mdh->position);
+   printf("  - Position     : 0x%"PRIx64"\n",mdh->pos);
    printf("  - HB Position  : 0x%"PRIx64"\n",mdh->hb_pos);
    printf("  - HB Lock      : %d (%s)\n",
           mdh->hb_lock,(mdh->hb_lock > 0) ? "LOCKED":"UNLOCKED");

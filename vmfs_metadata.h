@@ -45,7 +45,7 @@ struct vmfs_metadata_hdr_raw {
 
 struct vmfs_metadata_hdr {
    uint32_t magic;
-   uint64_t position;
+   uint64_t pos;
    uint64_t hb_pos;
    uint64_t hb_seq;
    uint64_t obj_seq;

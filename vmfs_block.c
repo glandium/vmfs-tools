@@ -111,7 +111,7 @@ static int vmfs_block_set_status(const vmfs_fs_t *fs,uint32_t blk_id,
    
    vmfs_bme_write(&entry,buf);
 
-   if (vmfs_lvm_write(fs->lvm,entry.mdh.position,buf,buf_len) != buf_len)
+   if (vmfs_lvm_write(fs->lvm,entry.mdh.pos,buf,buf_len) != buf_len)
       return(-1);
 
    return(0);
