@@ -94,7 +94,6 @@ int vmfs_block_get_status(const vmfs_fs_t *fs,uint32_t blk_id)
 static int vmfs_block_set_status(const vmfs_fs_t *fs,uint32_t blk_id,
                                  int status)
 {
-   DECL_ALIGNED_BUFFER(buf,VMFS_BITMAP_ENTRY_SIZE);
    vmfs_bitmap_entry_t entry;
    vmfs_bitmap_t *bmp;
    uint32_t blk_entry,blk_item;
@@ -108,13 +107,8 @@ static int vmfs_block_set_status(const vmfs_fs_t *fs,uint32_t blk_id,
    if (vmfs_bitmap_set_item_status(&bmp->bmh,&entry,
                                    blk_entry,blk_item,status) == -1)
       return(-1);
-   
-   vmfs_bme_write(&entry,buf);
 
-   if (vmfs_lvm_write(fs->lvm,entry.mdh.pos,buf,buf_len) != buf_len)
-      return(-1);
-
-   return(0);
+   return(vmfs_bme_update(fs,&entry));
 }
 
 /* Allocate the specified block */
