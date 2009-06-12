@@ -136,6 +136,7 @@ int vmfs_heartbeat_lock(vmfs_fs_t *fs,u_int id,vmfs_heartbeat_t *hb)
 
    if (vmfs_lvm_write(fs->lvm,pos,buf,buf_len) != buf_len) {
       fprintf(stderr,"VMFS: unable to write heartbeat info.\n");
+      hb->magic = VMFS_HB_MAGIC_OFF;
       goto done;
    }
 

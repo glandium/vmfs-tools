@@ -291,6 +291,15 @@ void vmfs_fs_close(vmfs_fs_t *fs)
 {
    if (!fs)
       return;
+
+   if (fs->hb_refcount > 0) {
+      fprintf(stderr,
+              "Warning: heartbeat still active in metadata (ref_count=%u)\n",
+              fs->hb_refcount);
+   }
+
+   vmfs_heartbeat_unlock(fs,&fs->hb);
+
    vmfs_bitmap_close(fs->fbb);
    vmfs_bitmap_close(fs->fdc);
    vmfs_bitmap_close(fs->pbc);
