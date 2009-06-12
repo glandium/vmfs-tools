@@ -268,9 +268,7 @@ int vmfs_bitmap_get_item_status(const vmfs_bitmap_header_t *bmh,
 }
 
 /* Find a free item in a bitmap entry and mark it allocated */
-int vmfs_bitmap_alloc_item(const vmfs_bitmap_header_t *bmh,
-                           vmfs_bitmap_entry_t *bmp_entry,
-                           uint32_t *item)
+int vmfs_bitmap_alloc_item(vmfs_bitmap_entry_t *bmp_entry,uint32_t *item)
 {
    u_int array_idx,bit_idx;
    int i;
