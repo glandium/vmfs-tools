@@ -108,6 +108,26 @@ static void vmfs_inode_write_blk_list(const vmfs_inode_t *inode,u_char *buf)
       vmfs_inode_write_blk_id(buf,i,inode->blocks[i]);
 }
 
+/* Update an inode on disk */
+int vmfs_inode_update(const vmfs_fs_t *fs,const vmfs_inode_t *inode,
+                      int update_blk_list)
+{
+   DECL_ALIGNED_BUFFER(buf,VMFS_INODE_SIZE);
+
+   vmfs_inode_write(inode,buf);
+
+   if (update_blk_list) {
+      vmfs_inode_write_blk_list(inode,buf);
+   } else {
+      buf_len -= VMFS_INODE_BLK_COUNT * sizeof(uint32_t);
+   }
+
+   if (vmfs_lvm_write(fs->lvm,inode->mdh.pos,buf,buf_len) != buf_len)
+      return(-1);
+
+   return(0);
+}
+
 /* Show an inode */
 void vmfs_inode_show(const vmfs_inode_t *inode)
 {

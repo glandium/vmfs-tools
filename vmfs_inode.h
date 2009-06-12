@@ -103,6 +103,10 @@ int vmfs_inode_read(vmfs_inode_t *inode,const u_char *buf);
 /* Write an inode */
 int vmfs_inode_write(const vmfs_inode_t *inode,u_char *buf);
 
+/* Update an inode on disk */
+int vmfs_inode_update(const vmfs_fs_t *fs,const vmfs_inode_t *inode,
+                      int update_blk_list);
+
 /* Show an inode */
 void vmfs_inode_show(const vmfs_inode_t *inode);
 
