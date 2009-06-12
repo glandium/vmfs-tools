@@ -248,7 +248,7 @@ int vmfs_bitmap_area_find_free_items(vmfs_bitmap_t *b,
                                      u_int area,u_int num_items,
                                      vmfs_bitmap_entry_t *entry)
 {
-   u_char *buf;
+   u_char *buf,*ptr;
    size_t buf_len;
    off_t pos;
    int res = -1;
@@ -264,9 +264,22 @@ int vmfs_bitmap_area_find_free_items(vmfs_bitmap_t *b,
       goto done;
 
    for(i=0;i<b->bmh.bmp_entries_per_area;i++) {
-      vmfs_bme_read(entry,buf+(i * VMFS_BITMAP_ENTRY_SIZE),1);
+      ptr = buf + (i * VMFS_BITMAP_ENTRY_SIZE);
+      vmfs_bme_read(entry,ptr,1);
 
-      if (entry->free >= num_items) {
+      if (vmfs_metadata_is_locked(&entry->mdh) && (entry->free < num_items))
+         continue;
+
+      /* We now have to re-read the bitmap entry with the reservation taken */
+      if (!vmfs_metadata_lock((vmfs_fs_t *)b->f->fs,entry->mdh.pos,
+                              ptr,VMFS_BITMAP_ENTRY_SIZE,
+                              &entry->mdh))
+      {
+         if (entry->free < num_items) {
+            vmfs_metadata_unlock((vmfs_fs_t *)b->f->fs,&entry->mdh);
+            continue;
+         }
+
          res = 0;
          break;
       }
