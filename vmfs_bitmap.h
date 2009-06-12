@@ -107,6 +107,11 @@ int vmfs_bitmap_get_item_status(const vmfs_bitmap_header_t *bmh,
                                 vmfs_bitmap_entry_t *bmp_entry,
                                 uint32_t entry,uint32_t item);
 
+/* Find a free item in a bitmap entry and mark it allocated */
+int vmfs_bitmap_alloc_item(const vmfs_bitmap_header_t *bmh,
+                           vmfs_bitmap_entry_t *bmp_entry,
+                           uint32_t *item);
+
 /* Find a bitmap entry with at least "num_items" free in the specified area */
 int vmfs_bitmap_area_find_free_items(vmfs_bitmap_t *b,
                                      u_int area,u_int num_items,
