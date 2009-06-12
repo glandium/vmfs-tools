@@ -55,7 +55,7 @@ int vmfs_bmh_write(const vmfs_bitmap_header_t *bmh,u_char *buf)
    return(0);
 }
 
-/* Show bitmap information */
+/* Show bitmap header information */
 void vmfs_bmh_show(const vmfs_bitmap_header_t *bmh)
 {
    printf("  - Items per bitmap entry: %d (0x%x)\n",
@@ -97,6 +97,17 @@ int vmfs_bme_write(const vmfs_bitmap_entry_t *bme,u_char *buf)
    write_le32(buf,VMFS_BME_OFS_FFREE,bme->ffree);
    memcpy(&buf[VMFS_BME_OFS_BITMAP],bme->bitmap,(bme->total+7)/8);
    return(0);
+}
+
+/* Show bitmap entry information */
+void vmfs_bme_show(const vmfs_bitmap_entry_t *bme)
+{
+   vmfs_metadata_hdr_show(&bme->mdh);
+
+   printf("  - ID           : 0x%8.8x\n",bme->id);
+   printf("  - Total        : %u\n",bme->total);
+   printf("  - Free         : %u\n",bme->free);
+   printf("  - First free   : %u\n",bme->ffree);
 }
 
 /* Get number of items per area */
