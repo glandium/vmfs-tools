@@ -322,7 +322,9 @@ int vmfs_bitmap_area_find_free_items(vmfs_bitmap_t *b,
       if (!vmfs_metadata_lock((vmfs_fs_t *)b->f->fs,entry->mdh.pos,
                               ptr,VMFS_BITMAP_ENTRY_SIZE,
                               &entry->mdh))
-      {
+      {      
+         vmfs_bme_read(entry,ptr,1);
+
          if (entry->free < num_items) {
             vmfs_metadata_unlock((vmfs_fs_t *)b->f->fs,&entry->mdh);
             continue;
