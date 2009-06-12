@@ -490,14 +490,14 @@ static int cmd_get_block_status(vmfs_fs_t *fs,int argc,char *argv[])
    return(0);
 }
 
-/* Allocate a block */
-static int cmd_alloc_block(vmfs_fs_t *fs,int argc,char *argv[])
+/* Allocate a fixed block */
+static int cmd_alloc_block_fixed(vmfs_fs_t *fs,int argc,char *argv[])
 {
    uint32_t blk_id;
    int res;
 
    if (argc == 0) {
-      fprintf(stderr,"Usage: alloc_block blk_id\n");
+      fprintf(stderr,"Usage: alloc_block_fixed blk_id\n");
       return(-1);
    }
 
@@ -509,6 +509,30 @@ static int cmd_alloc_block(vmfs_fs_t *fs,int argc,char *argv[])
       printf("Block 0x%8.8x allocated.\n",blk_id);
    } else {
       fprintf(stderr,"Unable to allocate block 0x%8.8x\n",blk_id);
+   }
+
+   return(0);
+}
+
+/* Allocate a block */
+static int cmd_alloc_block(vmfs_fs_t *fs,int argc,char *argv[])
+{
+   uint32_t blk_type,blk_id;
+   int res;
+
+   if (argc == 0) {
+      fprintf(stderr,"Usage: alloc_block blk_type\n");
+      return(-1);
+   }
+
+   blk_type = (uint32_t)strtoul(argv[0],NULL,16);
+
+   res = vmfs_block_alloc(fs,blk_type,&blk_id);
+
+   if (res == 0) {
+      printf("Block 0x%8.8x allocated.\n",blk_id);
+   } else {
+      fprintf(stderr,"Unable to allocate block.\n");
    }
 
    return(0);
@@ -639,7 +663,8 @@ struct cmd cmd_array[] = {
    { "read_block", "Read a block", cmd_read_block },
    { "dump_block", "Dump a block in hex", cmd_dump_block },
    { "get_block_status", "Get block status", cmd_get_block_status },
-   { "alloc_block", "Allocate block", cmd_alloc_block },
+   { "alloc_block_fixed", "Allocate block (fixed)", cmd_alloc_block_fixed },
+   { "alloc_block", "Find and Allocate a block", cmd_alloc_block },
    { "free_block", "Free block", cmd_free_block },
    { "show_bitmap_item", "Show a bitmap item", cmd_show_bitmap_item },
    { "show_bitmap_entry", "Show a bitmap entry", cmd_show_bitmap_entry },
