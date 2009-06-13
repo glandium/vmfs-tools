@@ -81,9 +81,13 @@ Outputs content within the specified block_id in hex
 *get_block_status* 'block_id'::
 Get status (allocated or free) of the specified block_id.
 
-*alloc_block* 'block_id'::
+*alloc_block_fixed* 'block_id'::
 Allocate the specified block_id. R/W support must be enabled.
-Warning: can cause damage since no heartbeat is used at this time.
+
+*alloc_block* 'block_type'::
+Allocate a block of the specified type. R/W support must be enabled.
+Allowed block types are: 1 (File Block), 2 (Sub-Block), 3 (Pointer Block) 
+and 4 (File Descriptor / Inode).
 
 *free_block* 'block_id'::
 Free the specified block_id. R/W support must be enabled.
@@ -92,6 +96,9 @@ used by a file can be freed.
 
 *show_bitmap_item* 'block_id'::
 Outputs raw content for the bitmap item corresponding to the given block_id.
+
+*show_bitmap_entry* 'block_id'::
+Outputs content of the bitmap entry containing the specified block_id.
 
 *shell*::
 Starts an interactive session. All of the above commands can be executed from
