@@ -183,7 +183,7 @@ static int vmfs_read_fdc_base(vmfs_fs_t *fs)
 {
    DECL_ALIGNED_BUFFER_WOL(buf,VMFS_INODE_SIZE);
    struct vmfs_inode_raw inode = { { 0, }, };
-   off_t fdc_base;
+   uint32_t fdc_base;
 
    /* 
     * Compute position of FDC base: it is located at the first
@@ -191,11 +191,11 @@ static int vmfs_read_fdc_base(vmfs_fs_t *fs)
     * When blocksize = 8 Mb, there is free space between heartbeats
     * and FDC.
     */
-   fdc_base = m_max(VMFS_HB_BASE + VMFS_HB_NUM * VMFS_HB_SIZE,
+   fdc_base = m_max(1, (VMFS_HB_BASE + VMFS_HB_NUM * VMFS_HB_SIZE) /
                     vmfs_fs_get_blocksize(fs));
 
    if (fs->debug_level > 0)
-      printf("FDC base = @0x%"PRIx64"\n",(uint64_t)fdc_base);
+      printf("FDC base = block #%u\n", fdc_base);
 
    inode.mdh.magic = cpu_to_le32(VMFS_INODE_MAGIC);
    inode.size = cpu_to_le64(fs->fs_info.block_size);
@@ -203,8 +203,7 @@ static int vmfs_read_fdc_base(vmfs_fs_t *fs)
    inode.blk_size = cpu_to_le64(fs->fs_info.block_size);
    inode.blk_count = cpu_to_le32(1);
    inode.zla = cpu_to_le32(VMFS_BLK_TYPE_FB);
-   inode.blocks[0] = cpu_to_le32(VMFS_BLK_TYPE_FB +
-                                 ((fdc_base / fs->fs_info.block_size) << 6));
+   inode.blocks[0] = cpu_to_le32(VMFS_BLK_TYPE_FB + (fdc_base << 6));
 
    fs->fdc = vmfs_bitmap_open_from_inode(fs,(u_char *)&inode);
 
