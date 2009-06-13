@@ -78,7 +78,7 @@ $(strip $(1))_EXTRA_OBJS := $$($(strip $(1))_EXTRA_SRCS:%.c=%.o)
 LIBVMFS_EXCLUDE_OBJS += $(1).o $$($(strip $(1))_EXTRA_OBJS)
 $(1): $(1).o $$($(strip $(1))_EXTRA_OBJS) $(LIB)
 endef
-$(foreach program, $(buildPROGRAMS), $(eval $(call program_template,$(program))))
+$(foreach program, $(PROGRAMS), $(eval $(call program_template,$(program))))
 
 $(LIB): $(filter-out $(LIBVMFS_EXCLUDE_OBJS),$(OBJS))
 	ar -r $@ $^
