@@ -102,6 +102,17 @@ static inline void write_le64(u_char *p,int offset,uint64_t val)
 #endif
 }
 
+#define cpu_to_lexx(bits) \
+   static inline uint##bits##_t cpu_to_le##bits(uint##bits##_t i) \
+   { \
+      u_char *p = (u_char *)&i; \
+      return read_le##bits(p, 0); \
+   }
+
+cpu_to_lexx(16)
+cpu_to_lexx(32)
+cpu_to_lexx(64)
+
 /* Read an UUID at a given offset in a buffer */
 static inline void read_uuid(const u_char *buf,int offset,uuid_t *uuid)
 {
