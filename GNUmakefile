@@ -12,6 +12,23 @@ UC = $(strip $(eval __uc := $1) \
                    $(subst $(subst /,,$(dir $(c))),$(notdir $(c)),$(__uc)))) \
              $(__uc))
 
+#Usage: $(call PKG_CONFIG_CHK,name,cflags,ldflags)
+# cflags and ldflags used in case pkg-config fails.
+# Sets NAME_LDFLAGS and NAME_CFLAGS
+PKG_CONFIG := $(call PATH_LOOKUP,pkg-config)
+define _PKG_CONFIG_CHK
+__name := $(call UC,$(1))
+$$(__name)_LDFLAGS := $(if $(PKG_CONFIG),$$(strip $$(shell $$(PKG_CONFIG) --libs $(1) 2> /dev/null || echo __)),__)
+$$(__name)_CFLAGS := $(if $(PKG_CONFIG),$$(strip $$(shell $$(PKG_CONFIG) --cflags $(1) 2> /dev/null || echo __)),__)
+ifeq (__,$$($$(__name)_LDFLAGS))
+$$(__name)_LDFLAGS := $(3)
+endif
+ifeq (__,$$($$(__name)_CFLAGS))
+$$(__name)_CFLAGS := $(2)
+endif
+endef
+PKG_CONFIG_CHK = $(eval $(call _PKG_CONFIG_CHK,$(1),$(2),$(3)))
+
 CC := gcc
 OPTIMFLAGS := -O2
 CFLAGS := -Wall $(OPTIMFLAGS) -g -D_FILE_OFFSET_BITS=64 $(EXTRA_CFLAGS)
