@@ -1,8 +1,6 @@
 PACKAGE := vmfs-tools
 
-define PATH_LOOKUP
-$(wildcard $(foreach path,$(subst :, ,$(PATH)),$(path)/$(1)))
-endef
+PATH_LOOKUP = $(wildcard $(foreach path,$(subst :, ,$(PATH)),$(path)/$(1)))
 
 CC := gcc
 OPTIMFLAGS := -O2
