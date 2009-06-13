@@ -32,13 +32,9 @@ PKG_CONFIG_CHK = $(eval $(call _PKG_CONFIG_CHK,$(1),$(2),$(3)))
 CC := gcc
 OPTIMFLAGS := -O2
 CFLAGS := -Wall $(OPTIMFLAGS) -g -D_FILE_OFFSET_BITS=64 $(EXTRA_CFLAGS)
-ifneq (,$(call PATH_LOOKUP,pkg-config))
-UUID_LDFLAGS := $(shell pkg-config --libs uuid)
-FUSE_LDFLAGS := $(shell pkg-config --libs fuse)
-FUSE_CFLAGS := $(shell pkg-config --cflags fuse)
-else
-UUID_LDFLAGS := -luuid
-endif
+$(call PKG_CONFIG_CHK,uuid,,-luuid)
+$(call PKG_CONFIG_CHK,fuse)
+CFLAGS += $(UUID_CFLAGS)
 LDFLAGS := $(UUID_LDFLAGS)
 SRC := $(wildcard *.c)
 HEADERS := $(wildcard *.h)
