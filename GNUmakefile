@@ -2,6 +2,16 @@ PACKAGE := vmfs-tools
 
 PATH_LOOKUP = $(wildcard $(foreach path,$(subst :, ,$(PATH)),$(path)/$(1)))
 
+ALPHA := A B C D E F G H I J K L M N O P Q R S T U V W X Y Z
+alpha := a b c d e f g h i j k l m n o p q r s t u v w x y z
+alphaALPHA := $(join $(addsuffix /,$(alpha)), $(ALPHA))
+
+UC = $(strip $(eval __uc := $1) \
+             $(foreach c,$(alphaALPHA), \
+                $(eval __uc := \
+                   $(subst $(subst /,,$(dir $(c))),$(notdir $(c)),$(__uc)))) \
+             $(__uc))
+
 CC := gcc
 OPTIMFLAGS := -O2
 CFLAGS := -Wall $(OPTIMFLAGS) -g -D_FILE_OFFSET_BITS=64 $(EXTRA_CFLAGS)
