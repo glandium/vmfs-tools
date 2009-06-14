@@ -14,18 +14,13 @@ OBJS := $(SRC:%.c=%.o)
 PROGRAMS := debugvmfs vmfs_fsck vmfs-fuse
 buildPROGRAMS := $(PROGRAMS)
 ifeq (,$(FUSE_LDFLAGS))
+ifneq (clean,$(MAKECMDGOALS))
 buildPROGRAMS := $(filter-out vmfs-fuse,$(buildPROGRAMS))
 endif
+endif
 MANSRCS := $(wildcard $(buildPROGRAMS:%=%.txt))
-
-ifneq (,$(ASCIIDOC))
-ifneq (,$(XSLTPROC))
-ifneq (,$(DOCBOOK_XSL))
 MANDOCBOOK := $(MANSRCS:%.txt=%.xml)
 MANPAGES := $(foreach man,$(MANSRCS),$(shell sed '1{s/(/./;s/)//;q}' $(man)))
-endif
-endif
-endif
 
 EXTRA_DIST := LICENSE README TODO AUTHORS
 LIB := libvmfs.a
@@ -85,6 +80,9 @@ dist: $(ALL_DIST)
 	tar -zcf "$(DIST_DIR).tar.gz" "$(DIST_DIR)"
 	@rm -rf "$(DIST_DIR)"
 
+ifneq (,$(ASCIIDOC))
+ifneq (,$(XSLTPROC))
+ifneq (,$(DOCBOOK_XSL))
 $(MANDOCBOOK): %.xml: %.txt
 	$(ASCIIDOC) -a manversion=$(VERSION:v%=%) -a manmanual=$(PACKAGE) -b docbook -d manpage -o $@ $<
 
@@ -92,6 +90,9 @@ $(MANPAGES): %.8: %.xml
 	$(XSLTPROC) -o $@ --nonet --novalid $(DOCBOOK_XSL) $<
 
 doc: $(MANPAGES)
+endif
+endif
+endif
 
 $(DESTDIR)/%:
 	install -d -m 0755 $@
