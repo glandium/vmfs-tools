@@ -1,9 +1,17 @@
+#Usage: $(call checking,message])
+checking = $(shell echo -n Checking for $(1)... >&2)
+
+#Usage: $(call result,value)
+result = $(shell echo $(if $(1),yes,no) >&2)
+
 #Usage: $(call PATH_LOOKUP,name)
 # Sets NAME to the full path of name
 define _PATH_LOOKUP
 __path_lookup := $(call UC,$(1))
 ifndef $$(__path_lookup)
+$$(call checking,$(1))
 $$(__path_lookup) := $$(firstword $$(wildcard $$(foreach path,$$(subst :, ,$(PATH)),$$(path)/$(1))))
+$$(call result,$$(__path_lookup))
 endif
 endef
 PATH_LOOKUP = $(eval $(call _PATH_LOOKUP,$(1)))
@@ -23,6 +31,7 @@ UC = $(strip $(eval __uc := $1) \
 # Sets NAME_LDFLAGS and NAME_CFLAGS
 define _PKG_CONFIG_CHK
 $$(call PATH_LOOKUP,pkg-config)
+$$(call checking,$(1))
 __name := $(call UC,$(1))
 $$(__name)_LDFLAGS := $(if $(PKG_CONFIG),$$(strip $$(shell $$(PKG_CONFIG) --libs $(1) 2> /dev/null || echo __)),__)
 $$(__name)_CFLAGS := $(if $(PKG_CONFIG),$$(strip $$(shell $$(PKG_CONFIG) --cflags $(1) 2> /dev/null || echo __)),__)
@@ -32,6 +41,7 @@ endif
 ifeq (__,$$($$(__name)_CFLAGS))
 $$(__name)_CFLAGS := $(2)
 endif
+$$(call result,$$(__name))
 endef
 PKG_CONFIG_CHK = $(eval $(call _PKG_CONFIG_CHK,$(1),$(2),$(3)))
 
