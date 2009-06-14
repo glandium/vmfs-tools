@@ -1,7 +1,15 @@
-PATH_LOOKUP = $(firstword $(wildcard $(foreach path,$(subst :, ,$(PATH)),$(path)/$(1))))
+#Usage: $(call PATH_LOOKUP,name)
+# Sets NAME to the full path of name
+define _PATH_LOOKUP
+__path_lookup := $(call UC,$(1))
+ifndef $$(__path_lookup)
+$$(__path_lookup) := $$(firstword $$(wildcard $$(foreach path,$$(subst :, ,$(PATH)),$$(path)/$(1))))
+endif
+endef
+PATH_LOOKUP = $(eval $(call _PATH_LOOKUP,$(1)))
 
-ALPHA := A B C D E F G H I J K L M N O P Q R S T U V W X Y Z
-alpha := a b c d e f g h i j k l m n o p q r s t u v w x y z
+ALPHA := A B C D E F G H I J K L M N O P Q R S T U V W X Y Z _
+alpha := a b c d e f g h i j k l m n o p q r s t u v w x y z -
 alphaALPHA := $(join $(addsuffix /,$(alpha)), $(ALPHA))
 
 UC = $(strip $(eval __uc := $1) \
@@ -13,8 +21,8 @@ UC = $(strip $(eval __uc := $1) \
 #Usage: $(call PKG_CONFIG_CHK,name,cflags,ldflags)
 # cflags and ldflags used in case pkg-config fails.
 # Sets NAME_LDFLAGS and NAME_CFLAGS
-PKG_CONFIG := $(call PATH_LOOKUP,pkg-config)
 define _PKG_CONFIG_CHK
+$$(call PATH_LOOKUP,pkg-config)
 __name := $(call UC,$(1))
 $$(__name)_LDFLAGS := $(if $(PKG_CONFIG),$$(strip $$(shell $$(PKG_CONFIG) --libs $(1) 2> /dev/null || echo __)),__)
 $$(__name)_CFLAGS := $(if $(PKG_CONFIG),$$(strip $$(shell $$(PKG_CONFIG) --cflags $(1) 2> /dev/null || echo __)),__)
