@@ -3,6 +3,7 @@
 *.xml
 *.8
 version
+config.cache
 debugvmfs
 vmfs_fsck
 vmfs-fuse

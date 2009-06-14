@@ -38,8 +38,10 @@ mandir := $(datarootdir)/man
 
 all: $(buildPROGRAMS) $(wildcard .gitignore)
 
+ALL_MAKEFILES = $(filter-out config.cache,$(MAKEFILE_LIST))
+
 ifneq (clean,$(MAKECMDGOALS))
-version: $(MAKEFILE_LIST) $(SRC) $(HEADERS) $(wildcard .git/logs/HEAD .git/refs/tags)
+version: $(ALL_MAKEFILES) $(SRC) $(HEADERS) $(wildcard .git/logs/HEAD .git/refs/tags)
 	echo VERSION := $(GEN_VERSION) > $@
 -include version
 endif
@@ -74,7 +76,7 @@ clean: CLEAN := $(wildcard $(LIB) $(PROGRAMS) $(OBJS) $(PACKAGE)-*.tar.gz $(MANP
 clean:
 	$(if $(CLEAN),rm $(CLEAN))
 
-ALL_DIST := $(SRC) $(HEADERS) $(MAKEFILE_LIST) $(MANSRCS) $(EXTRA_DIST)
+ALL_DIST := $(SRC) $(HEADERS) $(ALL_MAKFILES) $(MANSRCS) $(EXTRA_DIST)
 DIST_DIR := $(PACKAGE)-$(VERSION:v%=%)
 dist: $(ALL_DIST)
 	@rm -rf "$(DIST_DIR)"
@@ -107,11 +109,12 @@ install: $(installPROGRAMS) $(installMANPAGES)
 
 .PHONY: all clean dist install doc
 
-.gitignore: $(MAKEFILE_LIST)
+.gitignore: $(ALL_MAKEFILES)
 	(echo "*.tar.gz"; \
 	 echo "*.[ao]"; \
 	 echo "*.xml"; \
 	 echo "*.8"; \
 	 echo "version"; \
+	 echo "config.cache"; \
 	 $(foreach program, $(PROGRAMS),echo $(program);) \
 	) > $@
