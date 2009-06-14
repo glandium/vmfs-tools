@@ -38,9 +38,11 @@ mandir := $(datarootdir)/man
 
 all: $(buildPROGRAMS) $(wildcard .gitignore)
 
+ifneq (clean,$(MAKECMDGOALS))
 version: $(MAKEFILE_LIST) $(SRC) $(HEADERS) $(wildcard .git/logs/HEAD .git/refs/tags)
 	echo VERSION := $(GEN_VERSION) > $@
 -include version
+endif
 
 vmfs-fuse: LDFLAGS+=$(FUSE_LDFLAGS)
 vmfs-fuse.o: CFLAGS+=$(FUSE_CFLAGS)
