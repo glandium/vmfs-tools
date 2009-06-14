@@ -1,12 +1,11 @@
 include utils.mk
+include configure.mk
 
 PACKAGE := vmfs-tools
 
 CC := gcc
 OPTIMFLAGS := -O2
 CFLAGS := -Wall $(OPTIMFLAGS) -g -D_FILE_OFFSET_BITS=64 $(EXTRA_CFLAGS)
-$(call PKG_CONFIG_CHK,uuid,,-luuid)
-$(call PKG_CONFIG_CHK,fuse)
 CFLAGS += $(UUID_CFLAGS)
 LDFLAGS := $(UUID_LDFLAGS)
 SRC := $(wildcard *.c)
@@ -18,11 +17,10 @@ ifeq (,$(FUSE_LDFLAGS))
 buildPROGRAMS := $(filter-out vmfs-fuse,$(buildPROGRAMS))
 endif
 MANSRCS := $(wildcard $(buildPROGRAMS:%=%.txt))
-DOCBOOK_XSL :=	http://docbook.sourceforge.net/release/xsl/current/manpages/docbook.xsl
 
-ifneq (,$(call PATH_LOOKUP,asciidoc))
-ifneq (,$(call PATH_LOOKUP,xsltproc))
-ifneq (,$(shell xsltproc --nonet --noout $(DOCBOOK_XSL) && echo ok))
+ifneq (,$(ASCIIDOC))
+ifneq (,$(XSLTPROC))
+ifneq (,$(DOCBOOK_XSL))
 MANDOCBOOK := $(MANSRCS:%.txt=%.xml)
 MANPAGES := $(foreach man,$(MANSRCS),$(shell sed '1{s/(/./;s/)//;q}' $(man)))
 endif
@@ -84,10 +82,10 @@ dist: $(ALL_DIST)
 	@rm -rf "$(DIST_DIR)"
 
 $(MANDOCBOOK): %.xml: %.txt
-	asciidoc -a manversion=$(VERSION:v%=%) -a manmanual=$(PACKAGE) -b docbook -d manpage -o $@ $<
+	$(ASCIIDOC) -a manversion=$(VERSION:v%=%) -a manmanual=$(PACKAGE) -b docbook -d manpage -o $@ $<
 
 $(MANPAGES): %.8: %.xml
-	xsltproc -o $@ --nonet --novalid $(DOCBOOK_XSL) $<
+	$(XSLTPROC) -o $@ --nonet --novalid $(DOCBOOK_XSL) $<
 
 doc: $(MANPAGES)
 
