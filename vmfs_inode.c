@@ -238,6 +238,54 @@ int vmfs_inode_get_block(const vmfs_fs_t *fs,const vmfs_inode_t *inode,
    return(0);
 }
 
+/* Aggregate a sub-block to a file block */
+int vmfs_inode_aggregate_fb(const vmfs_fs_t *fs,vmfs_inode_t *inode)
+{
+   uint32_t fb_blk,sb_len,sb_count;
+   uint32_t fb_item;
+   u_char *buf;
+   off_t pos;
+   int i;
+
+   sb_len = fs->sbc->bmh.data_size;
+   sb_count = vmfs_fs_get_blocksize(fs) / sb_len;
+
+   if (!(buf = iobuffer_alloc(sb_len)))
+      return(-1);
+
+   if (vmfs_block_alloc(fs,VMFS_BLK_TYPE_PB,&fb_blk) == -1)
+      goto err_blk_alloc;
+
+   fb_item = VMFS_BLK_FB_ITEM(fb_blk);
+
+   if (vmfs_fs_write(fs,fb_item,0,buf,sb_len) != sb_len)
+      goto err_fs_write;
+
+   memset(buf,0,sb_len);
+   pos = sb_len;
+
+   for(i=1;i<sb_count;i++) {
+      if (vmfs_fs_write(fs,fb_item,pos,buf,sb_len) != sb_len)
+         goto err_fs_write;
+
+      pos += sb_len;
+   }
+
+   inode->blocks[0] = fb_blk;
+   inode->zla = VMFS_BLK_TYPE_FB;
+   inode->blk_size = vmfs_fs_get_blocksize(fs);
+   vmfs_inode_update(fs,inode,1);
+
+   iobuffer_free(buf);
+   return(0);
+
+ err_fs_write:
+   vmfs_block_free(fs,fb_blk);
+ err_blk_alloc:
+   iobuffer_free(buf);
+   return(-1);
+}
+
 /* Aggregate block list of an inode to a pointer block */
 int vmfs_inode_aggregate_pb(const vmfs_fs_t *fs,vmfs_inode_t *inode)
 {
