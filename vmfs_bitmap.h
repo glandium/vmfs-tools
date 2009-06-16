@@ -99,6 +99,10 @@ int vmfs_bitmap_get_entry(vmfs_bitmap_t *b,uint32_t entry,uint32_t item,
 bool vmfs_bitmap_get_item(vmfs_bitmap_t *b, uint32_t entry, uint32_t item,
                           u_char *buf);
 
+/* Write a bitmap given its entry and item numbers */
+bool vmfs_bitmap_set_item(vmfs_bitmap_t *b,uint32_t entry,uint32_t item,
+                          u_char *buf);
+
 /* Mark an item as free or allocated */
 int vmfs_bitmap_set_item_status(const vmfs_bitmap_header_t *bmh,
                                 vmfs_bitmap_entry_t *bmp_entry,

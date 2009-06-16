@@ -163,9 +163,8 @@ int vmfs_bitmap_get_entry(vmfs_bitmap_t *b,uint32_t entry,uint32_t item,
    return(0);
 }
 
-/* Read a bitmap item from its entry and item numbers */
-bool vmfs_bitmap_get_item(vmfs_bitmap_t *b, uint32_t entry, uint32_t item,
-                          u_char *buf)
+/* Get position of an item */
+off_t vmfs_bitmap_get_item_pos(vmfs_bitmap_t *b,uint32_t entry,uint32_t item)
 {
    off_t pos;
    uint32_t addr;
@@ -181,7 +180,23 @@ bool vmfs_bitmap_get_item(vmfs_bitmap_t *b, uint32_t entry, uint32_t item,
    pos += b->bmh.bmp_entries_per_area * VMFS_BITMAP_ENTRY_SIZE;
    pos += (addr % items_per_area) * b->bmh.data_size;
 
+   return(pos);
+}
+
+/* Read a bitmap item from its entry and item numbers */
+bool vmfs_bitmap_get_item(vmfs_bitmap_t *b, uint32_t entry, uint32_t item,
+                          u_char *buf)
+{
+   off_t pos = vmfs_bitmap_get_item_pos(b,entry,item);
    return(vmfs_file_pread(b->f,buf,b->bmh.data_size,pos) == b->bmh.data_size);
+}
+
+/* Write a bitmap given its entry and item numbers */
+bool vmfs_bitmap_set_item(vmfs_bitmap_t *b,uint32_t entry,uint32_t item,
+                          u_char *buf)
+{
+   off_t pos = vmfs_bitmap_get_item_pos(b,entry,item);
+   return(vmfs_file_pwrite(b->f,buf,b->bmh.data_size,pos) == b->bmh.data_size);
 }
 
 /* Get offset of an item in a bitmap entry */
