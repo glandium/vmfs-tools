@@ -236,12 +236,32 @@ ssize_t vmfs_file_pread(vmfs_file_t *f,u_char *buf,size_t len,off_t pos)
    return(rlen);
 }
 
+/* Write data to a file at the specified position */
+ssize_t vmfs_file_pwrite(vmfs_file_t *f,u_char *buf,size_t len,off_t pos)
+{
+   /* TODO */
+   return(-1);
+}
+
 /* Read data from a file */
 ssize_t vmfs_file_read(vmfs_file_t *f,u_char *buf,size_t len)
 {
    ssize_t res;
 
    res = vmfs_file_pread(f,buf,len,f->pos);
+
+   if (res > 0)
+      f->pos += res;
+
+   return(res);
+}
+
+/* Write data to a file */
+ssize_t vmfs_file_write(vmfs_file_t *f,u_char *buf,size_t len)
+{
+   ssize_t res;
+
+   res = vmfs_file_pwrite(f,buf,len,f->pos);
 
    if (res > 0)
       f->pos += res;

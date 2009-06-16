@@ -75,8 +75,14 @@ int vmfs_file_seek(vmfs_file_t *f,off_t pos,int whence);
 /* Read data from a file at the specified position */
 ssize_t vmfs_file_pread(vmfs_file_t *f,u_char *buf,size_t len,off_t pos);
 
+/* Write data to a file at the specified position */
+ssize_t vmfs_file_pwrite(vmfs_file_t *f,u_char *buf,size_t len,off_t pos);
+
 /* Read data from a file */
 ssize_t vmfs_file_read(vmfs_file_t *f,u_char *buf,size_t len);
+
+/* Write data to a file */
+ssize_t vmfs_file_write(vmfs_file_t *f,u_char *buf,size_t len);
 
 /* Dump a file */
 int vmfs_file_dump(vmfs_file_t *f,off_t pos,uint64_t len,FILE *fd_out);
