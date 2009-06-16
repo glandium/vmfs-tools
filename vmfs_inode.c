@@ -238,6 +238,54 @@ int vmfs_inode_get_block(const vmfs_fs_t *fs,const vmfs_inode_t *inode,
    return(0);
 }
 
+/* Aggregate block list of an inode to a pointer block */
+int vmfs_inode_aggregate_pb(const vmfs_fs_t *fs,vmfs_inode_t *inode)
+{
+   uint32_t pb_blk,pb_len;
+   uint32_t item,entry;
+   u_char *buf;
+   int i;
+
+   pb_len = fs->pbc->bmh.data_size;
+
+   if (pb_len < (VMFS_INODE_BLK_COUNT * sizeof(uint32_t))) {
+      fprintf(stderr,"vmfs_inode_aggregate_pb: pb_len=0x%8.8x\n",pb_len);
+      return(-1);
+   }
+
+   if (!(buf = iobuffer_alloc(pb_len)))
+      return(-1);
+
+   memset(buf,0,pb_len);
+
+   if (vmfs_block_alloc(fs,VMFS_BLK_TYPE_PB,&pb_blk) == -1)
+      goto err_blk_alloc;
+
+   for(i=0;i<VMFS_INODE_BLK_COUNT;i++)
+      write_le32(buf,i*sizeof(uint32_t),inode->blocks[i]);
+
+   entry = VMFS_BLK_PB_ENTRY(pb_blk);
+   item  = VMFS_BLK_PB_ITEM(pb_blk);
+
+   if (vmfs_bitmap_set_item(fs->pbc,entry,item,buf) == -1)
+      goto err_set_item;
+
+   memset(inode->blocks,0,sizeof(inode->blocks));
+   inode->blocks[0] = pb_blk;
+   inode->zla = VMFS_BLK_TYPE_PB;
+
+   vmfs_inode_update(fs,inode,1);
+
+   iobuffer_free(buf);
+   return(0);
+
+ err_set_item:
+   vmfs_block_free(fs,pb_blk);
+ err_blk_alloc:
+   iobuffer_free(buf);
+   return(-1);
+}
+
 /* Show block list of an inode */
 void vmfs_inode_show_blocks(const vmfs_fs_t *fs,const vmfs_inode_t *inode)
 {
