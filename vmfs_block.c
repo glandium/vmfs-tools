@@ -189,3 +189,28 @@ int vmfs_block_alloc(const vmfs_fs_t *fs,uint32_t blk_type,uint32_t *blk_id)
 
    return(0);
 }
+
+/* Zeroize a file block */
+int vmfs_block_zeroize_fb(const vmfs_fs_t *fs,uint32_t blk_id)
+{
+   DECL_ALIGNED_BUFFER(buf,M_DIO_BLK_SIZE);
+   uint32_t blk_item;
+   off_t pos,len;
+
+   if (VMFS_BLK_TYPE(blk_id) != VMFS_BLK_TYPE_FB)
+      return(-1);
+
+   memset(buf,0,buf_len);
+   blk_item = VMFS_BLK_FB_ITEM(blk_id);
+   len = vmfs_fs_get_blocksize(fs);
+   pos = 0;
+
+   while(pos < len) {
+      if (vmfs_fs_write(fs,blk_item,pos,buf,buf_len) != buf_len)
+         return(-1);
+
+      pos += buf_len;
+   }
+
+   return(0);
+}

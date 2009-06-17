@@ -111,4 +111,7 @@ int vmfs_block_free(const vmfs_fs_t *fs,uint32_t blk_id);
 /* Allocate a single block */
 int vmfs_block_alloc(const vmfs_fs_t *fs,uint32_t blk_type,uint32_t *blk_id);
 
+/* Zeroize a file block */
+int vmfs_block_zeroize_fb(const vmfs_fs_t *fs,uint32_t blk_id);
+
 #endif
