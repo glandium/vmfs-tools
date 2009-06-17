@@ -334,6 +334,27 @@ int vmfs_inode_aggregate_pb(const vmfs_fs_t *fs,vmfs_inode_t *inode)
    return(-1);
 }
 
+/* Proceed to block aggregation if the specified offset */
+int vmfs_inode_aggregate(const vmfs_fs_t *fs,vmfs_inode_t *inode,off_t pos)
+{
+   if ((inode->zla == VMFS_BLK_TYPE_SB) &&
+       (pos >= (inode->blk_size * VMFS_INODE_BLK_COUNT)))
+   {
+      /* A directory consists only of sub-blocks (except the root dir) */
+      if (inode->type == VMFS_FILE_TYPE_DIR)
+         return(-1);
+
+      if (vmfs_inode_aggregate_fb(fs,inode) == -1)
+         return(-1);
+   }
+
+   if ((inode->zla == VMFS_BLK_TYPE_FB) &&
+       (pos >= (inode->blk_size * VMFS_INODE_BLK_COUNT)))
+      return(vmfs_inode_aggregate_pb(fs,inode));
+
+   return(0);
+}
+
 /* Show block list of an inode */
 void vmfs_inode_show_blocks(const vmfs_fs_t *fs,const vmfs_inode_t *inode)
 {
