@@ -239,7 +239,7 @@ int vmfs_inode_get_block(const vmfs_fs_t *fs,const vmfs_inode_t *inode,
 }
 
 /* Aggregate a sub-block to a file block */
-int vmfs_inode_aggregate_fb(const vmfs_fs_t *fs,vmfs_inode_t *inode)
+static int vmfs_inode_aggregate_fb(const vmfs_fs_t *fs,vmfs_inode_t *inode)
 {
    uint32_t fb_blk,sb_len,sb_count;
    uint32_t fb_item;
@@ -287,7 +287,7 @@ int vmfs_inode_aggregate_fb(const vmfs_fs_t *fs,vmfs_inode_t *inode)
 }
 
 /* Aggregate block list of an inode to a pointer block */
-int vmfs_inode_aggregate_pb(const vmfs_fs_t *fs,vmfs_inode_t *inode)
+static int vmfs_inode_aggregate_pb(const vmfs_fs_t *fs,vmfs_inode_t *inode)
 {
    uint32_t pb_blk,pb_len;
    uint32_t item,entry;
@@ -335,7 +335,8 @@ int vmfs_inode_aggregate_pb(const vmfs_fs_t *fs,vmfs_inode_t *inode)
 }
 
 /* Proceed to block aggregation if the specified offset */
-int vmfs_inode_aggregate(const vmfs_fs_t *fs,vmfs_inode_t *inode,off_t pos)
+static int vmfs_inode_aggregate(const vmfs_fs_t *fs,vmfs_inode_t *inode,
+                                off_t pos)
 {
    if ((inode->zla == VMFS_BLK_TYPE_SB) &&
        (pos >= (inode->blk_size * VMFS_INODE_BLK_COUNT)))
