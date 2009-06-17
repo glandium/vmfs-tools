@@ -356,6 +356,122 @@ static int vmfs_inode_aggregate(const vmfs_fs_t *fs,vmfs_inode_t *inode,
    return(0);
 }
 
+/* Get a block for writing corresponding to the specified position */
+int vmfs_inode_get_wrblock(const vmfs_fs_t *fs,vmfs_inode_t *inode,off_t pos,
+                           uint32_t *blk_id)
+{
+   u_int blk_index;
+   bool update_inode;
+
+   *blk_id = 0;
+   update_inode = 0;
+
+   if (vmfs_inode_aggregate(fs,inode,pos) == -1)
+      return(-1);
+
+   if (inode->zla == VMFS_BLK_TYPE_PB) {
+      DECL_ALIGNED_BUFFER_WOL(buf,fs->pbc->bmh.data_size);
+      uint32_t pb_blk_id;
+      uint32_t blk_per_pb;
+      u_int pb_index;
+      u_int sub_index;
+      bool update_pb;
+      
+      update_pb = 0;
+
+      blk_per_pb = fs->pbc->bmh.data_size / sizeof(uint32_t);
+      blk_index = pos / inode->blk_size;
+
+      pb_index  = blk_index / blk_per_pb;
+      sub_index = blk_index % blk_per_pb;
+
+      if (pb_index >= VMFS_INODE_BLK_COUNT)
+         return(-1);
+
+      pb_blk_id = inode->blocks[pb_index];
+
+      /* Allocate a Pointer Block if none is currently present */
+      if (!pb_blk_id) {
+         if (vmfs_block_alloc(fs,VMFS_BLK_TYPE_PB,&pb_blk_id) == -1)
+            return(-1);
+
+         memset(buf,0,fs->pbc->bmh.data_size);
+         inode->blocks[pb_index] = pb_blk_id;
+         update_inode = 1;
+         update_pb = 1;
+      } else {
+         if (!vmfs_bitmap_get_item(fs->pbc,
+                                   VMFS_BLK_PB_ENTRY(pb_blk_id),
+                                   VMFS_BLK_PB_ITEM(pb_blk_id),
+                                   buf))
+            return(-1);
+
+         *blk_id = read_le32(buf,sub_index*sizeof(uint32_t));
+      }
+
+      if (!*blk_id) {
+         if (vmfs_block_alloc(fs,VMFS_BLK_TYPE_FB,blk_id) == -1)
+            return(-1);
+
+         write_le32(buf,sub_index*sizeof(uint32_t),*blk_id);
+         inode->blk_count++;
+         update_inode = 1;
+         update_pb = 1;
+      } else {
+         if (VMFS_BLK_FB_TBZ(*blk_id)) {
+            if (vmfs_block_zeroize_fb(fs,*blk_id) == -1)
+               return(-1);
+
+            *blk_id &= ~VMFS_BLK_FB_TBZ_MASK;
+            write_le32(buf,sub_index*sizeof(uint32_t),*blk_id);
+            inode->tbz--;
+            update_inode = 1;
+            update_pb = 1;
+         }
+      }
+
+      /* Update the pointer block on disk if it has been modified */
+      if (update_pb && !vmfs_bitmap_set_item(fs->pbc,
+                                             VMFS_BLK_PB_ENTRY(pb_blk_id),
+                                             VMFS_BLK_PB_ITEM(pb_blk_id),
+                                             buf))
+         return(-1);
+   } else {
+      /* File Block or Sub-Block */
+      blk_index = pos / inode->blk_size;
+         
+      if (blk_index >= VMFS_INODE_BLK_COUNT)
+         return(-1);
+
+      *blk_id = inode->blocks[blk_index];
+
+      if (!*blk_id) {
+         if (vmfs_block_alloc(fs,inode->zla,blk_id) == -1)
+            return(-1);
+
+         inode->blocks[blk_index] = *blk_id;
+         inode->blk_count++;
+         update_inode = 1;
+      } else {
+         if ((inode->zla == VMFS_BLK_TYPE_FB) && VMFS_BLK_FB_TBZ(*blk_id)) {
+            if (vmfs_block_zeroize_fb(fs,*blk_id) == -1)
+               return(-1);
+
+            *blk_id &= ~VMFS_BLK_FB_TBZ_MASK;
+            inode->blocks[blk_index] = *blk_id;
+            inode->tbz--;
+            update_inode = 1;
+         }
+      }
+   }
+
+   /* Update inode if it has been modified */
+   if (update_inode)
+      vmfs_inode_update(fs,inode,1);
+
+   return(0);
+}
+
 /* Show block list of an inode */
 void vmfs_inode_show_blocks(const vmfs_fs_t *fs,const vmfs_inode_t *inode)
 {
