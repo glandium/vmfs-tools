@@ -105,11 +105,12 @@ int vmfs_vol_check_reservation(vmfs_volume_t *vol)
 }
 
 /* Read volume information */
-static int vmfs_volinfo_read(vmfs_volinfo_t *vol,int fd)
+static int vmfs_volinfo_read(vmfs_volume_t *volume)
 {
    DECL_ALIGNED_BUFFER(buf,1024);
+   vmfs_volinfo_t *vol = &volume->vol_info;
 
-   if (m_pread(fd,buf,buf_len,VMFS_VOLINFO_BASE) != buf_len)
+   if (m_pread(volume->fd,buf,buf_len,volume->vmfs_base) != buf_len)
       return(-1);
 
    vol->magic = read_le32(buf,VMFS_VOLINFO_OFS_MAGIC);
@@ -217,9 +218,19 @@ int vmfs_vol_open(vmfs_volume_t *vol)
    vol->vmfs_base = VMFS_VOLINFO_BASE;
 
    /* Read volume information */
-   if (vmfs_volinfo_read(&vol->vol_info,vol->fd) == -1) {
+   if (vmfs_volinfo_read(vol) == -1) {
+      DECL_ALIGNED_BUFFER(buf,512);
+      uint16_t magic;
       fprintf(stderr,"VMFS: Unable to read volume information\n");
-      return(-1);
+      fprintf(stderr,"Trying to find partitions\n");
+      m_pread(vol->fd,buf,buf_len,0);
+      magic = read_le16(buf, 510);
+      if ((magic == 0xaa55) && (buf[450] == 0xfb)) {
+         vol->vmfs_base += read_le32(buf, 454) * 512;
+         if (vmfs_volinfo_read(vol) == -1)
+            return(-1);
+      } else
+         return(-1);
    }
 
    /* We support only VMFS3 */
