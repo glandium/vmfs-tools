@@ -243,13 +243,13 @@ ssize_t vmfs_file_pwrite(vmfs_file_t *f,u_char *buf,size_t len,off_t pos)
       pos += res;
       wlen += res;
 
-      /* Move buffer position */
-      buf += res;
-      len -= res;
-
       /* Incomplete write, stop now */
       if (res < len)
          break;
+
+      /* Move buffer position */
+      buf += res;
+      len -= res;
    }
 
    /* Update file size */
