@@ -198,8 +198,67 @@ ssize_t vmfs_file_pread(vmfs_file_t *f,u_char *buf,size_t len,off_t pos)
 /* Write data to a file at the specified position */
 ssize_t vmfs_file_pwrite(vmfs_file_t *f,u_char *buf,size_t len,off_t pos)
 {
-   /* TODO */
-   return(-1);
+   uint32_t blk_id,blk_type;
+   uint64_t blk_size;
+   ssize_t res=0,wlen = 0;
+
+   /* We don't handle RDM files */
+   if (f->inode.type == VMFS_FILE_TYPE_RDM)
+      return(-1);
+
+   blk_size = vmfs_fs_get_blocksize(f->fs);
+
+   while(len > 0) {
+      if (vmfs_inode_get_wrblock(f->fs,&f->inode,pos,&blk_id) == -1)
+         return(-1);
+
+#if 0
+      if (f->vol->debug_level > 1)
+         printf("vmfs_file_write: writing block 0x%8.8x\n",blk_id);
+#endif
+
+      blk_type = VMFS_BLK_TYPE(blk_id);
+
+      switch(blk_type) {
+         /* File-Block */
+         case VMFS_BLK_TYPE_FB:
+            res = vmfs_block_write_fb(f->fs,blk_id,pos,buf,len);
+            break;
+
+         /* Sub-Block */
+         case VMFS_BLK_TYPE_SB:
+            res = vmfs_block_write_sb(f->fs,blk_id,pos,buf,len);
+            break;
+
+         default:
+            fprintf(stderr,"VMFS: unknown block type 0x%2.2x\n",blk_type);
+            return(-1);
+      }
+
+      /* Error while writing block, abort immediately */
+      if (res < 0)
+         break;
+
+      /* Move file position and keep track of bytes currently written */
+      pos += res;
+      wlen += res;
+
+      /* Move buffer position */
+      buf += res;
+      len -= res;
+
+      /* Incomplete write, stop now */
+      if (res < len)
+         break;
+   }
+
+   /* Update file size */
+   if ((pos + wlen) > vmfs_file_get_size(f)) {
+      f->inode.size = pos + wlen;
+      vmfs_inode_update(f->fs,&f->inode,0);
+   }
+
+   return(wlen);
 }
 
 /* Read data from a file */
