@@ -122,9 +122,7 @@ ssize_t vmfs_file_pread(vmfs_file_t *f,u_char *buf,size_t len,off_t pos)
    uint64_t blk_size,blk_len;
    uint64_t file_size,offset;
    ssize_t res=0,rlen = 0;
-   size_t clen,exp_len;
-
-   DECL_ALIGNED_BUFFER(tbuf,M_BLK_SIZE);
+   size_t exp_len;
 
    /* We don't handle RDM files */
    if (f->inode.type == VMFS_FILE_TYPE_RDM)
@@ -160,54 +158,15 @@ ssize_t vmfs_file_pread(vmfs_file_t *f,u_char *buf,size_t len,off_t pos)
 
          /* File-Block */
          case VMFS_BLK_TYPE_FB: {
-            off_t sub_page,sub_offset;
-
-            offset = pos % blk_size;
-
-            blk_len = tbuf_len - (pos & (tbuf_len - 1));
-            exp_len = m_min(blk_len,len);
-            clen = m_min(exp_len,file_size - pos);
-
-            sub_page   = offset & ~((off_t)tbuf_len - 1);
-            sub_offset = offset & (tbuf_len - 1);
-
-            /* 
-             * If the user provided an aligned buffer acceptable for 
-             * direct I/O, avoid a useless mem copy.
-             */
-            if (ALIGN_CHECK(sub_offset,M_DIO_BLK_SIZE) &&
-                ALIGN_CHECK((uintptr_t)buf,M_DIO_BLK_SIZE) &&
-                ALIGN_CHECK(clen,M_DIO_BLK_SIZE))
-            {
-               vmfs_fs_read(f->fs,VMFS_BLK_FB_ITEM(blk_id),
-                            sub_page+sub_offset,buf,clen);
-            } else {
-               vmfs_fs_read(f->fs,VMFS_BLK_FB_ITEM(blk_id),sub_page,
-                            tbuf,tbuf_len);
-               memcpy(buf,tbuf+sub_offset,clen);
-            }
-
-            res = clen;
+            exp_len = m_min(len,file_size - pos);
+            res = vmfs_block_read_fb(f->fs,blk_id,pos,buf,exp_len);
             break;
          }
 
          /* Sub-Block */
          case VMFS_BLK_TYPE_SB: {
-            uint32_t sbc_entry,sbc_item;
-            DECL_ALIGNED_BUFFER_WOL(tmpbuf,f->fs->sbc->bmh.data_size);
-
-            offset = pos % f->fs->sbc->bmh.data_size;
-            blk_len = f->fs->sbc->bmh.data_size - offset;
-            exp_len = m_min(blk_len,len);
-            clen = m_min(exp_len,file_size - pos);
-
-            sbc_entry = VMFS_BLK_SB_ENTRY(blk_id);
-            sbc_item  = VMFS_BLK_SB_ITEM(blk_id);
-
-            if (vmfs_bitmap_get_item(f->fs->sbc,sbc_entry,sbc_item,tmpbuf)) {
-               memcpy(buf,tmpbuf+offset,clen);
-               res = clen;
-            }
+            exp_len = m_min(len,file_size - pos);
+            res = vmfs_block_read_sb(f->fs,blk_id,pos,buf,exp_len);
             break;
          }
 
