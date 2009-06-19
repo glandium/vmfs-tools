@@ -120,6 +120,10 @@ int vmfs_inode_get(const vmfs_fs_t *fs,const vmfs_dirent_t *rec,u_char *buf);
 int vmfs_inode_get_block(const vmfs_fs_t *fs,const vmfs_inode_t *inode,
                          off_t pos,uint32_t *blk_id);
 
+/* Get a block for writing corresponding to the specified position */
+int vmfs_inode_get_wrblock(const vmfs_fs_t *fs,vmfs_inode_t *inode,off_t pos,
+                           uint32_t *blk_id);
+
 /* Show block list of an inode */
 void vmfs_inode_show_blocks(const vmfs_fs_t *fs,const vmfs_inode_t *inode);
 
