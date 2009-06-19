@@ -71,7 +71,7 @@ clean: CLEAN := $(wildcard $(LIB) $(PROGRAMS) $(OBJS) $(PACKAGE)-*.tar.gz $(MANP
 clean:
 	$(if $(CLEAN),rm $(CLEAN))
 
-ALL_DIST := $(SRC) $(HEADERS) $(ALL_MAKFILES) $(MANSRCS) $(EXTRA_DIST)
+ALL_DIST := $(SRC) $(HEADERS) $(ALL_MAKEFILES) $(MANSRCS) $(EXTRA_DIST)
 DIST_DIR := $(PACKAGE)-$(VERSION:v%=%)
 dist: $(ALL_DIST)
 	@rm -rf "$(DIST_DIR)"
