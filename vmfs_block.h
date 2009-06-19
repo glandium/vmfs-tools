@@ -114,4 +114,20 @@ int vmfs_block_alloc(const vmfs_fs_t *fs,uint32_t blk_type,uint32_t *blk_id);
 /* Zeroize a file block */
 int vmfs_block_zeroize_fb(const vmfs_fs_t *fs,uint32_t blk_id);
 
+/* Read a piece of a sub-block */
+ssize_t vmfs_block_read_sb(const vmfs_fs_t *fs,uint32_t blk_id,off_t pos,
+                           u_char *buf,size_t len);
+
+/* Write a piece of a sub-block */
+ssize_t vmfs_block_write_sb(const vmfs_fs_t *fs,uint32_t blk_id,off_t pos,
+                            u_char *buf,size_t len);
+
+/* Read a piece of a file block */
+ssize_t vmfs_block_read_fb(const vmfs_fs_t *fs,uint32_t blk_id,off_t pos,
+                           u_char *buf,size_t len);
+
+/* Write a piece of a file block */
+ssize_t vmfs_block_write_fb(const vmfs_fs_t *fs,uint32_t blk_id,off_t pos,
+                            u_char *buf,size_t len);
+
 #endif

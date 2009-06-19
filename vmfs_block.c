@@ -214,3 +214,145 @@ int vmfs_block_zeroize_fb(const vmfs_fs_t *fs,uint32_t blk_id)
 
    return(0);
 }
+
+/* Read a piece of a sub-block */
+ssize_t vmfs_block_read_sb(const vmfs_fs_t *fs,uint32_t blk_id,off_t pos,
+                           u_char *buf,size_t len)
+{
+   DECL_ALIGNED_BUFFER_WOL(tmpbuf,fs->sbc->bmh.data_size);
+   uint32_t offset,sbc_entry,sbc_item;
+   size_t clen;
+
+   offset = pos % fs->sbc->bmh.data_size;
+   clen   = m_min(fs->sbc->bmh.data_size - offset,len);
+
+   sbc_entry = VMFS_BLK_SB_ENTRY(blk_id);
+   sbc_item  = VMFS_BLK_SB_ITEM(blk_id);
+
+   if (!vmfs_bitmap_get_item(fs->sbc,sbc_entry,sbc_item,tmpbuf))
+      return(-1);
+
+   memcpy(buf,tmpbuf+offset,clen);
+   return(clen);
+}
+
+/* Write a piece of a sub-block */
+ssize_t vmfs_block_write_sb(const vmfs_fs_t *fs,uint32_t blk_id,off_t pos,
+                            u_char *buf,size_t len)
+{
+   DECL_ALIGNED_BUFFER_WOL(tmpbuf,fs->sbc->bmh.data_size);
+   uint32_t offset,sbc_entry,sbc_item;
+   size_t clen;
+
+   offset = pos % fs->sbc->bmh.data_size;
+   clen   = m_min(fs->sbc->bmh.data_size - offset,len);
+
+   sbc_entry = VMFS_BLK_SB_ENTRY(blk_id);
+   sbc_item  = VMFS_BLK_SB_ITEM(blk_id);
+
+   /* If we write completely the sub-block, no need to read something */
+   if (!offset && (clen == len) &&
+       !vmfs_bitmap_get_item(fs->sbc,sbc_entry,sbc_item,tmpbuf))
+      return(-1);
+
+   memcpy(buf,tmpbuf+offset,clen);
+
+   if (!vmfs_bitmap_set_item(fs->sbc,sbc_entry,sbc_item,tmpbuf))
+      return(-1);
+
+   return(clen);
+}
+
+/* Read a piece of a file block */
+ssize_t vmfs_block_read_fb(const vmfs_fs_t *fs,uint32_t blk_id,off_t pos,
+                           u_char *buf,size_t len)
+{
+   uint64_t offset,n_offset,blk_size;
+   size_t clen,n_clen;
+   uint32_t fb_item;
+   u_char *tmpbuf;
+
+   blk_size = vmfs_fs_get_blocksize(fs);
+
+   offset = pos % blk_size;
+   clen   = m_min(blk_size - offset,len);
+
+   /* Use "normalized" offset / length to access data (for direct I/O) */
+   n_offset = offset & ~(M_DIO_BLK_SIZE - 1);
+   n_clen   = ALIGN_NUM(clen,M_DIO_BLK_SIZE);
+
+   fb_item = VMFS_BLK_FB_ITEM(blk_id);
+
+   /* If everything is aligned for direct I/O, store directly in user buffer */
+   if ((n_offset == offset) && (n_clen == clen) &&
+       ALIGN_CHECK((uintptr_t)buf,M_DIO_BLK_SIZE))
+   {
+      return(vmfs_fs_read(fs,fb_item,n_offset,buf,n_clen));
+   }
+
+   /* Allocate a temporary buffer and copy result to user buffer */
+   if (!(tmpbuf = iobuffer_alloc(n_clen)))
+      return(-1);
+
+   if (vmfs_fs_read(fs,fb_item,n_offset,tmpbuf,n_clen) != n_clen) {
+      iobuffer_free(tmpbuf);
+      return(-1);
+   }
+
+   memcpy(buf,tmpbuf+(offset-n_offset),clen);
+
+   iobuffer_free(tmpbuf);
+   return(clen);
+}
+
+/* Write a piece of a file block */
+ssize_t vmfs_block_write_fb(const vmfs_fs_t *fs,uint32_t blk_id,off_t pos,
+                            u_char *buf,size_t len)
+{
+   uint64_t offset,n_offset,blk_size;
+   size_t clen,n_clen;
+   uint32_t fb_item;
+   u_char *tmpbuf;
+
+   blk_size = vmfs_fs_get_blocksize(fs);
+
+   offset = pos % blk_size;
+   clen   = m_min(blk_size - offset,len);
+
+   /* Use "normalized" offset / length to access data (for direct I/O) */
+   n_offset = offset & ~(M_DIO_BLK_SIZE - 1);
+   n_clen   = ALIGN_NUM(clen,M_DIO_BLK_SIZE);
+
+   fb_item = VMFS_BLK_FB_ITEM(blk_id);
+
+   /* 
+    * If everything is aligned for direct I/O, write directly from user 
+    * buffer.
+    */
+   if ((n_offset == offset) && (n_clen == clen) &&
+       ALIGN_CHECK((uintptr_t)buf,M_DIO_BLK_SIZE))
+   {
+      return(vmfs_fs_write(fs,fb_item,n_offset,buf,n_clen));
+   }
+
+   /* Allocate a temporary buffer */
+   if (!(tmpbuf = iobuffer_alloc(n_clen)))
+      return(-1);
+
+   /* Read the original block and add user data */
+   if (vmfs_fs_read(fs,fb_item,n_offset,tmpbuf,n_clen) != n_clen)
+      goto err_io;
+      
+   memcpy(tmpbuf+(offset-n_offset),buf,clen);
+
+   /* Write the modified block */
+   if (vmfs_fs_write(fs,fb_item,n_offset,tmpbuf,n_clen) != n_clen)
+      goto err_io;
+
+   iobuffer_free(tmpbuf);
+   return(clen);
+
+ err_io:
+   iobuffer_free(tmpbuf);
+   return(-1);
+}
