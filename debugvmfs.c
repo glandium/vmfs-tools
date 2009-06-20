@@ -150,7 +150,7 @@ static int cmd_show_dirent(vmfs_fs_t *fs,int argc,char *argv[])
       return(-1);
    }
 
-   if (vmfs_dirent_resolve_path(fs,fs->root_dir,argv[0],0,&entry) != 1) {
+   if (vmfs_dirent_resolve_path(fs->root_dir,argv[0],0,&entry) != 1) {
       fprintf(stderr,"Unable to resolve path '%s'\n",argv[0]);
       return(-1);
    }
