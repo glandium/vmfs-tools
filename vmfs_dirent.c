@@ -282,6 +282,22 @@ vmfs_dir_t *vmfs_dir_open_from_path(const vmfs_fs_t *fs,const char *path)
                              (open_file_callback) vmfs_file_open_from_path);
 }
 
+/* Return next entry in directory. Returned directory entry will be overwritten
+by subsequent calls */
+const vmfs_dirent_t *vmfs_dir_read(vmfs_dir_t *d)
+{
+   u_char buf[VMFS_DIRENT_SIZE];
+
+   if ((d == NULL) || (vmfs_file_pread(d->dir,buf,sizeof(buf),
+                                       d->pos*sizeof(buf)) != sizeof(buf)))
+      return(NULL);
+
+   vmfs_dirent_read(&d->dirent,buf);
+   d->pos++;
+
+   return &d->dirent;
+}
+
 /* Close a directory */
 int vmfs_dir_close(vmfs_dir_t *d)
 {

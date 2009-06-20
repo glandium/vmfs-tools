@@ -67,6 +67,8 @@ int vmfs_dirent_readdir(const vmfs_fs_t *fs,const char *dir,
 
 struct vmfs_dir {
    vmfs_file_t *dir;
+   uint32_t pos;
+   vmfs_dirent_t dirent;
 };
 
 /* Open a directory based on an inode buffer */
@@ -79,6 +81,10 @@ vmfs_dir_t *vmfs_dir_open_from_rec(const vmfs_fs_t *fs,
 
 /* Open a directory */
 vmfs_dir_t *vmfs_dir_open_from_path(const vmfs_fs_t *fs,const char *path);
+
+/* Return next entry in directory. Returned directory entry will be overwritten
+by subsequent calls */
+const vmfs_dirent_t *vmfs_dir_read(vmfs_dir_t *d);
 
 /* Close a directory */
 int vmfs_dir_close(vmfs_dir_t *d);
