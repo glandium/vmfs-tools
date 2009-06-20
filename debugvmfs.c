@@ -83,9 +83,11 @@ static int cmd_ls(vmfs_fs_t *fs,int argc,char *argv[])
 
    while((entry = vmfs_dir_read(d))) {
       if (long_format) {
-         snprintf(buffer,sizeof(buffer),"%s/%s",argv[0],entry->name);
-         if (vmfs_file_lstat(fs,buffer,&st_info) == -1)
+         vmfs_file_t *f = vmfs_file_open_from_rec(fs,entry);
+         if (!f)
             continue;
+         vmfs_file_fstat(f,&st_info);
+         vmfs_file_close(f);
 
          printf("%-10s ",m_fmode_to_str(st_info.st_mode,buffer));
 
