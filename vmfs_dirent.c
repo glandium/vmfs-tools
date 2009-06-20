@@ -180,63 +180,6 @@ int vmfs_dirent_resolve_path(vmfs_dir_t *base_dir,
    return(res);
 }
 
-/* Free a directory list (returned by readdir) */
-void vmfs_dirent_free_dlist(int count,vmfs_dirent_t ***dlist)
-{
-   int i;
-
-   if (*dlist != NULL) {
-      for(i=0;i<count;i++)
-         free((*dlist)[i]);
-
-      free(*dlist);
-      *dlist = NULL;
-   }
-}
-
-/* Read a directory */
-int vmfs_dirent_readdir(const vmfs_fs_t *fs,const char *dir,
-                        vmfs_dirent_t ***dlist)
-{
-   u_char buf[VMFS_DIRENT_SIZE];
-   vmfs_dirent_t *entry;
-   vmfs_file_t *f;
-   int i,dcount = 0;
-
-   *dlist = NULL;
-   dcount = 0;
-
-   if (!(f = vmfs_file_open_from_path(fs,dir)))
-      return(-1);
-   
-   dcount = f->inode.size / VMFS_DIRENT_SIZE;
-   *dlist = calloc(dcount,sizeof(vmfs_dirent_t *));
-
-   if (*dlist == NULL) {
-      vmfs_file_close(f);
-      return(-1);
-   }
-
-   for(i=0;i<dcount;i++) {
-      if (vmfs_file_read(f,buf,sizeof(buf)) != sizeof(buf))
-         goto error;
-
-      if (!(entry = malloc(sizeof(*entry))))
-         goto error;
-      
-      vmfs_dirent_read(entry,buf);
-      (*dlist)[i] = entry;
-   }
-
-   vmfs_file_close(f);
-   return(dcount);
-
- error:
-   vmfs_dirent_free_dlist(dcount,dlist);
-   vmfs_file_close(f);
-   return(-1);
-}
-
 typedef vmfs_file_t *(*open_file_callback)(const vmfs_fs_t *, const void *);
 
 /* Open a directory file using a callback */

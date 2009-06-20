@@ -58,13 +58,6 @@ int vmfs_dirent_resolve_path(vmfs_dir_t *base_dir,
                              const char *name,int follow_symlink,
                              vmfs_dirent_t *rec);
 
-/* Free a directory list (returned by readdir) */
-void vmfs_dirent_free_dlist(int count,vmfs_dirent_t ***dlist);
-
-/* Read a directory */
-int vmfs_dirent_readdir(const vmfs_fs_t *fs,const char *dir,
-                        vmfs_dirent_t ***dlist);
-
 struct vmfs_dir {
    vmfs_file_t *dir;
    uint32_t pos;
