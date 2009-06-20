@@ -279,7 +279,7 @@ ssize_t vmfs_block_read_fb(const vmfs_fs_t *fs,uint32_t blk_id,off_t pos,
 
    /* Use "normalized" offset / length to access data (for direct I/O) */
    n_offset = offset & ~(M_DIO_BLK_SIZE - 1);
-   n_clen   = ALIGN_NUM(clen,M_DIO_BLK_SIZE);
+   n_clen   = ALIGN_NUM((offset % M_DIO_BLK_SIZE) + clen,M_DIO_BLK_SIZE);
 
    fb_item = VMFS_BLK_FB_ITEM(blk_id);
 
@@ -321,7 +321,7 @@ ssize_t vmfs_block_write_fb(const vmfs_fs_t *fs,uint32_t blk_id,off_t pos,
 
    /* Use "normalized" offset / length to access data (for direct I/O) */
    n_offset = offset & ~(M_DIO_BLK_SIZE - 1);
-   n_clen   = ALIGN_NUM(clen,M_DIO_BLK_SIZE);
+   n_clen   = ALIGN_NUM((offset % M_DIO_BLK_SIZE) + clen,M_DIO_BLK_SIZE);
 
    fb_item = VMFS_BLK_FB_ITEM(blk_id);
 
