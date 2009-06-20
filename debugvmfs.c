@@ -57,12 +57,13 @@ static int cmd_cat(vmfs_fs_t *fs,int argc,char *argv[])
 /* "ls" command */
 static int cmd_ls(vmfs_fs_t *fs,int argc,char *argv[])
 {
-   vmfs_dirent_t **dlist,*entry;
+   vmfs_dir_t *d;
+   const vmfs_dirent_t *entry;
    struct stat st_info;
    struct passwd *usr;
    struct group *grp;
    char buffer[1024];
-   int i,res,long_format=0;
+   int long_format=0;
 
    if ((argc == 2) && (strcmp(argv[0],"-l") == 0)) {
       long_format = 1;
@@ -75,16 +76,12 @@ static int cmd_ls(vmfs_fs_t *fs,int argc,char *argv[])
       return(-1);
    }
 
-
-   res = vmfs_dirent_readdir(fs,argv[0],&dlist);
-
-   if (res == -1) {
-      fprintf(stderr,"Unable to read directory %s\n",argv[0]);
+   if (!(d = vmfs_dir_open_from_path(fs,argv[0]))) {
+      fprintf(stderr,"Unable to open directory %s\n",argv[0]);
       return(-1);
    }
 
-   for(i=0;i<res;i++) {
-      entry = dlist[i];
+   while((entry = vmfs_dir_read(d))) {
       if (long_format) {
          snprintf(buffer,sizeof(buffer),"%s/%s",argv[0],entry->name);
          if (vmfs_file_lstat(fs,buffer,&st_info) == -1)
@@ -114,7 +111,7 @@ static int cmd_ls(vmfs_fs_t *fs,int argc,char *argv[])
       }
    }
 
-   vmfs_dirent_free_dlist(res,&dlist);
+   vmfs_dir_close(d);
    return(0);
 }
 
