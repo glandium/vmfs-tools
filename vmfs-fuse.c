@@ -34,16 +34,18 @@ static int vmfs_fuse_readdir(const char *path, void *buf,
                              fuse_fill_dir_t filler, off_t offset,
                              struct fuse_file_info *fi)
 {
-   vmfs_dirent_t **dlist;
+   const vmfs_dirent_t *entry;
+   vmfs_dir_t *d;
    struct stat st = {0, };
-   int i,num;
-   num = vmfs_dirent_readdir(fs, path, &dlist);
-   for (i = 0; i < num; i++) {
-      st.st_mode = vmfs_file_type2mode(dlist[i]->type);
-      if (filler(buf, dlist[i]->name, &st, 0))
+
+   d = vmfs_dir_open_from_path(fs, path);
+
+   while((entry = vmfs_dir_read(d))) {
+      st.st_mode = vmfs_file_type2mode(entry->type);
+      if (filler(buf, entry->name, &st, 0))
          break;
    }
-   vmfs_dirent_free_dlist(num, &dlist);
+   vmfs_dir_close(d);
    return(0);
 }
 
