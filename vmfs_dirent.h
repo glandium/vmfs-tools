@@ -86,6 +86,13 @@ vmfs_dir_t *vmfs_dir_open_from_path(const vmfs_fs_t *fs,const char *path);
 by subsequent calls */
 const vmfs_dirent_t *vmfs_dir_read(vmfs_dir_t *d);
 
+/* Set position of the next entry that vmfs_dir_read will return */
+static inline void vmfs_dir_seek(vmfs_dir_t *d, uint32_t pos)
+{
+   if (d)
+      d->pos = pos;
+}
+
 /* Close a directory */
 int vmfs_dir_close(vmfs_dir_t *d);
 

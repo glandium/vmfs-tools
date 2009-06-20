@@ -91,7 +91,7 @@ struct vmfs_fsck_info {
 };
 
 /* Allocate a directory map structure */
-vmfs_dir_map_t *vmfs_dir_map_alloc(char *name,uint32_t blk_id)
+vmfs_dir_map_t *vmfs_dir_map_alloc(const char *name,uint32_t blk_id)
 {
    vmfs_dir_map_t *map;
 
@@ -360,42 +360,32 @@ int vmfs_fsck_walk_dir(const vmfs_fs_t *fs,
                        vmfs_dir_map_t *dir_map,
                        vmfs_dir_t *dir_entry)
 {   
-   u_char buf[VMFS_DIRENT_SIZE];
-   vmfs_dirent_t rec;
+   const vmfs_dirent_t *rec;
    vmfs_dir_t *sub_dir;
    vmfs_blk_map_t *map;
    vmfs_dir_map_t *dm;
-   int i,res,dir_count;
-   ssize_t len;
+   int res;
 
-   dir_count = vmfs_file_get_size(dir_entry->dir) / VMFS_DIRENT_SIZE;
-   vmfs_file_seek(dir_entry->dir,0,SEEK_SET);
+   vmfs_dir_seek(dir_entry,0);
 
-   for(i=0;i<dir_count;i++) {
-      len = vmfs_file_read(dir_entry->dir,buf,sizeof(buf));
-      
-      if (len != sizeof(buf))
-         return(-1);
-
-      vmfs_dirent_read(&rec,buf);
-
-      if (!(map = vmfs_block_map_find(fi->blk_map,rec.block_id))) {
+   while((rec = vmfs_dir_read(dir_entry))) {
+      if (!(map = vmfs_block_map_find(fi->blk_map,rec->block_id))) {
          fi->undef_inodes++;
          continue;
       }
 
-      if (!(dm = vmfs_dir_map_alloc(rec.name,rec.block_id)))
+      if (!(dm = vmfs_dir_map_alloc(rec->name,rec->block_id)))
          return(-1);
 
       vmfs_dir_map_add_child(dir_map,dm);
       map->dir_map = dm;
       map->nlink++;
 
-      if (rec.type == VMFS_FILE_TYPE_DIR) {
+      if (rec->type == VMFS_FILE_TYPE_DIR) {
          dm->is_dir = 1;
 
-         if (strcmp(rec.name,".") && strcmp(rec.name,"..")) {
-            if (!(sub_dir = vmfs_dir_open_from_rec(fs,&rec)))
+         if (strcmp(rec->name,".") && strcmp(rec->name,"..")) {
+            if (!(sub_dir = vmfs_dir_open_from_rec(fs,rec)))
                return(-1);
 
             res = vmfs_fsck_walk_dir(fs,fi,dm,sub_dir);
