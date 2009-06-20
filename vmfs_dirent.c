@@ -99,11 +99,11 @@ static char *vmfs_dirent_read_symlink(const vmfs_fs_t *fs,vmfs_dirent_t *entry)
 }
 
 /* Resolve a path name to a directory entry */
-int vmfs_dirent_resolve_path(const vmfs_fs_t *fs,vmfs_file_t *base_dir,
+int vmfs_dirent_resolve_path(const vmfs_fs_t *fs,vmfs_dir_t *base_dir,
                              const char *name,int follow_symlink,
                              vmfs_dirent_t *rec)
 {
-   vmfs_file_t *cur_dir,*sub_dir;
+   vmfs_dir_t *cur_dir,*sub_dir;
    char *nam, *ptr,*sl,*symlink;
    int close_dir = 0;
    int res = 1;
@@ -111,7 +111,7 @@ int vmfs_dirent_resolve_path(const vmfs_fs_t *fs,vmfs_file_t *base_dir,
 
    cur_dir = base_dir;
 
-   if (vmfs_dirent_search(cur_dir,".",rec) != 1)
+   if (vmfs_dirent_search(cur_dir->dir,".",rec) != 1)
       return(-1);
 
    nam = ptr = strdup(name);
@@ -127,7 +127,7 @@ int vmfs_dirent_resolve_path(const vmfs_fs_t *fs,vmfs_file_t *base_dir,
          continue;
       }
              
-      if (vmfs_dirent_search(cur_dir,ptr,rec) != 1) {
+      if (vmfs_dirent_search(cur_dir->dir,ptr,rec) != 1) {
          res = -1;
          break;
       }
@@ -159,14 +159,14 @@ int vmfs_dirent_resolve_path(const vmfs_fs_t *fs,vmfs_file_t *base_dir,
 
       /* we must have a directory here */
       if ((rec->type != VMFS_FILE_TYPE_DIR) ||
-          !(sub_dir = vmfs_file_open_from_rec(fs,rec)))
+          !(sub_dir = vmfs_dir_open_from_rec(fs,rec)))
       {
          res = -1;
          break;
       }
 
       if (close_dir)
-         vmfs_file_close(cur_dir);
+         vmfs_dir_close(cur_dir);
 
       cur_dir = sub_dir;
       close_dir = 1;
@@ -175,7 +175,7 @@ int vmfs_dirent_resolve_path(const vmfs_fs_t *fs,vmfs_file_t *base_dir,
    free(nam);
 
    if (close_dir)
-      vmfs_file_close(cur_dir);
+      vmfs_dir_close(cur_dir);
 
    return(res);
 }

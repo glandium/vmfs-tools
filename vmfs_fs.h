@@ -93,7 +93,7 @@ struct vmfs_fs {
    vmfs_bitmap_t *fbb,*fdc,*pbc,*sbc;
 
    /* Root directory */
-   vmfs_file_t *root_dir;
+   vmfs_dir_t *root_dir;
 
    /* Heartbeat used to lock meta-data */
    vmfs_heartbeat_t hb;

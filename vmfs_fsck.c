@@ -358,21 +358,21 @@ void vmfs_fsck_count_blocks(vmfs_fsck_info_t *fi)
 int vmfs_fsck_walk_dir(const vmfs_fs_t *fs,
                        vmfs_fsck_info_t *fi,
                        vmfs_dir_map_t *dir_map,
-                       vmfs_file_t *dir_entry)
+                       vmfs_dir_t *dir_entry)
 {   
    u_char buf[VMFS_DIRENT_SIZE];
    vmfs_dirent_t rec;
-   vmfs_file_t *sub_dir;
+   vmfs_dir_t *sub_dir;
    vmfs_blk_map_t *map;
    vmfs_dir_map_t *dm;
    int i,res,dir_count;
    ssize_t len;
 
-   dir_count = vmfs_file_get_size(dir_entry) / VMFS_DIRENT_SIZE;
-   vmfs_file_seek(dir_entry,0,SEEK_SET);
+   dir_count = vmfs_file_get_size(dir_entry->dir) / VMFS_DIRENT_SIZE;
+   vmfs_file_seek(dir_entry->dir,0,SEEK_SET);
 
    for(i=0;i<dir_count;i++) {
-      len = vmfs_file_read(dir_entry,buf,sizeof(buf));
+      len = vmfs_file_read(dir_entry->dir,buf,sizeof(buf));
       
       if (len != sizeof(buf))
          return(-1);
@@ -395,11 +395,11 @@ int vmfs_fsck_walk_dir(const vmfs_fs_t *fs,
          dm->is_dir = 1;
 
          if (strcmp(rec.name,".") && strcmp(rec.name,"..")) {
-            if (!(sub_dir = vmfs_file_open_from_rec(fs,&rec)))
+            if (!(sub_dir = vmfs_dir_open_from_rec(fs,&rec)))
                return(-1);
 
             res = vmfs_fsck_walk_dir(fs,fi,dm,sub_dir);
-            vmfs_file_close(sub_dir);
+            vmfs_dir_close(sub_dir);
          
             if (res == -1)
                return(-1);

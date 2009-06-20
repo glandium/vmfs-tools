@@ -218,7 +218,7 @@ static int vmfs_read_fdc_base(vmfs_fs_t *fs)
       return(-1);
    }
 
-   if (!(fs->root_dir = vmfs_file_open_from_inode(fs,buf))) {
+   if (!(fs->root_dir = vmfs_dir_open_from_inode(fs,buf))) {
       fprintf(stderr,"VMFS: unable to bind inode to root directory\n");
       return(-1);
    }
@@ -296,7 +296,7 @@ void vmfs_fs_close(vmfs_fs_t *fs)
    vmfs_bitmap_close(fs->fdc);
    vmfs_bitmap_close(fs->pbc);
    vmfs_bitmap_close(fs->sbc);
-   vmfs_file_close(fs->root_dir);
+   vmfs_dir_close(fs->root_dir);
    vmfs_lvm_close(fs->lvm);
    free(fs->fs_info.label);
    free(fs);
