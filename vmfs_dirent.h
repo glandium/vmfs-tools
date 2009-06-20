@@ -65,4 +65,22 @@ void vmfs_dirent_free_dlist(int count,vmfs_dirent_t ***dlist);
 int vmfs_dirent_readdir(const vmfs_fs_t *fs,const char *dir,
                         vmfs_dirent_t ***dlist);
 
+struct vmfs_dir {
+   vmfs_file_t *dir;
+};
+
+/* Open a directory based on an inode buffer */
+vmfs_dir_t *vmfs_dir_open_from_inode(const vmfs_fs_t *fs,
+                                     const u_char *inode_buf);
+
+/* Open a directory based on a directory entry */
+vmfs_dir_t *vmfs_dir_open_from_rec(const vmfs_fs_t *fs,
+                                   const vmfs_dirent_t *rec);
+
+/* Open a directory */
+vmfs_dir_t *vmfs_dir_open_from_path(const vmfs_fs_t *fs,const char *path);
+
+/* Close a directory */
+int vmfs_dir_close(vmfs_dir_t *d);
+
 #endif

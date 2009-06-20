@@ -29,6 +29,7 @@ typedef struct vmfs_bitmap_entry  vmfs_bitmap_entry_t;
 typedef struct vmfs_bitmap vmfs_bitmap_t;
 typedef struct vmfs_inode vmfs_inode_t;
 typedef struct vmfs_dirent vmfs_dirent_t;
+typedef struct vmfs_dir vmfs_dir_t;
 typedef struct vmfs_blk_array vmfs_blk_array_t;
 typedef struct vmfs_blk_list vmfs_blk_list_t;
 typedef struct vmfs_file vmfs_file_t;

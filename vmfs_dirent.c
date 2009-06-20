@@ -236,3 +236,59 @@ int vmfs_dirent_readdir(const vmfs_fs_t *fs,const char *dir,
    vmfs_file_close(f);
    return(-1);
 }
+
+typedef vmfs_file_t *(*open_file_callback)(const vmfs_fs_t *, const void *);
+
+/* Open a directory file using a callback */
+static vmfs_dir_t *vmfs_dir_open_file(const vmfs_fs_t *fs,
+                                      const void *private,
+                                      open_file_callback callback)
+{
+   vmfs_dir_t *d;
+
+   if (!(d = calloc(1, sizeof(*d))))
+      return NULL;
+
+   d->dir = callback(fs, private);
+
+   if (!d->dir || d->dir->inode.type != VMFS_FILE_TYPE_DIR) {
+      vmfs_file_close(d->dir);
+      return NULL;
+   }
+
+   return d;
+}
+
+/* Open a directory based on an inode buffer */
+vmfs_dir_t *vmfs_dir_open_from_inode(const vmfs_fs_t *fs,
+                                    const u_char *inode_buf)
+{
+   return vmfs_dir_open_file(fs, inode_buf,
+                             (open_file_callback) vmfs_file_open_from_inode);
+}
+
+/* Open a directory based on a directory entry */
+vmfs_dir_t *vmfs_dir_open_from_rec(const vmfs_fs_t *fs,
+                                   const vmfs_dirent_t *rec)
+{
+   return vmfs_dir_open_file(fs, rec,
+                             (open_file_callback) vmfs_file_open_from_rec);
+}
+
+/* Open a directory */
+vmfs_dir_t *vmfs_dir_open_from_path(const vmfs_fs_t *fs,const char *path)
+{
+   return vmfs_dir_open_file(fs, path,
+                             (open_file_callback) vmfs_file_open_from_path);
+}
+
+/* Close a directory */
+int vmfs_dir_close(vmfs_dir_t *d)
+{
+   if (d == NULL)
+      return(-1);
+
+   vmfs_file_close(d->dir);
+   free(d);
+   return(0);
+}
