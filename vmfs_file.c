@@ -71,6 +71,16 @@ vmfs_file_t *vmfs_file_open_from_path(const vmfs_fs_t *fs,const char *path)
    return(vmfs_file_open_from_rec(fs,&rec));
 }
 
+/* Open a file */
+vmfs_file_t *vmfs_file_open_at(vmfs_dir_t *dir,const char *name)
+{
+   const vmfs_dirent_t *rec;
+   if (!(rec = vmfs_dir_lookup(dir, name)))
+      return(NULL);
+
+   return(vmfs_file_open_from_rec(dir->dir->fs,rec));
+}
+
 /* Close a file */
 int vmfs_file_close(vmfs_file_t *f)
 {
