@@ -48,7 +48,7 @@ vmfs_file_t *vmfs_file_open_from_rec(const vmfs_fs_t *fs,
    vmfs_inode_t inode;
 
    /* Read the inode */
-   if (vmfs_inode_get(fs,rec,buf) == -1) {
+   if (vmfs_inode_get(fs,rec->block_id,buf) == -1) {
       fprintf(stderr,"VMFS: Unable to get inode info for dir entry '%s'\n",
               rec->name);
       return NULL;
@@ -349,7 +349,7 @@ static int vmfs_file_stat_internal(const vmfs_fs_t *fs,const char *path,
    if (!(entry = vmfs_dir_resolve_path(fs->root_dir,path,follow_symlink)))
       return(-1);
 
-   if (vmfs_inode_get(fs,entry,inode_buf) == -1)
+   if (vmfs_inode_get(fs,entry->block_id,inode_buf) == -1)
       return(-1);
    
    vmfs_inode_read(&inode,inode_buf);

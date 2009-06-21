@@ -161,11 +161,9 @@ void vmfs_inode_show(const vmfs_inode_t *inode)
    }
 }
 
-/* Get inode associated to a directory entry */
-int vmfs_inode_get(const vmfs_fs_t *fs,const vmfs_dirent_t *rec,u_char *buf)
+/* Get inode corresponding to a block id */
+int vmfs_inode_get(const vmfs_fs_t *fs,uint32_t blk_id,u_char *buf)
 {
-   uint32_t blk_id = rec->block_id;
-
    if (VMFS_BLK_TYPE(blk_id) != VMFS_BLK_TYPE_FD)
       return(-1);
 
