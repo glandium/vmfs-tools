@@ -31,8 +31,9 @@
 #include "readcmd.h"
 
 /* "cat" command */
-static int cmd_cat(vmfs_fs_t *fs,int argc,char *argv[])
+static int cmd_cat(vmfs_dir_t *base_dir,int argc,char *argv[])
 {
+   const vmfs_fs_t *fs = vmfs_dir_get_fs(base_dir);
    vmfs_file_t *f;
    int i;
 
@@ -55,8 +56,9 @@ static int cmd_cat(vmfs_fs_t *fs,int argc,char *argv[])
 }
 
 /* "ls" command */
-static int cmd_ls(vmfs_fs_t *fs,int argc,char *argv[])
+static int cmd_ls(vmfs_dir_t *base_dir,int argc,char *argv[])
 {
+   const vmfs_fs_t *fs = vmfs_dir_get_fs(base_dir);
    vmfs_dir_t *d;
    const vmfs_dirent_t *entry;
    struct stat st_info;
@@ -118,8 +120,9 @@ static int cmd_ls(vmfs_fs_t *fs,int argc,char *argv[])
 }
 
 /* "df" (disk free) command */
-static int cmd_df(vmfs_fs_t *fs,int argc,char *argv[])
+static int cmd_df(vmfs_dir_t *base_dir,int argc,char *argv[])
 {
+   const vmfs_fs_t *fs = vmfs_dir_get_fs(base_dir);
    uint32_t alloc,total;
 
    total = fs->fbb->bmh.total_items;
@@ -143,7 +146,7 @@ static int cmd_df(vmfs_fs_t *fs,int argc,char *argv[])
 }
 
 /* Show a directory entry */
-static int cmd_show_dirent(vmfs_fs_t *fs,int argc,char *argv[])
+static int cmd_show_dirent(vmfs_dir_t *base_dir,int argc,char *argv[])
 {
    const vmfs_dirent_t *entry;
 
@@ -152,7 +155,7 @@ static int cmd_show_dirent(vmfs_fs_t *fs,int argc,char *argv[])
       return(-1);
    }
 
-   if (!(entry = vmfs_dir_resolve_path(fs->root_dir,argv[0],0))) {
+   if (!(entry = vmfs_dir_resolve_path(base_dir,argv[0],0))) {
       fprintf(stderr,"Unable to resolve path '%s'\n",argv[0]);
       return(-1);
    }
@@ -162,8 +165,9 @@ static int cmd_show_dirent(vmfs_fs_t *fs,int argc,char *argv[])
 }
 
 /* Show an inode */
-static int cmd_show_inode(vmfs_fs_t *fs,int argc,char *argv[])
+static int cmd_show_inode(vmfs_dir_t *base_dir,int argc,char *argv[])
 {
+   const vmfs_fs_t *fs = vmfs_dir_get_fs(base_dir);
    vmfs_file_t *f;
 
    if (argc == 0) {
@@ -182,8 +186,9 @@ static int cmd_show_inode(vmfs_fs_t *fs,int argc,char *argv[])
 }
 
 /* Show file blocks */
-static int cmd_show_file_blocks(vmfs_fs_t *fs,int argc,char *argv[])
+static int cmd_show_file_blocks(vmfs_dir_t *base_dir,int argc,char *argv[])
 {
+   const vmfs_fs_t *fs = vmfs_dir_get_fs(base_dir);
    vmfs_file_t *f;
 
    if (argc == 0) {
@@ -202,8 +207,9 @@ static int cmd_show_file_blocks(vmfs_fs_t *fs,int argc,char *argv[])
 }
 
 /* Get file block corresponding to specified position */
-static int cmd_get_file_block(vmfs_fs_t *fs,int argc,char *argv[])
+static int cmd_get_file_block(vmfs_dir_t *base_dir,int argc,char *argv[])
 {
+   const vmfs_fs_t *fs = vmfs_dir_get_fs(base_dir);
    vmfs_file_t *f;
    uint32_t blk_id;
    off_t pos;
@@ -231,8 +237,9 @@ static int cmd_get_file_block(vmfs_fs_t *fs,int argc,char *argv[])
 }
 
 /* Check file blocks */
-static int cmd_check_file_blocks(vmfs_fs_t *fs,int argc,char *argv[])
+static int cmd_check_file_blocks(vmfs_dir_t *base_dir,int argc,char *argv[])
 {
+   const vmfs_fs_t *fs = vmfs_dir_get_fs(base_dir);
    vmfs_file_t *f;
    int res;
 
@@ -258,28 +265,32 @@ static int cmd_check_file_blocks(vmfs_fs_t *fs,int argc,char *argv[])
 }
 
 /* Show filesystem information */
-static int cmd_show_fs(vmfs_fs_t *fs,int argc,char *argv[])
+static int cmd_show_fs(vmfs_dir_t *base_dir,int argc,char *argv[])
 {
+   const vmfs_fs_t *fs = vmfs_dir_get_fs(base_dir);
    vmfs_fs_show(fs);
    return(0);
 }
 
 /* Show volume information */
-static int cmd_show_volume(vmfs_fs_t *fs,int argc,char *argv[])
+static int cmd_show_volume(vmfs_dir_t *base_dir,int argc,char *argv[])
 {
+   const vmfs_fs_t *fs = vmfs_dir_get_fs(base_dir);
    vmfs_lvm_show(fs->lvm);
    return(0);
 }
 
 /* Show volume bitmaps */
-static int cmd_show_vol_bitmaps(vmfs_fs_t *fs,int argc,char *argv[])
+static int cmd_show_vol_bitmaps(vmfs_dir_t *base_dir,int argc,char *argv[])
 {
+   const vmfs_fs_t *fs = vmfs_dir_get_fs(base_dir);
    return(vmfs_fs_dump_bitmaps(fs));
 }
 
 /* Check volume bitmaps */
-static int cmd_check_vol_bitmaps(vmfs_fs_t *fs,int argc,char *argv[])
+static int cmd_check_vol_bitmaps(vmfs_dir_t *base_dir,int argc,char *argv[])
 {
+   const vmfs_fs_t *fs = vmfs_dir_get_fs(base_dir);
    int errors = 0;
 
    printf("Checking FBB bitmaps...\n");
@@ -299,8 +310,9 @@ static int cmd_check_vol_bitmaps(vmfs_fs_t *fs,int argc,char *argv[])
 }
 
 /* Bitmaps usage statistics */
-static int cmd_show_bitmaps_usage(vmfs_fs_t *fs,int argc,char *argv[])
+static int cmd_show_bitmaps_usage(vmfs_dir_t *base_dir,int argc,char *argv[])
 {
+   const vmfs_fs_t *fs = vmfs_dir_get_fs(base_dir);
    u_int total,alloc;
 
    /* File Blocks */
@@ -331,13 +343,14 @@ static int cmd_show_bitmaps_usage(vmfs_fs_t *fs,int argc,char *argv[])
 }
 
 /* Show active heartbeats */
-static int cmd_show_heartbeats(vmfs_fs_t *fs,int argc,char *argv[])
+static int cmd_show_heartbeats(vmfs_dir_t *base_dir,int argc,char *argv[])
 {
+   const vmfs_fs_t *fs = vmfs_dir_get_fs(base_dir);
    return(vmfs_heartbeat_show_active(fs));
 }
 
 /* Convert a raw block ID in human readable form */
-static int cmd_convert_block_id(vmfs_fs_t *fs,int argc,char *argv[])
+static int cmd_convert_block_id(vmfs_dir_t *base_dir,int argc,char *argv[])
 {
    uint32_t blk_id,blk_type;
    int i;
@@ -383,8 +396,9 @@ static int cmd_convert_block_id(vmfs_fs_t *fs,int argc,char *argv[])
 }
 
 /* Read/Dump a block */
-static int read_dump_block(vmfs_fs_t *fs,int argc,char *argv[],int action)
+static int read_dump_block(vmfs_dir_t *base_dir,int argc,char *argv[],int action)
 {    
+   const vmfs_fs_t *fs = vmfs_dir_get_fs(base_dir);
    uint32_t blk_id,blk_type;
    uint64_t blk_size;
    u_char *buf;
@@ -453,20 +467,21 @@ static int read_dump_block(vmfs_fs_t *fs,int argc,char *argv[],int action)
 }
 
 /* Read a block */
-static int cmd_read_block(vmfs_fs_t *fs,int argc,char *argv[])
+static int cmd_read_block(vmfs_dir_t *base_dir,int argc,char *argv[])
 {
-   return(read_dump_block(fs,argc,argv,0));
+   return(read_dump_block(base_dir,argc,argv,0));
 }
 
 /* Dump a block */
-static int cmd_dump_block(vmfs_fs_t *fs,int argc,char *argv[])
+static int cmd_dump_block(vmfs_dir_t *base_dir,int argc,char *argv[])
 {
-   return(read_dump_block(fs,argc,argv,1));
+   return(read_dump_block(base_dir,argc,argv,1));
 }
 
 /* Get block status */
-static int cmd_get_block_status(vmfs_fs_t *fs,int argc,char *argv[])
+static int cmd_get_block_status(vmfs_dir_t *base_dir,int argc,char *argv[])
 {
+   const vmfs_fs_t *fs = vmfs_dir_get_fs(base_dir);
    uint32_t blk_id;
    int status;
 
@@ -490,8 +505,9 @@ static int cmd_get_block_status(vmfs_fs_t *fs,int argc,char *argv[])
 }
 
 /* Allocate a fixed block */
-static int cmd_alloc_block_fixed(vmfs_fs_t *fs,int argc,char *argv[])
+static int cmd_alloc_block_fixed(vmfs_dir_t *base_dir,int argc,char *argv[])
 {
+   const vmfs_fs_t *fs = vmfs_dir_get_fs(base_dir);
    uint32_t blk_id;
    int res;
 
@@ -514,8 +530,9 @@ static int cmd_alloc_block_fixed(vmfs_fs_t *fs,int argc,char *argv[])
 }
 
 /* Allocate a block */
-static int cmd_alloc_block(vmfs_fs_t *fs,int argc,char *argv[])
+static int cmd_alloc_block(vmfs_dir_t *base_dir,int argc,char *argv[])
 {
+   const vmfs_fs_t *fs = vmfs_dir_get_fs(base_dir);
    uint32_t blk_type,blk_id;
    int res;
 
@@ -538,8 +555,9 @@ static int cmd_alloc_block(vmfs_fs_t *fs,int argc,char *argv[])
 }
 
 /* Free a block */
-static int cmd_free_block(vmfs_fs_t *fs,int argc,char *argv[])
+static int cmd_free_block(vmfs_dir_t *base_dir,int argc,char *argv[])
 {
+   const vmfs_fs_t *fs = vmfs_dir_get_fs(base_dir);
    uint32_t blk_id;
    int res;
 
@@ -562,8 +580,9 @@ static int cmd_free_block(vmfs_fs_t *fs,int argc,char *argv[])
 }
 
 /* Show a bitmap item */
-static int cmd_show_bitmap_item(vmfs_fs_t *fs,int argc,char *argv[])
+static int cmd_show_bitmap_item(vmfs_dir_t *base_dir,int argc,char *argv[])
 {   
+   const vmfs_fs_t *fs = vmfs_dir_get_fs(base_dir);
    uint32_t blk_id,blk_type;
    uint32_t entry,item;
    vmfs_bitmap_t *bmp;
@@ -609,8 +628,9 @@ static int cmd_show_bitmap_item(vmfs_fs_t *fs,int argc,char *argv[])
 }
 
 /* Show a bitmap entry */
-static int cmd_show_bitmap_entry(vmfs_fs_t *fs,int argc,char *argv[])
+static int cmd_show_bitmap_entry(vmfs_dir_t *base_dir,int argc,char *argv[])
 {   
+   const vmfs_fs_t *fs = vmfs_dir_get_fs(base_dir);
    vmfs_bitmap_entry_t bmp_entry;
    uint32_t blk_id;
    uint32_t entry,item;
@@ -636,11 +656,11 @@ static int cmd_show_bitmap_entry(vmfs_fs_t *fs,int argc,char *argv[])
 struct cmd {
    char *name;
    char *description;
-   int (*fn)(vmfs_fs_t *fs,int argc,char *argv[]);
+   int (*fn)(vmfs_dir_t *base_dir,int argc,char *argv[]);
 };
 
 /* Opens a shell */
-static int cmd_shell(vmfs_fs_t *fs,int argc,char *argv[]);
+static int cmd_shell(vmfs_dir_t *base_dir,int argc,char *argv[]);
 
 struct cmd cmd_array[] = {
    { "cat", "Concatenate files and print on standard output", cmd_cat },
@@ -722,7 +742,7 @@ static int pipe_exec(const char *cmd) {
 }
 
 /* Opens a shell */
-static int cmd_shell(vmfs_fs_t *fs,int argc,char *argv[])
+static int cmd_shell(vmfs_dir_t *base_dir,int argc,char *argv[])
 {
    struct cmd *cmd = NULL;
    const cmd_t *cmdline = NULL;
@@ -764,7 +784,7 @@ static int cmd_shell(vmfs_fs_t *fs,int argc,char *argv[])
            dup2(fd,1);
            close(fd);
         }
-        cmd->fn(fs,cmdline->argc-1,&cmdline->argv[1]);
+        cmd->fn(base_dir,cmdline->argc-1,&cmdline->argv[1]);
         if (cmdline->redir) {
            dup2(out,1);
            close(out);
@@ -832,7 +852,7 @@ int main(int argc,char *argv[])
       exit(EXIT_FAILURE);
    }
 
-   ret = cmd->fn(fs,argc-arg-1,&argv[arg+1]);
+   ret = cmd->fn(fs->root_dir,argc-arg-1,&argv[arg+1]);
    vmfs_fs_close(fs);
    return(ret);
 }
