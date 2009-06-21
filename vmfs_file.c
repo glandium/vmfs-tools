@@ -26,7 +26,7 @@
 
 /* Open a file based on an inode buffer */
 vmfs_file_t *vmfs_file_open_from_inode(const vmfs_fs_t *fs,
-                                       const u_char *inode_buf)
+                                       const vmfs_inode_t *inode)
 {
    vmfs_file_t *f;
 
@@ -35,11 +35,7 @@ vmfs_file_t *vmfs_file_open_from_inode(const vmfs_fs_t *fs,
 
    f->fs = fs;
 
-   /* Read the associated inode */
-   if (vmfs_inode_read(&f->inode,inode_buf) == -1) {
-      vmfs_file_close(f);
-      return NULL;
-   }
+   memcpy(&f->inode, inode, sizeof(*inode));
 
    return f;
 }
@@ -49,6 +45,7 @@ vmfs_file_t *vmfs_file_open_from_rec(const vmfs_fs_t *fs,
                                      const vmfs_dirent_t *rec)
 {
    DECL_ALIGNED_BUFFER_WOL(buf,VMFS_INODE_SIZE);
+   vmfs_inode_t inode;
 
    /* Read the inode */
    if (vmfs_inode_get(fs,rec,buf) == -1) {
@@ -57,7 +54,11 @@ vmfs_file_t *vmfs_file_open_from_rec(const vmfs_fs_t *fs,
       return NULL;
    }
 
-   return(vmfs_file_open_from_inode(fs,buf));
+   /* Read the associated inode */
+   if (vmfs_inode_read(&inode,buf) == -1)
+      return NULL;
+
+   return(vmfs_file_open_from_inode(fs,&inode));
 }
 
 /* Open a file */

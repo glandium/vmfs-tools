@@ -187,9 +187,9 @@ static vmfs_dir_t *vmfs_dir_open_file(const vmfs_fs_t *fs,
 
 /* Open a directory based on an inode buffer */
 vmfs_dir_t *vmfs_dir_open_from_inode(const vmfs_fs_t *fs,
-                                    const u_char *inode_buf)
+                                    const vmfs_inode_t *inode)
 {
-   return vmfs_dir_open_file(fs, inode_buf,
+   return vmfs_dir_open_file(fs, inode,
                              (open_file_callback) vmfs_file_open_from_inode);
 }
 

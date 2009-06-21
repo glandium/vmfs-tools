@@ -57,7 +57,7 @@ static inline uint64_t vmfs_file_get_size(const vmfs_file_t *f)
 
 /* Open a file based on an inode buffer */
 vmfs_file_t *vmfs_file_open_from_inode(const vmfs_fs_t *fs,
-                                       const u_char *inode_buf);
+                                       const vmfs_inode_t *inode);
 
 /* Open a file based on a directory entry */
 vmfs_file_t *vmfs_file_open_from_rec(const vmfs_fs_t *fs,

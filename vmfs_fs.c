@@ -182,7 +182,7 @@ int vmfs_fs_dump_bitmaps(const vmfs_fs_t *fs)
 static int vmfs_read_fdc_base(vmfs_fs_t *fs)
 {
    DECL_ALIGNED_BUFFER_WOL(buf,VMFS_INODE_SIZE);
-   struct vmfs_inode_raw inode = { { 0, }, };
+   vmfs_inode_t inode = { { 0, }, };
    uint32_t fdc_base;
 
    /* 
@@ -197,15 +197,15 @@ static int vmfs_read_fdc_base(vmfs_fs_t *fs)
    if (fs->debug_level > 0)
       printf("FDC base = block #%u\n", fdc_base);
 
-   inode.mdh.magic = cpu_to_le32(VMFS_INODE_MAGIC);
-   inode.size = cpu_to_le64(fs->fs_info.block_size);
-   inode.type = cpu_to_le32(VMFS_FILE_TYPE_META);
-   inode.blk_size = cpu_to_le64(fs->fs_info.block_size);
-   inode.blk_count = cpu_to_le32(1);
-   inode.zla = cpu_to_le32(VMFS_BLK_TYPE_FB);
-   inode.blocks[0] = cpu_to_le32(VMFS_BLK_FB_BUILD(fdc_base));
+   inode.mdh.magic = VMFS_INODE_MAGIC;
+   inode.size = fs->fs_info.block_size;
+   inode.type = VMFS_FILE_TYPE_META;
+   inode.blk_size = fs->fs_info.block_size;
+   inode.blk_count = 1;
+   inode.zla = VMFS_BLK_TYPE_FB;
+   inode.blocks[0] = VMFS_BLK_FB_BUILD(fdc_base);
 
-   fs->fdc = vmfs_bitmap_open_from_inode(fs,(u_char *)&inode);
+   fs->fdc = vmfs_bitmap_open_from_inode(fs,&inode);
 
    if (fs->debug_level > 0) {
       printf("FDC bitmap:\n");
@@ -213,12 +213,13 @@ static int vmfs_read_fdc_base(vmfs_fs_t *fs)
    }
 
    /* Read the first inode */
-   if (!vmfs_bitmap_get_item(fs->fdc,0,0,buf)) {
+   if (!vmfs_bitmap_get_item(fs->fdc,0,0,buf) ||
+       (vmfs_inode_read(&inode,buf) == -1)) {
       fprintf(stderr,"VMFS: couldn't read root directory inode\n");
       return(-1);
    }
 
-   if (!(fs->root_dir = vmfs_dir_open_from_inode(fs,buf))) {
+   if (!(fs->root_dir = vmfs_dir_open_from_inode(fs,&inode))) {
       fprintf(stderr,"VMFS: unable to bind inode to root directory\n");
       return(-1);
    }

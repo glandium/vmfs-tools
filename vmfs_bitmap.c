@@ -564,9 +564,9 @@ vmfs_bitmap_t *vmfs_bitmap_open_at(vmfs_dir_t *d,const char *name)
 }
 
 vmfs_bitmap_t *vmfs_bitmap_open_from_inode(const vmfs_fs_t *fs,
-                                           const u_char *inode_buf)
+                                           const vmfs_inode_t *inode)
 {
-   return vmfs_bitmap_open_from_file(vmfs_file_open_from_inode(fs, inode_buf));
+   return vmfs_bitmap_open_from_file(vmfs_file_open_from_inode(fs, inode));
 }
 
 
