@@ -543,7 +543,7 @@ static inline vmfs_bitmap_t *vmfs_bitmap_open_from_file(vmfs_file_t *f)
    if (!f)
       return NULL;
 
-   if (vmfs_file_read(f,buf,buf_len) != buf_len) {
+   if (vmfs_file_pread(f,buf,buf_len,0) != buf_len) {
       vmfs_file_close(f);
       return NULL;
    }
