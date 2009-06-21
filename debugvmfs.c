@@ -83,7 +83,7 @@ static int cmd_ls(vmfs_fs_t *fs,int argc,char *argv[])
 
    while((entry = vmfs_dir_read(d))) {
       if (long_format) {
-         vmfs_file_t *f = vmfs_file_open_from_rec(fs,entry);
+         vmfs_file_t *f = vmfs_file_open_from_blkid(fs,entry->block_id);
          if (!f)
             continue;
          vmfs_file_fstat(f,&st_info);

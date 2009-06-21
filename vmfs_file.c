@@ -41,15 +41,13 @@ vmfs_file_t *vmfs_file_open_from_inode(const vmfs_fs_t *fs,
 }
 
 /* Open a file based on a directory entry */
-vmfs_file_t *vmfs_file_open_from_rec(const vmfs_fs_t *fs,
-                                     const vmfs_dirent_t *rec)
+vmfs_file_t *vmfs_file_open_from_blkid(const vmfs_fs_t *fs,uint32_t blk_id)
 {
    vmfs_inode_t inode;
 
    /* Read the inode */
-   if (vmfs_inode_get(fs,rec->block_id,&inode) == -1) {
-      fprintf(stderr,"VMFS: Unable to get inode info for dir entry '%s'\n",
-              rec->name);
+   if (vmfs_inode_get(fs,blk_id,&inode) == -1) {
+      fprintf(stderr,"VMFS: Unable to get inode 0x%8.8x\n",blk_id);
       return NULL;
    }
 
@@ -64,7 +62,7 @@ vmfs_file_t *vmfs_file_open_from_path(const vmfs_fs_t *fs,const char *path)
    if (!(rec = vmfs_dir_resolve_path(fs->root_dir,path,1)))
       return NULL;
 
-   return(vmfs_file_open_from_rec(fs,rec));
+   return(vmfs_file_open_from_blkid(fs,rec->block_id));
 }
 
 /* Open a file */
@@ -74,7 +72,7 @@ vmfs_file_t *vmfs_file_open_at(vmfs_dir_t *dir,const char *name)
    if (!(rec = vmfs_dir_lookup(dir, name)))
       return(NULL);
 
-   return(vmfs_file_open_from_rec(dir->dir->fs,rec));
+   return(vmfs_file_open_from_blkid(dir->dir->fs,rec->block_id));
 }
 
 /* Close a file */

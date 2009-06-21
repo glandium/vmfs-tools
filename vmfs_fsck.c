@@ -384,7 +384,7 @@ int vmfs_fsck_walk_dir(const vmfs_fs_t *fs,
          dm->is_dir = 1;
 
          if (strcmp(rec->name,".") && strcmp(rec->name,"..")) {
-            if (!(sub_dir = vmfs_dir_open_from_rec(fs,rec)))
+            if (!(sub_dir = vmfs_dir_open_from_blkid(fs,rec->block_id)))
                return(-1);
 
             res = vmfs_fsck_walk_dir(fs,fi,dm,sub_dir);

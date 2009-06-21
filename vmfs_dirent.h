@@ -66,8 +66,7 @@ vmfs_dir_t *vmfs_dir_open_from_inode(const vmfs_fs_t *fs,
                                      const vmfs_inode_t *inode);
 
 /* Open a directory based on a directory entry */
-vmfs_dir_t *vmfs_dir_open_from_rec(const vmfs_fs_t *fs,
-                                   const vmfs_dirent_t *rec);
+vmfs_dir_t *vmfs_dir_open_from_blkid(const vmfs_fs_t *fs,uint32_t blk_id);
 
 /* Open a directory */
 vmfs_dir_t *vmfs_dir_open_from_path(const vmfs_fs_t *fs,const char *path);

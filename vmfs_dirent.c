@@ -70,7 +70,7 @@ static char *vmfs_dirent_read_symlink(const vmfs_fs_t *fs,
    if (entry->type != VMFS_FILE_TYPE_SYMLINK)
       return NULL;
 
-   if (!(f = vmfs_file_open_from_rec(fs,entry)))
+   if (!(f = vmfs_file_open_from_blkid(fs,entry->block_id)))
       return NULL;
 
    str_len = f->inode.size;
@@ -142,7 +142,7 @@ const vmfs_dirent_t *vmfs_dir_resolve_path(vmfs_dir_t *base_dir,
 
       /* we must have a directory here */
       if ((rec->type != VMFS_FILE_TYPE_DIR) ||
-          !(sub_dir = vmfs_dir_open_from_rec(base_dir->dir->fs,rec)))
+          !(sub_dir = vmfs_dir_open_from_blkid(base_dir->dir->fs,rec->block_id)))
       {
          rec = NULL;
          break;
@@ -189,10 +189,9 @@ vmfs_dir_t *vmfs_dir_open_from_inode(const vmfs_fs_t *fs,
 }
 
 /* Open a directory based on a directory entry */
-vmfs_dir_t *vmfs_dir_open_from_rec(const vmfs_fs_t *fs,
-                                   const vmfs_dirent_t *rec)
+vmfs_dir_t *vmfs_dir_open_from_blkid(const vmfs_fs_t *fs,uint32_t blk_id)
 {
-   return vmfs_dir_open_from_file(vmfs_file_open_from_rec(fs,rec));
+   return vmfs_dir_open_from_file(vmfs_file_open_from_blkid(fs,blk_id));
 }
 
 /* Open a directory */
