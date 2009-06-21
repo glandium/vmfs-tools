@@ -31,11 +31,6 @@
 struct vmfs_file {
    const vmfs_fs_t *fs;
    vmfs_inode_t inode;
-
-   /* Current position in file */
-   off_t pos;
-
-   /* ... */
 };
 
 static inline const vmfs_fs_t *vmfs_file_get_fs(vmfs_file_t *f)
@@ -73,20 +68,11 @@ vmfs_file_t *vmfs_file_open_at(vmfs_dir_t *dir,const char *path);
 /* Close a file */
 int vmfs_file_close(vmfs_file_t *f);
 
-/* Set position */
-int vmfs_file_seek(vmfs_file_t *f,off_t pos,int whence);
-
 /* Read data from a file at the specified position */
 ssize_t vmfs_file_pread(vmfs_file_t *f,u_char *buf,size_t len,off_t pos);
 
 /* Write data to a file at the specified position */
 ssize_t vmfs_file_pwrite(vmfs_file_t *f,u_char *buf,size_t len,off_t pos);
-
-/* Read data from a file */
-ssize_t vmfs_file_read(vmfs_file_t *f,u_char *buf,size_t len);
-
-/* Write data to a file */
-ssize_t vmfs_file_write(vmfs_file_t *f,u_char *buf,size_t len);
 
 /* Dump a file */
 int vmfs_file_dump(vmfs_file_t *f,off_t pos,uint64_t len,FILE *fd_out);

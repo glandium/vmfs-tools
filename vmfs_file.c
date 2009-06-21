@@ -74,32 +74,6 @@ int vmfs_file_close(vmfs_file_t *f)
    return(0);
 }
 
-/* Set position */
-int vmfs_file_seek(vmfs_file_t *f,off_t pos,int whence)
-{
-   switch(whence) {
-      case SEEK_SET:
-         f->pos = pos;
-         break;
-      case SEEK_CUR:
-         f->pos += pos;
-         break;
-      case SEEK_END:
-         f->pos -= pos;
-         break;
-   }
-   
-   /* Normalize */
-   if (f->pos < 0)
-      f->pos = 0;
-   else {
-      if (f->pos > f->inode.size)
-         f->pos = f->inode.size;
-   }
-
-   return(0);
-}
-
 /* Read data from a file at the specified position */
 ssize_t vmfs_file_pread(vmfs_file_t *f,u_char *buf,size_t len,off_t pos)
 {
@@ -244,32 +218,6 @@ ssize_t vmfs_file_pwrite(vmfs_file_t *f,u_char *buf,size_t len,off_t pos)
    }
 
    return(wlen);
-}
-
-/* Read data from a file */
-ssize_t vmfs_file_read(vmfs_file_t *f,u_char *buf,size_t len)
-{
-   ssize_t res;
-
-   res = vmfs_file_pread(f,buf,len,f->pos);
-
-   if (res > 0)
-      f->pos += res;
-
-   return(res);
-}
-
-/* Write data to a file */
-ssize_t vmfs_file_write(vmfs_file_t *f,u_char *buf,size_t len)
-{
-   ssize_t res;
-
-   res = vmfs_file_pwrite(f,buf,len,f->pos);
-
-   if (res > 0)
-      f->pos += res;
-
-   return(res);
 }
 
 /* Dump a file */
