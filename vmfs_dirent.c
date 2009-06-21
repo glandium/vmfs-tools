@@ -70,7 +70,7 @@ static char *vmfs_dirent_read_symlink(const vmfs_fs_t *fs,
    if (!(f = vmfs_file_open_from_blkid(fs,entry->block_id)))
       return NULL;
 
-   str_len = f->inode.size;
+   str_len = vmfs_file_get_size(f);
 
    if (!(str = malloc(str_len+1)))
       goto done;
