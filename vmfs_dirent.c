@@ -78,7 +78,7 @@ static char *vmfs_dirent_read_symlink(const vmfs_fs_t *fs,
    if (!(str = malloc(str_len+1)))
       goto done;
 
-   if (vmfs_file_read(f,(u_char *)str,str_len) != str_len)
+   if (vmfs_file_pread(f,(u_char *)str,str_len,0) != str_len)
       goto done;
 
    str[str_len] = 0;
