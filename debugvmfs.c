@@ -765,13 +765,33 @@ static int cmd_shell(vmfs_dir_t *base_dir,int argc,char *argv[])
 {
    struct cmd *cmd = NULL;
    const cmd_t *cmdline = NULL;
+   vmfs_dir_t *cur_dir = vmfs_dir_open_at(base_dir,".");
+   if (!cur_dir) {
+      fprintf(stderr, "Couldn't open base directory\n");
+      return -1;
+   }
    do {
       freecmd(cmdline);
       cmdline = readcmd("debugvmfs> ");
-      if (!cmdline) return(0);
+      if (!cmdline) goto cleanup;
       if (!cmdline->argc) continue;
       if (!strcmp(cmdline->argv[0], "exit") ||
           !strcmp(cmdline->argv[0], "quit")) goto cleanup;
+
+      if (!strcmp(cmdline->argv[0], "cd")) {
+         if (cmdline->argc == 2) {
+            vmfs_dir_t *new_dir;
+            if (!(new_dir = vmfs_dir_open_at(cur_dir, cmdline->argv[1]))) {
+               fprintf(stderr, "No such directory: %s\n", cmdline->argv[1]);
+               continue;
+            }
+            vmfs_dir_close(cur_dir);
+            cur_dir = new_dir;
+         } else {
+            fprintf(stderr, "Usage: cd <path>\n");
+         }
+         continue;
+      }
 
       cmd = cmd_find(cmdline->argv[0]);
       if (!cmd) {
@@ -803,7 +823,7 @@ static int cmd_shell(vmfs_dir_t *base_dir,int argc,char *argv[])
            dup2(fd,1);
            close(fd);
         }
-        cmd->fn(base_dir,cmdline->argc-1,&cmdline->argv[1]);
+        cmd->fn(cur_dir,cmdline->argc-1,&cmdline->argv[1]);
         if (cmdline->redir) {
            dup2(out,1);
            close(out);
@@ -812,6 +832,7 @@ static int cmd_shell(vmfs_dir_t *base_dir,int argc,char *argv[])
       }
    } while (1);
 cleanup:
+   vmfs_dir_close(cur_dir);
    freecmd(cmdline);
    return(0);
 }
