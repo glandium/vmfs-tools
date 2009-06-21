@@ -101,6 +101,13 @@ const vmfs_dirent_t *vmfs_dir_resolve_path(vmfs_dir_t *base_dir,
 
    cur_dir = base_dir;
 
+   if (*path == '/') {
+      if (!(cur_dir = vmfs_dir_open_from_blkid(fs,VMFS_BLK_FD_BUILD(0,0))))
+         return(NULL);
+      path++;
+      close_dir = 1;
+   }
+
    if (!(rec = vmfs_dir_lookup(cur_dir,".")))
       return(NULL);
 
