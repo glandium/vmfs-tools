@@ -145,19 +145,19 @@ static int cmd_df(vmfs_fs_t *fs,int argc,char *argv[])
 /* Show a directory entry */
 static int cmd_show_dirent(vmfs_fs_t *fs,int argc,char *argv[])
 {
-   vmfs_dirent_t entry;
+   const vmfs_dirent_t *entry;
 
    if (argc == 0) {
       fprintf(stderr,"Usage: show_dirent <filename>\n");
       return(-1);
    }
 
-   if (vmfs_dirent_resolve_path(fs->root_dir,argv[0],0,&entry) != 1) {
+   if (!(entry = vmfs_dir_resolve_path(fs->root_dir,argv[0],0))) {
       fprintf(stderr,"Unable to resolve path '%s'\n",argv[0]);
       return(-1);
    }
 
-   vmfs_dirent_show(&entry);
+   vmfs_dirent_show(entry);
    return(0);
 }
 

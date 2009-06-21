@@ -53,10 +53,10 @@ void vmfs_dirent_show(const vmfs_dirent_t *entry);
 entry vmfs_dir_read will return */
 const vmfs_dirent_t *vmfs_dir_lookup(vmfs_dir_t *dir,const char *name);
 
-/* Resolve a path name to a directory entry */
-int vmfs_dirent_resolve_path(vmfs_dir_t *base_dir,
-                             const char *name,int follow_symlink,
-                             vmfs_dirent_t *rec);
+/* Resolve a path to a directory entry */
+const vmfs_dirent_t *vmfs_dir_resolve_path(vmfs_dir_t *base_dir,
+                                           const char *path,
+                                           int follow_symlink);
 
 struct vmfs_dir {
    vmfs_file_t *dir;

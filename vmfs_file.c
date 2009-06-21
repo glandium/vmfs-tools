@@ -63,12 +63,12 @@ vmfs_file_t *vmfs_file_open_from_rec(const vmfs_fs_t *fs,
 /* Open a file */
 vmfs_file_t *vmfs_file_open_from_path(const vmfs_fs_t *fs,const char *path)
 {
-   vmfs_dirent_t rec;
+   const vmfs_dirent_t *rec;
 
-   if (vmfs_dirent_resolve_path(fs->root_dir,path,1,&rec) != 1)
+   if (!(rec = vmfs_dir_resolve_path(fs->root_dir,path,1)))
       return NULL;
 
-   return(vmfs_file_open_from_rec(fs,&rec));
+   return(vmfs_file_open_from_rec(fs,rec));
 }
 
 /* Open a file */
@@ -342,14 +342,13 @@ static int vmfs_file_stat_internal(const vmfs_fs_t *fs,const char *path,
                                    struct stat *buf)
 {
    DECL_ALIGNED_BUFFER_WOL(inode_buf,VMFS_INODE_SIZE);
-   vmfs_dirent_t entry;
+   const vmfs_dirent_t *entry;
    vmfs_inode_t inode;
 
-   if (vmfs_dirent_resolve_path(fs->root_dir,path,follow_symlink,
-                                &entry) != 1)
+   if (!(entry = vmfs_dir_resolve_path(fs->root_dir,path,follow_symlink)))
       return(-1);
 
-   if (vmfs_inode_get(fs,&entry,inode_buf) == -1)
+   if (vmfs_inode_get(fs,entry,inode_buf) == -1)
       return(-1);
    
    vmfs_inode_read(&inode,inode_buf);
