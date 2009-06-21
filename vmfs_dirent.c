@@ -196,12 +196,6 @@ vmfs_dir_t *vmfs_dir_open_from_blkid(const vmfs_fs_t *fs,uint32_t blk_id)
 }
 
 /* Open a directory */
-vmfs_dir_t *vmfs_dir_open_from_path(const vmfs_fs_t *fs,const char *path)
-{
-   return vmfs_dir_open_from_file(vmfs_file_open_from_path(fs,path));
-}
-
-/* Open a directory */
 vmfs_dir_t *vmfs_dir_open_at(vmfs_dir_t *d,const char *path)
 {
    return vmfs_dir_open_from_file(vmfs_file_open_at(d,path));

@@ -75,9 +75,6 @@ vmfs_dir_t *vmfs_dir_open_from_inode(const vmfs_fs_t *fs,
 vmfs_dir_t *vmfs_dir_open_from_blkid(const vmfs_fs_t *fs,uint32_t blk_id);
 
 /* Open a directory */
-vmfs_dir_t *vmfs_dir_open_from_path(const vmfs_fs_t *fs,const char *path);
-
-/* Open a directory */
 vmfs_dir_t *vmfs_dir_open_at(vmfs_dir_t *d,const char *path);
 
 /* Return next entry in directory. Returned directory entry will be overwritten
