@@ -23,11 +23,20 @@
 #include <errno.h>
 #include "vmfs.h"
 
+static vmfs_fs_t *fs;
+
 static inline uint32_t ino2blkid(fuse_ino_t ino)
 {
    if (ino == FUSE_ROOT_ID)
       return(VMFS_BLK_FD_BUILD(0,0));
    return((uint32_t)ino);
+}
+
+static inline fuse_ino_t blkid2ino(uint32_t blk_id)
+{
+   if (blk_id == VMFS_BLK_FD_BUILD(0,0))
+      return(FUSE_ROOT_ID);
+   return((fuse_ino_t)blk_id);
 }
 
 static void vmfs_fuse_getattr(fuse_req_t req, fuse_ino_t ino,
@@ -43,33 +52,52 @@ static void vmfs_fuse_getattr(fuse_req_t req, fuse_ino_t ino,
       fuse_reply_err(req, ENOENT);
 }
 
-#if 0
-static int vmfs_fuse_readdir(const char *path, void *buf,
-                             fuse_fill_dir_t filler, off_t offset,
-                             struct fuse_file_info *fi)
+static void vmfs_fuse_opendir(fuse_req_t req, fuse_ino_t ino,
+                              struct fuse_file_info *fi)
 {
-   const vmfs_dirent_t *entry;
-   vmfs_dir_t *d, *root_dir;
-   struct stat st = {0, };
+   vmfs_fs_t *fs = (vmfs_fs_t *) fuse_req_userdata(req);
 
-   if (!(root_dir = vmfs_dir_open_from_blkid(fs,VMFS_BLK_FD_BUILD(0,0))))
-      return(-ENOMEM);
-
-   d = vmfs_dir_open_at(root_dir, path);
-   vmfs_dir_close(root_dir);
-
-   if (!d)
-      return(-ENOENT);
-
-   while((entry = vmfs_dir_read(d))) {
-      st.st_mode = vmfs_file_type2mode(entry->type);
-      if (filler(buf, entry->name, &st, 0))
-         break;
-   }
-   vmfs_dir_close(d);
-   return(0);
+   fi->fh = (uint64_t)(unsigned long)
+            vmfs_dir_open_from_blkid(fs, ino2blkid(ino));
+   if (fi->fh)
+      fuse_reply_open(req, fi);
+   else
+      fuse_reply_err(req, ENOTDIR);
 }
 
+static void vmfs_fuse_readdir(fuse_req_t req, fuse_ino_t ino, size_t size,
+                              off_t off, struct fuse_file_info *fi)
+{
+   char buf[size];
+   const vmfs_dirent_t *entry;
+   struct stat st = {0, };
+   size_t sz;
+
+   if (!fi->fh) {
+      fuse_reply_err(req, EBADF);
+      return;
+   }
+   if ((entry = vmfs_dir_read((vmfs_dir_t *)(unsigned long)fi->fh))) {
+      st.st_mode = vmfs_file_type2mode(entry->type);
+      st.st_ino = blkid2ino(entry->block_id);
+      sz = fuse_add_direntry(req, buf, size, entry->name, &st, off + 1);
+      fuse_reply_buf(req, buf, sz);
+   } else
+      fuse_reply_buf(req, NULL, 0);
+}
+
+static void vmfs_fuse_releasedir(fuse_req_t req, fuse_ino_t ino,
+                                 struct fuse_file_info *fi)
+{
+   if (!fi->fh) {
+      fuse_reply_err(req, EBADF);
+      return;
+   }
+   vmfs_dir_close((vmfs_dir_t *)(unsigned long)fi->fh);
+   fuse_reply_err(req, 0);
+}
+
+#if 0
 static int vmfs_fuse_open(const char *path, struct fuse_file_info *fi)
 {
    vmfs_file_t *file;
@@ -105,8 +133,10 @@ static int vmfs_fuse_release(const char *path, struct fuse_file_info *fi)
 
 const static struct fuse_lowlevel_ops vmfs_oper = {
    .getattr = vmfs_fuse_getattr,
-#if 0
+   .opendir = vmfs_fuse_opendir,
    .readdir = vmfs_fuse_readdir,
+   .releasedir = vmfs_fuse_releasedir,
+#if 0
    .open = vmfs_fuse_open,
    .read = vmfs_fuse_read,
    .release = vmfs_fuse_release,
@@ -157,7 +187,6 @@ int main(int argc, char *argv[])
    struct fuse_args args = FUSE_ARGS_INIT(argc, argv);
    struct vmfs_fuse_opts opts = { 0, };
    struct fuse_chan *chan;
-   vmfs_fs_t *fs = NULL;
    int err = -1;
 
    vmfs_host_init();
@@ -203,7 +232,6 @@ int main(int argc, char *argv[])
 cleanup:
    vmfs_fs_close(fs);
    fuse_opt_free_args(&args);
-   free(opts.mountpoint);
 
    return err ? 1 : 0;
 }
