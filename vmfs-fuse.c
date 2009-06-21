@@ -123,39 +123,46 @@ static void vmfs_fuse_lookup(fuse_req_t req, fuse_ino_t parent,
       fuse_reply_err(req, ENOENT);
 }
 
-#if 0
-static int vmfs_fuse_open(const char *path, struct fuse_file_info *fi)
+static void vmfs_fuse_open(fuse_req_t req, fuse_ino_t ino,
+                           struct fuse_file_info *fi)
 {
-   vmfs_file_t *file;
-   vmfs_dir_t *root_dir;
+   vmfs_fs_t *fs = (vmfs_fs_t *) fuse_req_userdata(req);
 
-   if (!(root_dir = vmfs_dir_open_from_blkid(fs,VMFS_BLK_FD_BUILD(0,0))))
-      return(-ENOMEM);
-
-   file = vmfs_file_open_at(root_dir, path);
-   vmfs_dir_close(root_dir);
-
-   if (!file)
-      return(-ENOENT);
-
-   fi->fh = (uint64_t)(unsigned long)file;
-   return(0);
+   fi->fh = (uint64_t)(unsigned long)
+            vmfs_file_open_from_blkid(fs, ino2blkid(ino));
+   if (fi->fh)
+      fuse_reply_open(req, fi);
+   else
+      fuse_reply_err(req, ENOTDIR);
 }
 
-static int vmfs_fuse_read(const char *path, char *buf, size_t size,
-                          off_t offset, struct fuse_file_info *fi)
+static void vmfs_fuse_read(fuse_req_t req, fuse_ino_t ino, size_t size,
+                           off_t off, struct fuse_file_info *fi)
 {
-   vmfs_file_t *file = (vmfs_file_t *)(unsigned long)fi->fh;
-   return vmfs_file_pread(file, (u_char *)buf, size, offset);
+   char buf[size];
+   size_t sz;
+
+   if (!fi->fh) {
+      fuse_reply_err(req, EBADF);
+      return;
+   }
+
+   sz = vmfs_file_pread((vmfs_file_t *)(unsigned long)fi->fh,
+                        (u_char *)buf, size, off);
+
+   fuse_reply_buf(req, buf, sz);
 }
 
-static int vmfs_fuse_release(const char *path, struct fuse_file_info *fi)
+static void vmfs_fuse_release(fuse_req_t req, fuse_ino_t ino,
+                              struct fuse_file_info *fi)
 {
+   if (!fi->fh) {
+      fuse_reply_err(req, EBADF);
+      return;
+   }
    vmfs_file_close((vmfs_file_t *)(unsigned long)fi->fh);
-
-   return(0);
+   fuse_reply_err(req, 0);
 }
-#endif
 
 const static struct fuse_lowlevel_ops vmfs_oper = {
    .getattr = vmfs_fuse_getattr,
@@ -163,11 +170,9 @@ const static struct fuse_lowlevel_ops vmfs_oper = {
    .readdir = vmfs_fuse_readdir,
    .releasedir = vmfs_fuse_releasedir,
    .lookup = vmfs_fuse_lookup,
-#if 0
    .open = vmfs_fuse_open,
    .read = vmfs_fuse_read,
    .release = vmfs_fuse_release,
-#endif
 };
 
 struct vmfs_fuse_opts {
