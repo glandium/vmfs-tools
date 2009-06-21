@@ -796,6 +796,7 @@ int main(int argc,char *argv[])
 {
    vmfs_lvm_t *lvm;
    vmfs_fs_t *fs;
+   vmfs_dir_t *root_dir;
    struct cmd *cmd = NULL;
    int arg, i, ret;
    vmfs_flags_t flags;
@@ -850,7 +851,13 @@ int main(int argc,char *argv[])
       exit(EXIT_FAILURE);
    }
 
-   ret = cmd->fn(fs->root_dir,argc-arg-1,&argv[arg+1]);
+   if (!(root_dir = vmfs_dir_open_from_blkid(fs,VMFS_BLK_FD_BUILD(0,0)))) {
+      fprintf(stderr,"Unable to open root directory\n");
+      exit(EXIT_FAILURE);
+   }
+
+   ret = cmd->fn(root_dir,argc-arg-1,&argv[arg+1]);
+   vmfs_dir_close(root_dir);
    vmfs_fs_close(fs);
    return(ret);
 }
