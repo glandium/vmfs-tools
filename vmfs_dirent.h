@@ -46,6 +46,12 @@ struct vmfs_dirent {
 /* Show a directory entry */
 void vmfs_dirent_show(const vmfs_dirent_t *entry);
 
+struct vmfs_dir {
+   vmfs_file_t *dir;
+   uint32_t pos;
+   vmfs_dirent_t dirent;
+};
+
 /* Search for an entry into a directory ; affects position of the next
 entry vmfs_dir_read will return */
 const vmfs_dirent_t *vmfs_dir_lookup(vmfs_dir_t *dir,const char *name);
@@ -54,12 +60,6 @@ const vmfs_dirent_t *vmfs_dir_lookup(vmfs_dir_t *dir,const char *name);
 const vmfs_dirent_t *vmfs_dir_resolve_path(vmfs_dir_t *base_dir,
                                            const char *path,
                                            int follow_symlink);
-
-struct vmfs_dir {
-   vmfs_file_t *dir;
-   uint32_t pos;
-   vmfs_dirent_t dirent;
-};
 
 /* Open a directory based on an inode buffer */
 vmfs_dir_t *vmfs_dir_open_from_inode(const vmfs_fs_t *fs,
