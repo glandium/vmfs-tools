@@ -17,14 +17,13 @@
  */
 #define FUSE_USE_VERSION 26
 
-#include <fuse.h>
+#include <fuse_lowlevel.h>
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
 #include "vmfs.h"
 
-static vmfs_fs_t *fs;
-
+#if 0
 static int vmfs_fuse_getattr(const char *path, struct stat *stbuf)
 {
    vmfs_dir_t *root_dir;
@@ -96,19 +95,28 @@ static int vmfs_fuse_release(const char *path, struct fuse_file_info *fi)
 
    return(0);
 }
+#endif
 
-
-const static struct fuse_operations vmfs_oper = {
+const static struct fuse_lowlevel_ops vmfs_oper = {
+#if 0
    .getattr = vmfs_fuse_getattr,
    .readdir = vmfs_fuse_readdir,
    .open = vmfs_fuse_open,
    .read = vmfs_fuse_read,
    .release = vmfs_fuse_release,
+#endif
 };
 
 struct vmfs_fuse_opts {
    vmfs_lvm_t *lvm;
-   int mountpoint_set;
+   char *mountpoint;
+   int foreground;
+};
+
+static const struct fuse_opt vmfs_fuse_args[] = {
+  { "-d", offsetof(struct vmfs_fuse_opts, foreground), 1 },
+  { "-f", offsetof(struct vmfs_fuse_opts, foreground), 1 },
+  FUSE_OPT_KEY("-d", FUSE_OPT_KEY_KEEP),
 };
 
 static int vmfs_fuse_opts_func(void *data, const char *arg, int key,
@@ -117,7 +125,7 @@ static int vmfs_fuse_opts_func(void *data, const char *arg, int key,
    struct vmfs_fuse_opts *opts = (struct vmfs_fuse_opts *) data;
    struct stat st;
    if (key == FUSE_OPT_KEY_NONOPT) {
-      if (opts->mountpoint_set) {
+      if (opts->mountpoint) {
          fprintf(stderr, "'%s' is not allowed here\n", arg);
          return -1;
       }
@@ -126,23 +134,24 @@ static int vmfs_fuse_opts_func(void *data, const char *arg, int key,
          return -1;
       }
       if (S_ISDIR(st.st_mode)) {
-         opts->mountpoint_set = 1;
+         opts->mountpoint = strdup(arg);
       } else if (S_ISREG(st.st_mode) || S_ISBLK(st.st_mode)) {
          if (vmfs_lvm_add_extent(opts->lvm,arg) == -1) {
             fprintf(stderr,"Unable to open device/file \"%s\".\n",arg);
             return -1;
          }
-         return 0;
       }
+      return 0;
    }
    return 1;
 }
-
 
 int main(int argc, char *argv[])
 {
    struct fuse_args args = FUSE_ARGS_INIT(argc, argv);
    struct vmfs_fuse_opts opts = { 0, };
+   struct fuse_chan *chan;
+   vmfs_fs_t *fs = NULL;
    int err = -1;
 
    vmfs_host_init();
@@ -152,7 +161,8 @@ int main(int argc, char *argv[])
       goto cleanup;
    }
 
-   if ((fuse_opt_parse(&args, &opts, NULL, &vmfs_fuse_opts_func) == -1) ||
+   if ((fuse_opt_parse(&args, &opts, vmfs_fuse_args,
+                       &vmfs_fuse_opts_func) == -1) ||
        (fuse_opt_add_arg(&args, "-odefault_permissions"))) {
       goto cleanup;
    }
@@ -167,11 +177,27 @@ int main(int argc, char *argv[])
       goto cleanup;
    }
 
-   err = fuse_main(args.argc, args.argv, &vmfs_oper, fs);
+   if ((chan = fuse_mount(opts.mountpoint, &args)) != NULL) {
+   struct fuse_session *session;
+      session = fuse_lowlevel_new(&args, &vmfs_oper,
+                                  sizeof(vmfs_oper), fs);
+      if (session != NULL) {
+         fuse_daemonize(opts.foreground);
+         if (fuse_set_signal_handlers(session) != -1) {
+            fuse_session_add_chan(session, chan);
+            err = fuse_session_loop_mt(session);
+            fuse_remove_signal_handlers(session);
+            fuse_session_remove_chan(chan);
+         }
+         fuse_session_destroy(session);
+      }
+      fuse_unmount(opts.mountpoint, chan);
+   }
 
 cleanup:
    vmfs_fs_close(fs);
    fuse_opt_free_args(&args);
+   free(opts.mountpoint);
 
    return err ? 1 : 0;
 }
