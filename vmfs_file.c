@@ -66,10 +66,10 @@ vmfs_file_t *vmfs_file_open_from_path(const vmfs_fs_t *fs,const char *path)
 }
 
 /* Open a file */
-vmfs_file_t *vmfs_file_open_at(vmfs_dir_t *dir,const char *name)
+vmfs_file_t *vmfs_file_open_at(vmfs_dir_t *dir,const char *path)
 {
    const vmfs_dirent_t *rec;
-   if (!(rec = vmfs_dir_lookup(dir, name)))
+   if (!(rec = vmfs_dir_resolve_path(dir,path,1)))
       return(NULL);
 
    return(vmfs_file_open_from_blkid(vmfs_dir_get_fs(dir),rec->block_id));

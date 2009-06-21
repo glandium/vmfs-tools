@@ -71,7 +71,7 @@ vmfs_file_t *vmfs_file_open_from_blkid(const vmfs_fs_t *fs,uint32_t blk_id);
 vmfs_file_t *vmfs_file_open_from_path(const vmfs_fs_t *fs,const char *path);
 
 /* Open a file */
-vmfs_file_t *vmfs_file_open_at(vmfs_dir_t *dir,const char *name);
+vmfs_file_t *vmfs_file_open_at(vmfs_dir_t *dir,const char *path);
 
 /* Close a file */
 int vmfs_file_close(vmfs_file_t *f);
