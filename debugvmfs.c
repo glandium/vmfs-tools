@@ -155,19 +155,33 @@ static int cmd_df(vmfs_dir_t *base_dir,int argc,char *argv[])
 static int cmd_show_dirent(vmfs_dir_t *base_dir,int argc,char *argv[])
 {
    const vmfs_dirent_t *entry;
+   vmfs_dir_t *dir;
+   char *bname, *dname;
+   int res = -1;
 
    if (argc == 0) {
       fprintf(stderr,"Usage: show_dirent <filename>\n");
       return(-1);
    }
 
-   if (!(entry = vmfs_dir_resolve_path(base_dir,argv[0],0))) {
-      fprintf(stderr,"Unable to resolve path '%s'\n",argv[0]);
-      return(-1);
+   bname = m_basename(argv[0]);
+   dname = m_dirname(argv[0]);
+   if (!(dir = vmfs_dir_open_at(base_dir,dname))) {
+      fprintf(stderr,"Unable to open directory '%s'\n", dname);
+      goto cleanup;
    }
 
-   vmfs_dirent_show(entry);
-   return(0);
+   if ((entry = vmfs_dir_lookup(dir,bname))) {
+      vmfs_dirent_show(entry);
+      res = 0;
+   } else
+      fprintf(stderr,"Unable to find '%s'\n",argv[0]);
+
+   vmfs_dir_close(dir);
+cleanup:
+   free(bname);
+   free(dname);
+   return(res);
 }
 
 /* Show an inode */
