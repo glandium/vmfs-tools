@@ -273,7 +273,6 @@ static int vmfs_fsck_store_inode(const vmfs_fs_t *fs,vmfs_blk_map_t **ht,
 int vmfs_fsck_get_all_block_mappings(const vmfs_fs_t *fs,
                                      vmfs_fsck_info_t *fi)
 {
-   DECL_ALIGNED_BUFFER_WOL(inode_buf,VMFS_INODE_SIZE);
    vmfs_inode_t inode;
    vmfs_bitmap_header_t *fdc_bmp;
    uint32_t entry,item;
@@ -287,13 +286,13 @@ int vmfs_fsck_get_all_block_mappings(const vmfs_fs_t *fs,
       entry = i / fdc_bmp->items_per_bitmap_entry;
       item  = i % fdc_bmp->items_per_bitmap_entry;
 
-      if (!vmfs_bitmap_get_item(fs->fdc,entry,item,inode_buf)) {        
+      if (vmfs_inode_get(fs,VMFS_BLK_FD_BUILD(entry,item),&inode) == -1) {
          fprintf(stderr,"Unable to read inode (%u,%u)\n",entry,item);
          return(-1);
       }
 
       /* Skip undefined/deleted inodes */
-      if ((vmfs_inode_read(&inode,inode_buf) == -1) || !inode.nlink)
+      if (!inode.nlink)
          continue;
 
       vmfs_fsck_store_inode(fs,fi->blk_map,&inode);

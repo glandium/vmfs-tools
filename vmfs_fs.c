@@ -181,7 +181,6 @@ int vmfs_fs_dump_bitmaps(const vmfs_fs_t *fs)
 /* Read FDC base information */
 static int vmfs_read_fdc_base(vmfs_fs_t *fs)
 {
-   DECL_ALIGNED_BUFFER_WOL(buf,VMFS_INODE_SIZE);
    vmfs_inode_t inode = { { 0, }, };
    uint32_t fdc_base;
 
@@ -213,8 +212,7 @@ static int vmfs_read_fdc_base(vmfs_fs_t *fs)
    }
 
    /* Read the first inode */
-   if (!vmfs_bitmap_get_item(fs->fdc,0,0,buf) ||
-       (vmfs_inode_read(&inode,buf) == -1)) {
+   if (vmfs_inode_get(fs,VMFS_BLK_FD_BUILD(0,0),&inode) == -1) {
       fprintf(stderr,"VMFS: couldn't read root directory inode\n");
       return(-1);
    }
