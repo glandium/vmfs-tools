@@ -23,21 +23,27 @@
 #include <errno.h>
 #include "vmfs.h"
 
-#if 0
-static int vmfs_fuse_getattr(const char *path, struct stat *stbuf)
+static inline uint32_t ino2blkid(fuse_ino_t ino)
 {
-   vmfs_dir_t *root_dir;
-   int ret;
-
-   if (!(root_dir = vmfs_dir_open_from_blkid(fs,VMFS_BLK_FD_BUILD(0,0))))
-      return(-ENOMEM);
-
-   ret = vmfs_file_lstat_at(root_dir, path, stbuf) ? -ENOENT : 0;
-   vmfs_dir_close(root_dir);
-
-   return(ret);
+   if (ino == FUSE_ROOT_ID)
+      return(VMFS_BLK_FD_BUILD(0,0));
+   return((uint32_t)ino);
 }
 
+static void vmfs_fuse_getattr(fuse_req_t req, fuse_ino_t ino,
+                             struct fuse_file_info *fi)
+{
+   vmfs_fs_t *fs = (vmfs_fs_t *) fuse_req_userdata(req);
+   struct stat stbuf;
+
+   if (!vmfs_inode_stat_from_blkid(fs, ino2blkid(ino), &stbuf)) {
+      stbuf.st_ino = ino;
+      fuse_reply_attr(req, &stbuf, 1.0);
+   } else
+      fuse_reply_err(req, ENOENT);
+}
+
+#if 0
 static int vmfs_fuse_readdir(const char *path, void *buf,
                              fuse_fill_dir_t filler, off_t offset,
                              struct fuse_file_info *fi)
@@ -98,8 +104,8 @@ static int vmfs_fuse_release(const char *path, struct fuse_file_info *fi)
 #endif
 
 const static struct fuse_lowlevel_ops vmfs_oper = {
-#if 0
    .getattr = vmfs_fuse_getattr,
+#if 0
    .readdir = vmfs_fuse_readdir,
    .open = vmfs_fuse_open,
    .read = vmfs_fuse_read,
