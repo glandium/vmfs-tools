@@ -135,28 +135,36 @@ void vmfs_fs_show(const vmfs_fs_t *fs)
 static int vmfs_open_all_meta_files(vmfs_fs_t *fs)
 {
    vmfs_bitmap_t *fdc = fs->fdc;
+   vmfs_dir_t *root_dir;
 
-   if (!(fs->fbb = vmfs_bitmap_open_at(fs->root_dir,VMFS_FBB_FILENAME))) {
+   /* Read the first inode */
+   if (!(root_dir = vmfs_dir_open_from_blkid(fs,VMFS_BLK_FD_BUILD(0,0)))) {
+      fprintf(stderr,"VMFS: unable to open root directory\n");
+      return(-1);
+   }
+
+   if (!(fs->fbb = vmfs_bitmap_open_at(root_dir,VMFS_FBB_FILENAME))) {
       fprintf(stderr,"Unable to open file-block bitmap (FBB).\n");
       return(-1);
    }
 
-   if (!(fs->fdc = vmfs_bitmap_open_at(fs->root_dir,VMFS_FDC_FILENAME))) {
+   if (!(fs->fdc = vmfs_bitmap_open_at(root_dir,VMFS_FDC_FILENAME))) {
       fprintf(stderr,"Unable to open file descriptor bitmap (FDC).\n");
       return(-1);
    }
 
-   if (!(fs->pbc = vmfs_bitmap_open_at(fs->root_dir,VMFS_PBC_FILENAME))) {
+   if (!(fs->pbc = vmfs_bitmap_open_at(root_dir,VMFS_PBC_FILENAME))) {
       fprintf(stderr,"Unable to open pointer block bitmap (PBC).\n");
       return(-1);
    }
 
-   if (!(fs->sbc = vmfs_bitmap_open_at(fs->root_dir,VMFS_SBC_FILENAME))) {
+   if (!(fs->sbc = vmfs_bitmap_open_at(root_dir,VMFS_SBC_FILENAME))) {
       fprintf(stderr,"Unable to open sub-block bitmap (SBC).\n");
       return(-1);
    }
 
    vmfs_bitmap_close(fdc);
+   vmfs_dir_close(root_dir);
    return(0);
 }
 
@@ -209,12 +217,6 @@ static int vmfs_read_fdc_base(vmfs_fs_t *fs)
    if (fs->debug_level > 0) {
       printf("FDC bitmap:\n");
       vmfs_bmh_show(&fs->fdc->bmh);
-   }
-
-   /* Read the first inode */
-   if (!(fs->root_dir = vmfs_dir_open_from_blkid(fs,VMFS_BLK_FD_BUILD(0,0)))) {
-      fprintf(stderr,"VMFS: unable to open root directory\n");
-      return(-1);
    }
 
    /* Read the meta files */
@@ -290,7 +292,6 @@ void vmfs_fs_close(vmfs_fs_t *fs)
    vmfs_bitmap_close(fs->fdc);
    vmfs_bitmap_close(fs->pbc);
    vmfs_bitmap_close(fs->sbc);
-   vmfs_dir_close(fs->root_dir);
    vmfs_lvm_close(fs->lvm);
    free(fs->fs_info.label);
    free(fs);
