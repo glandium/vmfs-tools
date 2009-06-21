@@ -320,29 +320,42 @@ int vmfs_file_fstat(const vmfs_file_t *f,struct stat *buf)
    return(vmfs_inode_stat(f->inode,buf));
 }
 
-/* Get file status (similar to fstat(), but with a path) */
-static int vmfs_file_stat_internal(vmfs_dir_t *dir,const char *path,
-                                   int follow_symlink,
-                                   struct stat *buf)
+/* Get file file status (follow symlink) */
+int vmfs_file_stat_at(vmfs_dir_t *dir,const char *path,struct stat *buf)
 {
    uint32_t blk_id;
 
-   if (!(blk_id = vmfs_dir_resolve_path(dir,path,follow_symlink)))
+   if (!(blk_id = vmfs_dir_resolve_path(dir,path,1)))
       return(-ENOENT);
 
    return(vmfs_inode_stat_from_blkid(vmfs_dir_get_fs(dir),blk_id,buf));
 }
 
-/* Get file file status (follow symlink) */
-int vmfs_file_stat_at(vmfs_dir_t *dir,const char *path,struct stat *buf)
-{
-   return(vmfs_file_stat_internal(dir,path,1,buf));
-}
-
 /* Get file file status (do not follow symlink) */
 int vmfs_file_lstat_at(vmfs_dir_t *dir,const char *path,struct stat *buf)
-{   
-   return(vmfs_file_stat_internal(dir,path,0,buf));
+{
+   const vmfs_dirent_t *entry;
+   vmfs_dir_t *d;
+   char *name;
+
+   name = m_dirname(path);
+   d = vmfs_dir_open_at(dir,name);
+   free(name);
+   if (!d)
+      return(-1);
+
+   name = m_basename(path);
+   if (!strcmp(name,"/")) {
+      free(name);
+      return(vmfs_file_fstat(dir->dir,buf));
+   }
+   entry = vmfs_dir_lookup(dir,name);
+   free(name);
+   if (!entry)
+      return(-1);
+
+   return(vmfs_inode_stat_from_blkid(vmfs_dir_get_fs(dir),
+                                     entry->block_id,buf));
 }
 
 /* Truncate a file (using a file descriptor) */
