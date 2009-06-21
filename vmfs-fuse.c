@@ -97,6 +97,32 @@ static void vmfs_fuse_releasedir(fuse_req_t req, fuse_ino_t ino,
    fuse_reply_err(req, 0);
 }
 
+static void vmfs_fuse_lookup(fuse_req_t req, fuse_ino_t parent,
+                             const char *name)
+{
+   struct fuse_entry_param entry = { 0, };
+   vmfs_fs_t *fs = (vmfs_fs_t *) fuse_req_userdata(req);
+   vmfs_dir_t *d = vmfs_dir_open_from_blkid(fs, ino2blkid(parent));
+   const vmfs_dirent_t *rec;
+
+   if (!d) {
+      fuse_reply_err(req, ENOENT);
+      return;
+   }
+
+   rec = vmfs_dir_lookup(d, name);
+   vmfs_dir_close(d);
+
+   if (rec && !vmfs_inode_stat_from_blkid(fs, rec->block_id, &entry.attr)) {
+      entry.ino = entry.attr.st_ino = blkid2ino(rec->block_id);
+      entry.generation = 1;
+      entry.attr_timeout = 1.0;
+      entry.entry_timeout = 1.0;
+      fuse_reply_entry(req, &entry);
+   } else
+      fuse_reply_err(req, ENOENT);
+}
+
 #if 0
 static int vmfs_fuse_open(const char *path, struct fuse_file_info *fi)
 {
@@ -136,6 +162,7 @@ const static struct fuse_lowlevel_ops vmfs_oper = {
    .opendir = vmfs_fuse_opendir,
    .readdir = vmfs_fuse_readdir,
    .releasedir = vmfs_fuse_releasedir,
+   .lookup = vmfs_fuse_lookup,
 #if 0
    .open = vmfs_fuse_open,
    .read = vmfs_fuse_read,
