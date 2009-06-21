@@ -212,13 +212,8 @@ static int vmfs_read_fdc_base(vmfs_fs_t *fs)
    }
 
    /* Read the first inode */
-   if (vmfs_inode_get(fs,VMFS_BLK_FD_BUILD(0,0),&inode) == -1) {
-      fprintf(stderr,"VMFS: couldn't read root directory inode\n");
-      return(-1);
-   }
-
-   if (!(fs->root_dir = vmfs_dir_open_from_inode(fs,&inode))) {
-      fprintf(stderr,"VMFS: unable to bind inode to root directory\n");
+   if (!(fs->root_dir = vmfs_dir_open_from_blkid(fs,VMFS_BLK_FD_BUILD(0,0)))) {
+      fprintf(stderr,"VMFS: unable to open root directory\n");
       return(-1);
    }
 
