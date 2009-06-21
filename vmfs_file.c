@@ -326,8 +326,17 @@ static int vmfs_file_stat_internal(const vmfs_fs_t *fs,const char *path,
 {
    const vmfs_dirent_t *entry;
    vmfs_inode_t inode;
+   vmfs_dir_t *root_dir;
 
-   if (!(entry = vmfs_dir_resolve_path(fs->root_dir,path,follow_symlink)))
+   if (!(root_dir = vmfs_dir_open_from_blkid(fs,VMFS_BLK_FD_BUILD(0,0)))) {
+      fprintf(stderr,"Unable to open root directory\n");
+      return(-1);
+   }
+
+   entry = vmfs_dir_resolve_path(root_dir,path,follow_symlink);
+   vmfs_dir_close(root_dir);
+
+   if (!entry)
       return(-1);
 
    if (vmfs_inode_get(fs,entry->block_id,&inode) == -1)
