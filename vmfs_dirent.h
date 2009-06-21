@@ -49,9 +49,9 @@ int vmfs_dirent_read(vmfs_dirent_t *entry,const u_char *buf);
 /* Show a directory entry */
 void vmfs_dirent_show(const vmfs_dirent_t *entry);
 
-/* Search for an entry into a directory */
-int vmfs_dirent_search(vmfs_file_t *dir_entry,const char *name,
-                       vmfs_dirent_t *rec);
+/* Search for an entry into a directory ; affects position of the next
+entry vmfs_dir_read will return */
+const vmfs_dirent_t *vmfs_dir_lookup(vmfs_dir_t *dir,const char *name);
 
 /* Resolve a path name to a directory entry */
 int vmfs_dirent_resolve_path(vmfs_dir_t *base_dir,

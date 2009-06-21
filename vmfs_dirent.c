@@ -44,34 +44,24 @@ void vmfs_dirent_show(const vmfs_dirent_t *entry)
    printf("  - Name      : %s\n",entry->name);
 }
 
-/* Search for an entry into a directory */
-int vmfs_dirent_search(vmfs_file_t *dir_entry,const char *name,
-                       vmfs_dirent_t *rec)
+/* Search for an entry into a directory ; affects position of the next
+entry vmfs_dir_read will return */
+const vmfs_dirent_t *vmfs_dir_lookup(vmfs_dir_t *d,const char *name)
 {
-   u_char buf[VMFS_DIRENT_SIZE];
-   int i,dir_count;
-   ssize_t len;
+   const vmfs_dirent_t *rec;
+   vmfs_dir_seek(d,0);
 
-   dir_count = vmfs_file_get_size(dir_entry) / VMFS_DIRENT_SIZE;
-   vmfs_file_seek(dir_entry,0,SEEK_SET);
-
-   for(i=0;i<dir_count;i++) {
-      len = vmfs_file_read(dir_entry,buf,sizeof(buf));
-      
-      if (len != sizeof(buf))
-         return(-1);
-
-      vmfs_dirent_read(rec,buf);
-
+   while((rec = vmfs_dir_read(d))) {
       if (!strcmp(rec->name,name))
-         return(1);
+         return(rec);
    }
 
-   return(0);
+   return(NULL);
 }
 
 /* Read a symlink */
-static char *vmfs_dirent_read_symlink(const vmfs_fs_t *fs,vmfs_dirent_t *entry)
+static char *vmfs_dirent_read_symlink(const vmfs_fs_t *fs,
+                                      const vmfs_dirent_t *entry)
 {
    vmfs_file_t *f;
    size_t str_len;
@@ -104,6 +94,7 @@ int vmfs_dirent_resolve_path(vmfs_dir_t *base_dir,
                              vmfs_dirent_t *rec)
 {
    vmfs_dir_t *cur_dir,*sub_dir;
+   const vmfs_dirent_t *entry;
    char *nam, *ptr,*sl,*symlink;
    int close_dir = 0;
    int res = 1;
@@ -111,8 +102,9 @@ int vmfs_dirent_resolve_path(vmfs_dir_t *base_dir,
 
    cur_dir = base_dir;
 
-   if (vmfs_dirent_search(cur_dir->dir,".",rec) != 1)
+   if (!(entry = vmfs_dir_lookup(cur_dir,".")))
       return(-1);
+   memcpy(rec, entry, sizeof(*rec));
 
    nam = ptr = strdup(name);
    
@@ -127,10 +119,11 @@ int vmfs_dirent_resolve_path(vmfs_dir_t *base_dir,
          continue;
       }
              
-      if (vmfs_dirent_search(cur_dir->dir,ptr,rec) != 1) {
+      if (!(entry = vmfs_dir_lookup(cur_dir,ptr))) {
          res = -1;
          break;
       }
+      memcpy(rec, entry, sizeof(*rec));
       
       if ((sl == NULL) && !follow_symlink) {
          res = 1;
