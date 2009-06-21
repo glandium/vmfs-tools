@@ -162,13 +162,18 @@ void vmfs_inode_show(const vmfs_inode_t *inode)
 }
 
 /* Get inode corresponding to a block id */
-int vmfs_inode_get(const vmfs_fs_t *fs,uint32_t blk_id,u_char *buf)
+int vmfs_inode_get(const vmfs_fs_t *fs,uint32_t blk_id,vmfs_inode_t *inode)
 {
+   DECL_ALIGNED_BUFFER_WOL(buf,VMFS_INODE_SIZE);
+
    if (VMFS_BLK_TYPE(blk_id) != VMFS_BLK_TYPE_FD)
       return(-1);
 
-   return(vmfs_bitmap_get_item(fs->fdc, VMFS_BLK_FD_ENTRY(blk_id),
-                               VMFS_BLK_FD_ITEM(blk_id), buf) ? 0 : -1);
+   if (!vmfs_bitmap_get_item(fs->fdc, VMFS_BLK_FD_ENTRY(blk_id),
+                             VMFS_BLK_FD_ITEM(blk_id), buf))
+      return(-1);
+
+   return(vmfs_inode_read(inode,buf));
 }
 
 /* 

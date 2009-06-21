@@ -44,19 +44,14 @@ vmfs_file_t *vmfs_file_open_from_inode(const vmfs_fs_t *fs,
 vmfs_file_t *vmfs_file_open_from_rec(const vmfs_fs_t *fs,
                                      const vmfs_dirent_t *rec)
 {
-   DECL_ALIGNED_BUFFER_WOL(buf,VMFS_INODE_SIZE);
    vmfs_inode_t inode;
 
    /* Read the inode */
-   if (vmfs_inode_get(fs,rec->block_id,buf) == -1) {
+   if (vmfs_inode_get(fs,rec->block_id,&inode) == -1) {
       fprintf(stderr,"VMFS: Unable to get inode info for dir entry '%s'\n",
               rec->name);
       return NULL;
    }
-
-   /* Read the associated inode */
-   if (vmfs_inode_read(&inode,buf) == -1)
-      return NULL;
 
    return(vmfs_file_open_from_inode(fs,&inode));
 }
@@ -342,17 +337,15 @@ static int vmfs_file_stat_internal(const vmfs_fs_t *fs,const char *path,
                                    int follow_symlink,
                                    struct stat *buf)
 {
-   DECL_ALIGNED_BUFFER_WOL(inode_buf,VMFS_INODE_SIZE);
    const vmfs_dirent_t *entry;
    vmfs_inode_t inode;
 
    if (!(entry = vmfs_dir_resolve_path(fs->root_dir,path,follow_symlink)))
       return(-1);
 
-   if (vmfs_inode_get(fs,entry->block_id,inode_buf) == -1)
+   if (vmfs_inode_get(fs,entry->block_id,&inode) == -1)
       return(-1);
    
-   vmfs_inode_read(&inode,inode_buf);
    vmfs_inode_stat(&inode,buf);
    return(0);
 }

@@ -111,7 +111,7 @@ int vmfs_inode_update(const vmfs_fs_t *fs,const vmfs_inode_t *inode,
 void vmfs_inode_show(const vmfs_inode_t *inode);
 
 /* Get inode corresponding to a block id */
-int vmfs_inode_get(const vmfs_fs_t *fs,uint32_t blk_id,u_char *buf);
+int vmfs_inode_get(const vmfs_fs_t *fs,uint32_t blk_id,vmfs_inode_t *inode);
 
 /* 
  * Get block ID corresponding the specified position. Pointer block
