@@ -35,10 +35,14 @@ static int vmfs_fuse_readdir(const char *path, void *buf,
                              struct fuse_file_info *fi)
 {
    const vmfs_dirent_t *entry;
-   vmfs_dir_t *d;
+   vmfs_dir_t *d, *root_dir;
    struct stat st = {0, };
 
-   d = vmfs_dir_open_at(fs->root_dir, path);
+   if (!(root_dir = vmfs_dir_open_from_blkid(fs,VMFS_BLK_FD_BUILD(0,0))))
+      return(-ENOMEM);
+
+   d = vmfs_dir_open_at(root_dir, path);
+   vmfs_dir_close(root_dir);
 
    if (!d)
       return(-ENOENT);
@@ -54,7 +58,15 @@ static int vmfs_fuse_readdir(const char *path, void *buf,
 
 static int vmfs_fuse_open(const char *path, struct fuse_file_info *fi)
 {
-   vmfs_file_t *file = vmfs_file_open_at(fs->root_dir, path);
+   vmfs_file_t *file;
+   vmfs_dir_t *root_dir;
+
+   if (!(root_dir = vmfs_dir_open_from_blkid(fs,VMFS_BLK_FD_BUILD(0,0))))
+      return(-ENOMEM);
+
+   file = vmfs_file_open_at(root_dir, path);
+   vmfs_dir_close(root_dir);
+
    if (!file)
       return(-ENOENT);
 
