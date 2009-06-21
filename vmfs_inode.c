@@ -35,7 +35,7 @@ static inline void vmfs_inode_write_blk_id(u_char *buf,u_int index,
 }
 
 /* Read an inode */
-int vmfs_inode_read(vmfs_inode_t *inode,const u_char *buf)
+static int vmfs_inode_read(vmfs_inode_t *inode,const u_char *buf)
 {
    int i;
 
@@ -76,7 +76,7 @@ int vmfs_inode_read(vmfs_inode_t *inode,const u_char *buf)
 }
 
 /* Write an inode */
-int vmfs_inode_write(const vmfs_inode_t *inode,u_char *buf)
+static int vmfs_inode_write(const vmfs_inode_t *inode,u_char *buf)
 {
    vmfs_metadata_hdr_write(&inode->mdh,buf);
    write_le32(buf,VMFS_INODE_OFS_ID,inode->id);

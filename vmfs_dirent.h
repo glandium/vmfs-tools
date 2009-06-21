@@ -43,9 +43,6 @@ struct vmfs_dirent {
    char name[129];
 };
 
-/* Read a file descriptor */
-int vmfs_dirent_read(vmfs_dirent_t *entry,const u_char *buf);
-
 /* Show a directory entry */
 void vmfs_dirent_show(const vmfs_dirent_t *entry);
 

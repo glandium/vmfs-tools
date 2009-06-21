@@ -25,7 +25,7 @@
 #include "vmfs.h"
 
 /* Read a directory entry */
-int vmfs_dirent_read(vmfs_dirent_t *entry,const u_char *buf)
+static int vmfs_dirent_read(vmfs_dirent_t *entry,const u_char *buf)
 {
    entry->type      = read_le32(buf,VMFS_DIRENT_OFS_TYPE);
    entry->block_id  = read_le32(buf,VMFS_DIRENT_OFS_BLK_ID);
