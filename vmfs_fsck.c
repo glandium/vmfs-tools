@@ -537,6 +537,7 @@ int main(int argc,char *argv[])
    vmfs_lvm_t *lvm;
    vmfs_fs_t *fs;
    vmfs_flags_t flags;
+   vmfs_dir_t *root_dir;
    int i;
 
    if (argc < 2) {
@@ -570,7 +571,13 @@ int main(int argc,char *argv[])
 
    vmfs_fsck_init(&fsck_info);
    vmfs_fsck_get_all_block_mappings(fs,&fsck_info);
-   vmfs_fsck_walk_dir(fs,&fsck_info,fsck_info.dir_map,fs->root_dir);
+
+   if (!(root_dir = vmfs_dir_open_from_blkid(fs,VMFS_BLK_FD_BUILD(0,0)))) {
+      fprintf(stderr,"Unable to open root directory\n");
+      exit(EXIT_FAILURE);
+   }
+   vmfs_fsck_walk_dir(fs,&fsck_info,fsck_info.dir_map,root_dir);
+   vmfs_dir_close(root_dir);
 
    vmfs_fsck_count_blocks(&fsck_info);
    vmfs_fsck_show_orphaned_inodes(&fsck_info);
