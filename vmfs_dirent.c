@@ -67,9 +67,6 @@ static char *vmfs_dirent_read_symlink(const vmfs_fs_t *fs,
    size_t str_len;
    char *str = NULL;
 
-   if (entry->type != VMFS_FILE_TYPE_SYMLINK)
-      return NULL;
-
    if (!(f = vmfs_file_open_from_blkid(fs,entry->block_id)))
       return NULL;
 
