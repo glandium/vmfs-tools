@@ -264,26 +264,17 @@ int vmfs_file_fstat(const vmfs_file_t *f,struct stat *buf)
 }
 
 /* Get file status (similar to fstat(), but with a path) */
-static int vmfs_file_stat_internal(const vmfs_fs_t *fs,const char *path,
+static int vmfs_file_stat_internal(vmfs_dir_t *dir,const char *path,
                                    int follow_symlink,
                                    struct stat *buf)
 {
    const vmfs_dirent_t *entry;
    vmfs_inode_t inode;
-   vmfs_dir_t *root_dir;
 
-   if (!(root_dir = vmfs_dir_open_from_blkid(fs,VMFS_BLK_FD_BUILD(0,0)))) {
-      fprintf(stderr,"Unable to open root directory\n");
-      return(-1);
-   }
-
-   entry = vmfs_dir_resolve_path(root_dir,path,follow_symlink);
-   vmfs_dir_close(root_dir);
-
-   if (!entry)
+   if (!(entry = vmfs_dir_resolve_path(dir,path,follow_symlink)))
       return(-1);
 
-   if (vmfs_inode_get(fs,entry->block_id,&inode) == -1)
+   if (vmfs_inode_get(vmfs_dir_get_fs(dir),entry->block_id,&inode) == -1)
       return(-1);
    
    vmfs_inode_stat(&inode,buf);
@@ -291,13 +282,13 @@ static int vmfs_file_stat_internal(const vmfs_fs_t *fs,const char *path,
 }
 
 /* Get file file status (follow symlink) */
-int vmfs_file_stat(const vmfs_fs_t *fs,const char *path,struct stat *buf)
+int vmfs_file_stat_at(vmfs_dir_t *dir,const char *path,struct stat *buf)
 {
-   return(vmfs_file_stat_internal(fs,path,1,buf));
+   return(vmfs_file_stat_internal(dir,path,1,buf));
 }
 
 /* Get file file status (do not follow symlink) */
-int vmfs_file_lstat(const vmfs_fs_t *fs,const char *path,struct stat *buf)
+int vmfs_file_lstat_at(vmfs_dir_t *dir,const char *path,struct stat *buf)
 {   
-   return(vmfs_file_stat_internal(fs,path,0,buf));
+   return(vmfs_file_stat_internal(dir,path,0,buf));
 }

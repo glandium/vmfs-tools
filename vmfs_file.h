@@ -81,9 +81,9 @@ int vmfs_file_dump(vmfs_file_t *f,off_t pos,uint64_t len,FILE *fd_out);
 int vmfs_file_fstat(const vmfs_file_t *f,struct stat *buf);
 
 /* Get file file status (follow symlink) */
-int vmfs_file_stat(const vmfs_fs_t *fs,const char *path,struct stat *buf);
+int vmfs_file_stat_at(vmfs_dir_t *dir,const char *path,struct stat *buf);
 
 /* Get file file status (do not follow symlink) */
-int vmfs_file_lstat(const vmfs_fs_t *fs,const char *path,struct stat *buf);
+int vmfs_file_lstat_at(vmfs_dir_t *dir,const char *path,struct stat *buf);
 
 #endif

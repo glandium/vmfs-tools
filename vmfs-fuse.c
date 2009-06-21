@@ -27,7 +27,16 @@ static vmfs_fs_t *fs;
 
 static int vmfs_fuse_getattr(const char *path, struct stat *stbuf)
 {
-   return(vmfs_file_lstat(fs, path, stbuf) ? -ENOENT : 0);
+   vmfs_dir_t *root_dir;
+   int ret;
+
+   if (!(root_dir = vmfs_dir_open_from_blkid(fs,VMFS_BLK_FD_BUILD(0,0))))
+      return(-ENOMEM);
+
+   ret = vmfs_file_lstat_at(root_dir, path, stbuf) ? -ENOENT : 0;
+   vmfs_dir_close(root_dir);
+
+   return(ret);
 }
 
 static int vmfs_fuse_readdir(const char *path, void *buf,
