@@ -72,7 +72,7 @@ vmfs_file_t *vmfs_file_open_at(vmfs_dir_t *dir,const char *name)
    if (!(rec = vmfs_dir_lookup(dir, name)))
       return(NULL);
 
-   return(vmfs_file_open_from_blkid(dir->dir->fs,rec->block_id));
+   return(vmfs_file_open_from_blkid(vmfs_dir_get_fs(dir),rec->block_id));
 }
 
 /* Close a file */

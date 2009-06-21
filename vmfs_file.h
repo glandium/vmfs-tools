@@ -38,6 +38,11 @@ struct vmfs_file {
    /* ... */
 };
 
+static inline const vmfs_fs_t *vmfs_file_get_fs(vmfs_file_t *f)
+{
+   return f ? f->fs : NULL;
+}
+
 static inline mode_t vmfs_file_type2mode(uint32_t type) {
    switch (type) {
    case VMFS_FILE_TYPE_DIR:

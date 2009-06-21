@@ -19,6 +19,7 @@
 #define VMFS_DIRENT_H
 
 #include <stddef.h>
+#include "vmfs_file.h"
 
 #define VMFS_DIRENT_SIZE    0x8c
 
@@ -51,6 +52,11 @@ struct vmfs_dir {
    uint32_t pos;
    vmfs_dirent_t dirent;
 };
+
+static inline const vmfs_fs_t *vmfs_dir_get_fs(vmfs_dir_t *d)
+{
+   return d ? vmfs_file_get_fs(d->dir) : NULL;
+}
 
 /* Search for an entry into a directory ; affects position of the next
 entry vmfs_dir_read will return */

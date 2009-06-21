@@ -97,6 +97,7 @@ const vmfs_dirent_t *vmfs_dir_resolve_path(vmfs_dir_t *base_dir,
    const vmfs_dirent_t *rec;
    char *nam, *ptr,*sl,*symlink;
    int close_dir = 0;
+   const vmfs_fs_t *fs = vmfs_dir_get_fs(base_dir);
 
    cur_dir = base_dir;
 
@@ -124,7 +125,7 @@ const vmfs_dirent_t *vmfs_dir_resolve_path(vmfs_dir_t *base_dir,
 
       /* follow the symlink if we have an entry of this type */
       if (rec->type == VMFS_FILE_TYPE_SYMLINK) {
-         if (!(symlink = vmfs_dirent_read_symlink(base_dir->dir->fs,rec))) {
+         if (!(symlink = vmfs_dirent_read_symlink(fs,rec))) {
             rec = NULL;
             break;
          }
@@ -142,7 +143,7 @@ const vmfs_dirent_t *vmfs_dir_resolve_path(vmfs_dir_t *base_dir,
 
       /* we must have a directory here */
       if ((rec->type != VMFS_FILE_TYPE_DIR) ||
-          !(sub_dir = vmfs_dir_open_from_blkid(base_dir->dir->fs,rec->block_id)))
+          !(sub_dir = vmfs_dir_open_from_blkid(fs,rec->block_id)))
       {
          rec = NULL;
          break;
