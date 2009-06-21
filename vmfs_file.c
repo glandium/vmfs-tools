@@ -269,16 +269,12 @@ static int vmfs_file_stat_internal(vmfs_dir_t *dir,const char *path,
                                    struct stat *buf)
 {
    const vmfs_dirent_t *entry;
-   vmfs_inode_t inode;
 
    if (!(entry = vmfs_dir_resolve_path(dir,path,follow_symlink)))
       return(-1);
 
-   if (vmfs_inode_get(vmfs_dir_get_fs(dir),entry->block_id,&inode) == -1)
-      return(-1);
-   
-   vmfs_inode_stat(&inode,buf);
-   return(0);
+   return(vmfs_inode_stat_from_blkid(vmfs_dir_get_fs(dir),
+                                     entry->block_id,buf));
 }
 
 /* Get file file status (follow symlink) */
