@@ -287,11 +287,9 @@ int vmfs_file_dump(vmfs_file_t *f,off_t pos,uint64_t len,FILE *fd_out)
    if (posix_memalign((void **)&buf,M_DIO_BLK_SIZE,buf_len) != 0)
       return(-1);
 
-   vmfs_file_seek(f,pos,SEEK_SET);
-
-   while(len > 0) {
+   for(;pos < len; pos+=clen) {
       clen = m_min(len,buf_len);
-      res = vmfs_file_read(f,buf,clen);
+      res = vmfs_file_pread(f,buf,clen,pos);
 
       if (res < 0) {
          fprintf(stderr,"vmfs_file_dump: problem reading input file.\n");
@@ -305,8 +303,6 @@ int vmfs_file_dump(vmfs_file_t *f,off_t pos,uint64_t len,FILE *fd_out)
 
       if (res < clen)
          break;
-
-      len -= res;
    }
 
    free(buf);
