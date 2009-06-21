@@ -617,3 +617,16 @@ int vmfs_inode_stat(const vmfs_inode_t *inode,struct stat *buf)
    buf->st_ctime = inode->ctime;
    return(0);
 }
+
+/* Get inode status */
+int vmfs_inode_stat_from_blkid(const vmfs_fs_t *fs,uint32_t blk_id,
+                               struct stat *buf)
+{
+   vmfs_inode_t inode;
+
+   if (vmfs_inode_get(fs,blk_id,&inode) == -1)
+      return(-1);
+
+   vmfs_inode_stat(&inode,buf);
+   return(0);
+}
