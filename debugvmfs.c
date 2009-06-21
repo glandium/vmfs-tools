@@ -757,7 +757,7 @@ static int cmd_shell(vmfs_dir_t *base_dir,int argc,char *argv[])
       if (!cmdline) return(0);
       if (!cmdline->argc) continue;
       if (!strcmp(cmdline->argv[0], "exit") ||
-          !strcmp(cmdline->argv[0], "quit")) return(0);
+          !strcmp(cmdline->argv[0], "quit")) goto cleanup;
 
       cmd = cmd_find(cmdline->argv[0]);
       if (!cmd) {
@@ -797,6 +797,9 @@ static int cmd_shell(vmfs_dir_t *base_dir,int argc,char *argv[])
         }
       }
    } while (1);
+cleanup:
+   freecmd(cmdline);
+   return(0);
 }
 
 int main(int argc,char *argv[])
