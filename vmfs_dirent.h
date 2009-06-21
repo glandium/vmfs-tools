@@ -62,10 +62,9 @@ static inline const vmfs_fs_t *vmfs_dir_get_fs(vmfs_dir_t *d)
 entry vmfs_dir_read will return */
 const vmfs_dirent_t *vmfs_dir_lookup(vmfs_dir_t *dir,const char *name);
 
-/* Resolve a path to a directory entry */
-const vmfs_dirent_t *vmfs_dir_resolve_path(vmfs_dir_t *base_dir,
-                                           const char *path,
-                                           int follow_symlink);
+/* Resolve a path to a block id */
+uint32_t vmfs_dir_resolve_path(vmfs_dir_t *base_dir,const char *path,
+                               int follow_symlink);
 
 /* Open a directory based on an inode buffer */
 vmfs_dir_t *vmfs_dir_open_from_inode(const vmfs_fs_t *fs,

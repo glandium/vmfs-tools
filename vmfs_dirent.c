@@ -87,28 +87,30 @@ static char *vmfs_dirent_read_symlink(const vmfs_fs_t *fs,
    return str;
 }
 
-/* Resolve a path name to a directory entry */
-const vmfs_dirent_t *vmfs_dir_resolve_path(vmfs_dir_t *base_dir,
-                                           const char *path,
-                                           int follow_symlink)
+/* Resolve a path name to a block id */
+uint32_t vmfs_dir_resolve_path(vmfs_dir_t *base_dir,const char *path,
+                               int follow_symlink)
 {
    vmfs_dir_t *cur_dir,*sub_dir;
    const vmfs_dirent_t *rec;
    char *nam, *ptr,*sl,*symlink;
    int close_dir = 0;
    const vmfs_fs_t *fs = vmfs_dir_get_fs(base_dir);
+   uint32_t ret = 0;
 
    cur_dir = base_dir;
 
    if (*path == '/') {
       if (!(cur_dir = vmfs_dir_open_from_blkid(fs,VMFS_BLK_FD_BUILD(0,0))))
-         return(NULL);
+         return(0);
       path++;
       close_dir = 1;
    }
 
    if (!(rec = vmfs_dir_lookup(cur_dir,".")))
-      return(NULL);
+      return(0);
+
+   ret = rec->block_id;
 
    nam = ptr = strdup(path);
    
@@ -126,20 +128,20 @@ const vmfs_dirent_t *vmfs_dir_resolve_path(vmfs_dir_t *base_dir,
       if (!(rec = vmfs_dir_lookup(cur_dir,ptr)))
          break;
       
+      ret = rec->block_id;
+
       if ((sl == NULL) && !follow_symlink)
          break;
 
       /* follow the symlink if we have an entry of this type */
       if (rec->type == VMFS_FILE_TYPE_SYMLINK) {
-         if (!(symlink = vmfs_dirent_read_symlink(fs,rec))) {
-            rec = NULL;
+         if (!(symlink = vmfs_dirent_read_symlink(fs,rec)))
             break;
-         }
 
-         rec = vmfs_dir_resolve_path(cur_dir,symlink,1);
+         ret = vmfs_dir_resolve_path(cur_dir,symlink,1);
          free(symlink);
 
-         if (!rec)
+         if (!ret)
             break;
       }
 
@@ -148,10 +150,9 @@ const vmfs_dirent_t *vmfs_dir_resolve_path(vmfs_dir_t *base_dir,
          break;
 
       /* we must have a directory here */
-      if ((rec->type != VMFS_FILE_TYPE_DIR) ||
-          !(sub_dir = vmfs_dir_open_from_blkid(fs,rec->block_id)))
+      if (!(sub_dir = vmfs_dir_open_from_blkid(fs,ret)))
       {
-         rec = NULL;
+         ret = 0;
          break;
       }
 
@@ -167,7 +168,7 @@ const vmfs_dirent_t *vmfs_dir_resolve_path(vmfs_dir_t *base_dir,
    if (close_dir)
       vmfs_dir_close(cur_dir);
 
-   return(rec);
+   return(ret);
 }
 
 /* Open a directory file using a callback */

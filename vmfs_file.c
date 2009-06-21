@@ -57,11 +57,11 @@ vmfs_file_t *vmfs_file_open_from_blkid(const vmfs_fs_t *fs,uint32_t blk_id)
 /* Open a file */
 vmfs_file_t *vmfs_file_open_at(vmfs_dir_t *dir,const char *path)
 {
-   const vmfs_dirent_t *rec;
-   if (!(rec = vmfs_dir_resolve_path(dir,path,1)))
+   uint32_t blk_id;
+   if (!(blk_id = vmfs_dir_resolve_path(dir,path,1)))
       return(NULL);
 
-   return(vmfs_file_open_from_blkid(vmfs_dir_get_fs(dir),rec->block_id));
+   return(vmfs_file_open_from_blkid(vmfs_dir_get_fs(dir),blk_id));
 }
 
 /* Close a file */
@@ -268,13 +268,12 @@ static int vmfs_file_stat_internal(vmfs_dir_t *dir,const char *path,
                                    int follow_symlink,
                                    struct stat *buf)
 {
-   const vmfs_dirent_t *entry;
+   uint32_t blk_id;
 
-   if (!(entry = vmfs_dir_resolve_path(dir,path,follow_symlink)))
+   if (!(blk_id = vmfs_dir_resolve_path(dir,path,follow_symlink)))
       return(-1);
 
-   return(vmfs_inode_stat_from_blkid(vmfs_dir_get_fs(dir),
-                                     entry->block_id,buf));
+   return(vmfs_inode_stat_from_blkid(vmfs_dir_get_fs(dir),blk_id,buf));
 }
 
 /* Get file file status (follow symlink) */
