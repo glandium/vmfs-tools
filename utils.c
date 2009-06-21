@@ -28,6 +28,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <uuid/uuid.h>
+#include <libgen.h>
 
 #include "utils.h"
 
@@ -248,4 +249,22 @@ ssize_t m_pwrite(int fd,const void *buf,size_t count,off_t offset)
    }
 
    return(hlen);
+}
+
+/* Returns directory name */
+char *m_dirname(const char *path)
+{
+   char *dirc = strdup(path);
+   char *dname = strdup(dirname(dirc));
+   free(dirc);
+   return(dname);
+}
+
+/* Returns base name */
+char *m_basename(const char *path)
+{
+   char *basec = strdup(path);
+   char *bname = strdup(basename(basec));
+   free(basec);
+   return(bname);
 }

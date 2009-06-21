@@ -175,4 +175,10 @@ ssize_t m_pread(int fd,void *buf,size_t count,off_t offset);
 /* Write to a file descriptor at a given offset */
 ssize_t m_pwrite(int fd,const void *buf,size_t count,off_t offset);
 
+/* Returns directory name */
+char *m_dirname(const char *path);
+
+/* Returns base name */
+char *m_basename(const char *path);
+
 #endif
