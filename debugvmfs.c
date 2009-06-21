@@ -33,7 +33,6 @@
 /* "cat" command */
 static int cmd_cat(vmfs_dir_t *base_dir,int argc,char *argv[])
 {
-   const vmfs_fs_t *fs = vmfs_dir_get_fs(base_dir);
    vmfs_file_t *f;
    int i;
 
@@ -43,7 +42,7 @@ static int cmd_cat(vmfs_dir_t *base_dir,int argc,char *argv[])
    }
 
    for(i=0;i<argc;i++) {
-      if (!(f = vmfs_file_open_from_path(fs,argv[i]))) {
+      if (!(f = vmfs_file_open_at(base_dir,argv[i]))) {
          fprintf(stderr,"Unable to open file %s\n",argv[i]);
          return(-1);
       }
@@ -78,7 +77,7 @@ static int cmd_ls(vmfs_dir_t *base_dir,int argc,char *argv[])
       return(-1);
    }
 
-   if (!(d = vmfs_dir_open_from_path(fs,argv[0]))) {
+   if (!(d = vmfs_dir_open_at(base_dir,argv[0]))) {
       fprintf(stderr,"Unable to open directory %s\n",argv[0]);
       return(-1);
    }
@@ -167,7 +166,6 @@ static int cmd_show_dirent(vmfs_dir_t *base_dir,int argc,char *argv[])
 /* Show an inode */
 static int cmd_show_inode(vmfs_dir_t *base_dir,int argc,char *argv[])
 {
-   const vmfs_fs_t *fs = vmfs_dir_get_fs(base_dir);
    vmfs_file_t *f;
 
    if (argc == 0) {
@@ -175,7 +173,7 @@ static int cmd_show_inode(vmfs_dir_t *base_dir,int argc,char *argv[])
       return(-1);
    }
 
-   if (!(f = vmfs_file_open_from_path(fs,argv[0]))) {
+   if (!(f = vmfs_file_open_at(base_dir,argv[0]))) {
       fprintf(stderr,"Unable to open file '%s'\n",argv[0]);
       return(-1);
    }
@@ -196,12 +194,12 @@ static int cmd_show_file_blocks(vmfs_dir_t *base_dir,int argc,char *argv[])
       return(-1);
    }
 
-   if (!(f = vmfs_file_open_from_path(fs,argv[0]))) {
+   if (!(f = vmfs_file_open_at(base_dir,argv[0]))) {
       fprintf(stderr,"Unable to open file '%s'\n",argv[0]);
       return(-1);
    }
 
-   vmfs_inode_show_blocks(f->fs,&f->inode);
+   vmfs_inode_show_blocks(fs,&f->inode);
    vmfs_file_close(f);
    return(0);
 }
@@ -219,14 +217,14 @@ static int cmd_get_file_block(vmfs_dir_t *base_dir,int argc,char *argv[])
       return(-1);
    }
 
-   if (!(f = vmfs_file_open_from_path(fs,argv[0]))) {
+   if (!(f = vmfs_file_open_at(base_dir,argv[0]))) {
       fprintf(stderr,"Unable to open file '%s'\n",argv[0]);
       return(-1);
    }
 
    pos = (off_t)strtoul(argv[1],NULL,16);
 
-   if (!vmfs_inode_get_block(f->fs,&f->inode,pos,&blk_id)) {
+   if (!vmfs_inode_get_block(fs,&f->inode,pos,&blk_id)) {
       printf("0x%8.8x\n",blk_id);
    } else {
       fprintf(stderr,"Unable to get block info\n");
@@ -248,7 +246,7 @@ static int cmd_check_file_blocks(vmfs_dir_t *base_dir,int argc,char *argv[])
       return(-1);
    }
 
-   if (!(f = vmfs_file_open_from_path(fs,argv[0]))) {
+   if (!(f = vmfs_file_open_at(base_dir,argv[0]))) {
       fprintf(stderr,"Unable to open file '%s'\n",argv[0]);
       return(-1);
    }

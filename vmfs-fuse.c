@@ -38,7 +38,7 @@ static int vmfs_fuse_readdir(const char *path, void *buf,
    vmfs_dir_t *d;
    struct stat st = {0, };
 
-   d = vmfs_dir_open_from_path(fs, path);
+   d = vmfs_dir_open_at(fs->root_dir, path);
 
    while((entry = vmfs_dir_read(d))) {
       st.st_mode = vmfs_file_type2mode(entry->type);
@@ -51,7 +51,7 @@ static int vmfs_fuse_readdir(const char *path, void *buf,
 
 static int vmfs_fuse_open(const char *path, struct fuse_file_info *fi)
 {
-   vmfs_file_t *file = vmfs_file_open_from_path(fs, path);
+   vmfs_file_t *file = vmfs_file_open_at(fs->root_dir, path);
    if (!file)
       return -ENOENT;
 
