@@ -163,25 +163,21 @@ const vmfs_dirent_t *vmfs_dir_resolve_path(vmfs_dir_t *base_dir,
    return(rec);
 }
 
-typedef vmfs_file_t *(*open_file_callback)(const vmfs_fs_t *, const void *);
-
 /* Open a directory file using a callback */
-static vmfs_dir_t *vmfs_dir_open_file(const vmfs_fs_t *fs,
-                                      const void *private,
-                                      open_file_callback callback)
+static vmfs_dir_t *vmfs_dir_open_from_file(vmfs_file_t *file)
 {
    vmfs_dir_t *d;
 
-   if (!(d = calloc(1, sizeof(*d))))
+   if (file == NULL)
       return NULL;
 
-   d->dir = callback(fs, private);
-
-   if (!d->dir || d->dir->inode.type != VMFS_FILE_TYPE_DIR) {
-      vmfs_file_close(d->dir);
+   if (!(d = calloc(1, sizeof(*d))) ||
+       (file->inode.type != VMFS_FILE_TYPE_DIR)) {
+      vmfs_file_close(file);
       return NULL;
    }
 
+   d->dir = file;
    return d;
 }
 
@@ -189,23 +185,20 @@ static vmfs_dir_t *vmfs_dir_open_file(const vmfs_fs_t *fs,
 vmfs_dir_t *vmfs_dir_open_from_inode(const vmfs_fs_t *fs,
                                     const vmfs_inode_t *inode)
 {
-   return vmfs_dir_open_file(fs, inode,
-                             (open_file_callback) vmfs_file_open_from_inode);
+   return vmfs_dir_open_from_file(vmfs_file_open_from_inode(fs,inode));
 }
 
 /* Open a directory based on a directory entry */
 vmfs_dir_t *vmfs_dir_open_from_rec(const vmfs_fs_t *fs,
                                    const vmfs_dirent_t *rec)
 {
-   return vmfs_dir_open_file(fs, rec,
-                             (open_file_callback) vmfs_file_open_from_rec);
+   return vmfs_dir_open_from_file(vmfs_file_open_from_rec(fs,rec));
 }
 
 /* Open a directory */
 vmfs_dir_t *vmfs_dir_open_from_path(const vmfs_fs_t *fs,const char *path)
 {
-   return vmfs_dir_open_file(fs, path,
-                             (open_file_callback) vmfs_file_open_from_path);
+   return vmfs_dir_open_from_file(vmfs_file_open_from_path(fs,path));
 }
 
 /* Return next entry in directory. Returned directory entry will be overwritten
