@@ -63,21 +63,28 @@ static int cmd_ls(vmfs_dir_t *base_dir,int argc,char *argv[])
    struct stat st_info;
    struct passwd *usr;
    struct group *grp;
-   char buffer[1024];
+   char buffer[1024], *arg;
    int long_format=0;
 
-   if ((argc == 2) && (strcmp(argv[0],"-l") == 0)) {
+   if ((argc >= 1) && (strcmp(argv[0],"-l") == 0)) {
       long_format = 1;
       argv++;
       argc--;
    }
 
-   if (argc != 1) {
-      fprintf(stderr,"Usage: ls [-l] <path>\n");
+   switch (argc) {
+   case 0:
+      arg = ".";
+      break;
+   case 1:
+      arg = argv[0];
+      break;
+   default:
+      fprintf(stderr,"Usage: ls [-l] [path]\n");
       return(-1);
    }
 
-   if (!(d = vmfs_dir_open_at(base_dir,argv[0]))) {
+   if (!(d = vmfs_dir_open_at(base_dir,arg))) {
       fprintf(stderr,"Unable to open directory %s\n",argv[0]);
       return(-1);
    }
