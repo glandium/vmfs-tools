@@ -145,8 +145,7 @@ void vmfs_bitmap_foreach(vmfs_bitmap_t *b,vmfs_bitmap_foreach_cbk_t cbk,
 int vmfs_bitmap_check(vmfs_bitmap_t *b);
 
 /* Open a bitmap file */
-vmfs_bitmap_t *vmfs_bitmap_open_from_path(const vmfs_fs_t *fs,
-                                          const char *path);
+vmfs_bitmap_t *vmfs_bitmap_open_at(vmfs_dir_t *d, const char *name);
 
 vmfs_bitmap_t *vmfs_bitmap_open_from_inode(const vmfs_fs_t *fs,
                                            const u_char *inode_buf);

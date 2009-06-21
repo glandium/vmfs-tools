@@ -136,22 +136,22 @@ static int vmfs_open_all_meta_files(vmfs_fs_t *fs)
 {
    vmfs_bitmap_t *fdc = fs->fdc;
 
-   if (!(fs->fbb = vmfs_bitmap_open_from_path(fs,VMFS_FBB_FILENAME))) {
+   if (!(fs->fbb = vmfs_bitmap_open_at(fs->root_dir,VMFS_FBB_FILENAME))) {
       fprintf(stderr,"Unable to open file-block bitmap (FBB).\n");
       return(-1);
    }
 
-   if (!(fs->fdc = vmfs_bitmap_open_from_path(fs,VMFS_FDC_FILENAME))) {
+   if (!(fs->fdc = vmfs_bitmap_open_at(fs->root_dir,VMFS_FDC_FILENAME))) {
       fprintf(stderr,"Unable to open file descriptor bitmap (FDC).\n");
       return(-1);
    }
 
-   if (!(fs->pbc = vmfs_bitmap_open_from_path(fs,VMFS_PBC_FILENAME))) {
+   if (!(fs->pbc = vmfs_bitmap_open_at(fs->root_dir,VMFS_PBC_FILENAME))) {
       fprintf(stderr,"Unable to open pointer block bitmap (PBC).\n");
       return(-1);
    }
 
-   if (!(fs->sbc = vmfs_bitmap_open_from_path(fs,VMFS_SBC_FILENAME))) {
+   if (!(fs->sbc = vmfs_bitmap_open_at(fs->root_dir,VMFS_SBC_FILENAME))) {
       fprintf(stderr,"Unable to open sub-block bitmap (SBC).\n");
       return(-1);
    }

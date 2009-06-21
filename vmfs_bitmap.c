@@ -558,10 +558,9 @@ static inline vmfs_bitmap_t *vmfs_bitmap_open_from_file(vmfs_file_t *f)
    return b;
 }
 
-vmfs_bitmap_t *vmfs_bitmap_open_from_path(const vmfs_fs_t *fs,
-                                          const char *path)
+vmfs_bitmap_t *vmfs_bitmap_open_at(vmfs_dir_t *d,const char *name)
 {
-   return vmfs_bitmap_open_from_file(vmfs_file_open_from_path(fs, path));
+   return vmfs_bitmap_open_from_file(vmfs_file_open_at(d, name));
 }
 
 vmfs_bitmap_t *vmfs_bitmap_open_from_inode(const vmfs_fs_t *fs,
