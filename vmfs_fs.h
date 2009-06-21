@@ -92,9 +92,6 @@ struct vmfs_fs {
    /* Meta-files containing file system structures */
    vmfs_bitmap_t *fbb,*fdc,*pbc,*sbc;
 
-   /* Root directory */
-   vmfs_dir_t *root_dir;
-
    /* Heartbeat used to lock meta-data */
    vmfs_heartbeat_t hb;
    u_int hb_id;
