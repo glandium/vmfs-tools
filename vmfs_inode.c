@@ -176,6 +176,46 @@ int vmfs_inode_get(const vmfs_fs_t *fs,uint32_t blk_id,vmfs_inode_t *inode)
    return(vmfs_inode_read(inode,buf));
 }
 
+/* Allocate a new inode */
+int vmfs_inode_alloc(const vmfs_fs_t *fs,vmfs_inode_t *inode)
+{
+   vmfs_inode_t *fdc_inode;
+   off_t fdc_offset;
+   uint32_t fdc_blk;
+   time_t ct;
+
+   time(&ct);
+   memset(inode,0,sizeof(*inode));
+   inode->mdh.magic = VMFS_INODE_MAGIC;
+   inode->type      = VMFS_FILE_TYPE_FILE;
+   inode->blk_size  = fs->sbc->bmh.data_size;
+   inode->zla       = VMFS_BLK_TYPE_SB;
+   inode->mtime     = ct;
+   inode->ctime     = ct;
+   inode->atime     = ct;
+
+   if (vmfs_block_alloc(fs,VMFS_BLK_TYPE_FD,&inode->id) == -1)
+      return(-1);
+
+   /* Compute "physical" position of inode, using FDC file */
+   fdc_inode = &fs->fdc->f->inode;
+
+   fdc_offset = vmfs_bitmap_get_item_pos(fs->fdc,
+                                         VMFS_BLK_FD_ENTRY(inode->id),
+                                         VMFS_BLK_FD_ITEM(inode->id));
+
+   if ((vmfs_inode_get_block(fs,fdc_inode,fdc_offset,&fdc_blk) == -1) ||
+       (VMFS_BLK_TYPE(fdc_blk) != VMFS_BLK_TYPE_FB))
+   {
+      vmfs_block_free(fs,inode->id);
+      return(-1);
+   }
+
+   inode->mdh.pos = (uint64_t)VMFS_BLK_FB_ITEM(fdc_blk) * fdc_inode->blk_size;
+   inode->mdh.pos += fdc_offset % fdc_inode->blk_size;
+   return(0);
+}
+
 /* 
  * Get block ID corresponding the specified position. Pointer block
  * resolution is transparently done here.
