@@ -114,6 +114,7 @@ int vmfs_inode_update(const vmfs_fs_t *fs,const vmfs_inode_t *inode,
 {
    DECL_ALIGNED_BUFFER(buf,VMFS_INODE_SIZE);
 
+   memset(buf,0,VMFS_INODE_SIZE);
    vmfs_inode_write(inode,buf);
 
    if (update_blk_list) {
