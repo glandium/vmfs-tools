@@ -95,6 +95,9 @@ int vmfs_bme_update(const vmfs_fs_t *fs,const vmfs_bitmap_entry_t *bme);
 int vmfs_bitmap_get_entry(vmfs_bitmap_t *b,uint32_t entry,uint32_t item,
                           vmfs_bitmap_entry_t *bmp_entry);
 
+/* Get position of an item */
+off_t vmfs_bitmap_get_item_pos(vmfs_bitmap_t *b,uint32_t entry,uint32_t item);
+
 /* Read a bitmap item from its entry and item numbers */
 bool vmfs_bitmap_get_item(vmfs_bitmap_t *b, uint32_t entry, uint32_t item,
                           u_char *buf);
