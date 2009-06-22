@@ -43,7 +43,7 @@ static void vmfs_fuse_getattr(fuse_req_t req, fuse_ino_t ino,
                              struct fuse_file_info *fi)
 {
    vmfs_fs_t *fs = (vmfs_fs_t *) fuse_req_userdata(req);
-   struct stat stbuf;
+   struct stat stbuf = { 0, };
 
    if (!vmfs_inode_stat_from_blkid(fs, ino2blkid(ino), &stbuf)) {
       stbuf.st_ino = ino;
