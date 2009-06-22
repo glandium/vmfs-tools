@@ -265,6 +265,7 @@ int main(int argc, char *argv[])
 cleanup:
    vmfs_fs_close(fs);
    fuse_opt_free_args(&args);
+   free(opts.mountpoint);
 
    return err ? 1 : 0;
 }
