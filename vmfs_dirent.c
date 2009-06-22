@@ -125,8 +125,10 @@ uint32_t vmfs_dir_resolve_path(vmfs_dir_t *base_dir,const char *path,
          continue;
       }
              
-      if (!(rec = vmfs_dir_lookup(cur_dir,ptr)))
+      if (!(rec = vmfs_dir_lookup(cur_dir,ptr))) {
+         ret = 0;
          break;
+      }
       
       ret = rec->block_id;
 
@@ -135,8 +137,10 @@ uint32_t vmfs_dir_resolve_path(vmfs_dir_t *base_dir,const char *path,
 
       /* follow the symlink if we have an entry of this type */
       if (rec->type == VMFS_FILE_TYPE_SYMLINK) {
-         if (!(symlink = vmfs_dirent_read_symlink(fs,rec)))
+         if (!(symlink = vmfs_dirent_read_symlink(fs,rec))) {
+            ret = 0;
             break;
+         }
 
          ret = vmfs_dir_resolve_path(cur_dir,symlink,1);
          free(symlink);
