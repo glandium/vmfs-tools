@@ -192,7 +192,6 @@ vmfs_volume_t *vmfs_vol_create(const char *filename,vmfs_flags_t flags)
       goto err_filename;
 
    file_flags = (flags.read_write) ? O_RDWR : O_RDONLY;
-   file_flags |= O_DIRECT;
 
    if ((vol->fd = open(vol->filename,file_flags)) < 0) {
       perror("open");
@@ -202,6 +201,8 @@ vmfs_volume_t *vmfs_vol_create(const char *filename,vmfs_flags_t flags)
    vol->flags = flags;
    fstat(vol->fd,&st);
    vol->is_blkdev = S_ISBLK(st.st_mode);
+   if (vol->is_blkdev)
+      fcntl(vol->fd, F_SETFL, O_DIRECT);
 
    return vol;
 
