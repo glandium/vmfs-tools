@@ -104,6 +104,9 @@ Outputs content of the bitmap entry containing the specified block_id.
 Starts an interactive session. All of the above commands can be executed from
 within the interactive session.
 +
+The current working directory can be changed with the *cd* command,
+followed by a path.
++
 The following output redirections are supported within the shell:
 +
 - 'cmd' > 'output_file'
