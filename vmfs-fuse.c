@@ -111,7 +111,6 @@ static void vmfs_fuse_lookup(fuse_req_t req, fuse_ino_t parent,
    }
 
    rec = vmfs_dir_lookup(d, name);
-   vmfs_dir_close(d);
 
    if (rec && !vmfs_inode_stat_from_blkid(fs, rec->block_id, &entry.attr)) {
       entry.ino = entry.attr.st_ino = blkid2ino(rec->block_id);
@@ -121,6 +120,8 @@ static void vmfs_fuse_lookup(fuse_req_t req, fuse_ino_t parent,
       fuse_reply_entry(req, &entry);
    } else
       fuse_reply_err(req, ENOENT);
+
+   vmfs_dir_close(d);
 }
 
 static void vmfs_fuse_open(fuse_req_t req, fuse_ino_t ino,
