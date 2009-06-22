@@ -109,13 +109,13 @@ followed by a path.
 +
 The following output redirections are supported within the shell:
 +
-- 'cmd' > 'output_file'
+- 'cmd' > 'output'
 +
-Puts the output of 'cmd' in the 'output_file' file.
+Puts the output of 'cmd' in the 'output' file.
 +
-- 'cmd' >> 'output_file'
+- 'cmd' >> 'output'
 +
-Appends the output of 'cmd' to the 'output_file' file.
+Appends the output of 'cmd' to the 'output' file.
 +
 - 'cmd' | 'external command'
 +
