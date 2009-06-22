@@ -87,6 +87,7 @@ struct vmfs_lvminfo_raw {
 #define VMFS_LVMINFO_OFS_NUM_EXTENTS   VMFS_LVMINFO(num_extents)
 
 /* 
+ * Segment bitmap is at 0x80200.
  * Segment information are at 0x80600 + i * 0x80 for i between 0 and 
  * VMFS_LVMINFO_OFS_NUM_SEGMENTS 
  * 
