@@ -30,8 +30,8 @@ static int vmfs_dirent_read(vmfs_dirent_t *entry,const u_char *buf)
    entry->type      = read_le32(buf,VMFS_DIRENT_OFS_TYPE);
    entry->block_id  = read_le32(buf,VMFS_DIRENT_OFS_BLK_ID);
    entry->record_id = read_le32(buf,VMFS_DIRENT_OFS_REC_ID);
-   memcpy(entry->name,buf+VMFS_DIRENT_OFS_NAME,sizeof(entry->name));
-   entry->name[128] = 0;
+   memcpy(entry->name,buf+VMFS_DIRENT_OFS_NAME,VMFS_DIRENT_OFS_NAME_SIZE);
+   entry->name[VMFS_DIRENT_OFS_NAME_SIZE] = 0;
    return(0);
 }
 
