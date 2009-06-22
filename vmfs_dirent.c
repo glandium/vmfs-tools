@@ -186,6 +186,9 @@ static vmfs_dir_t *vmfs_dir_open_from_file(vmfs_file_t *file)
    }
 
    d->dir = file;
+   d->buf = calloc(1,vmfs_file_get_size(file));
+   if (d->buf)
+      vmfs_file_pread(file,d->buf,vmfs_file_get_size(file),0);
    return d;
 }
 
@@ -212,11 +215,21 @@ vmfs_dir_t *vmfs_dir_open_at(vmfs_dir_t *d,const char *path)
 by subsequent calls */
 const vmfs_dirent_t *vmfs_dir_read(vmfs_dir_t *d)
 {
-   u_char buf[VMFS_DIRENT_SIZE];
-
-   if ((d == NULL) || (vmfs_file_pread(d->dir,buf,sizeof(buf),
-                                       d->pos*sizeof(buf)) != sizeof(buf)))
+   u_char *buf;
+   if (d == NULL)
       return(NULL);
+
+   if (d->buf) {
+      if (d->pos*VMFS_DIRENT_SIZE >= vmfs_file_get_size(d->dir))
+         return(NULL);
+      buf = &d->buf[d->pos*VMFS_DIRENT_SIZE];
+   } else {
+      u_char _buf[VMFS_DIRENT_SIZE];
+      if ((vmfs_file_pread(d->dir,_buf,sizeof(_buf),
+                           d->pos*sizeof(_buf)) != sizeof(_buf)))
+         return(NULL);
+      buf = _buf;
+   }
 
    vmfs_dirent_read(&d->dirent,buf);
    d->pos++;
@@ -230,6 +243,8 @@ int vmfs_dir_close(vmfs_dir_t *d)
    if (d == NULL)
       return(-1);
 
+   if (d->buf)
+      free(d->buf);
    vmfs_file_close(d->dir);
    free(d);
    return(0);
