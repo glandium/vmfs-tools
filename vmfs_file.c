@@ -145,10 +145,6 @@ ssize_t vmfs_file_pread(vmfs_file_t *f,u_char *buf,size_t len,off_t pos)
       /* Move buffer position */
       buf += res;
       len -= res;
-
-      /* Incomplete read, stop now */
-      if (res < exp_len)
-         break;
    }
 
    return(rlen);
@@ -201,10 +197,6 @@ ssize_t vmfs_file_pwrite(vmfs_file_t *f,u_char *buf,size_t len,off_t pos)
       /* Move file position and keep track of bytes currently written */
       pos += res;
       wlen += res;
-
-      /* Incomplete write, stop now */
-      if (res < len)
-         break;
 
       /* Move buffer position */
       buf += res;

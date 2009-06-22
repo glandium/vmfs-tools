@@ -279,7 +279,7 @@ ssize_t vmfs_block_read_fb(const vmfs_fs_t *fs,uint32_t blk_id,off_t pos,
 
    /* Use "normalized" offset / length to access data (for direct I/O) */
    n_offset = offset & ~(M_DIO_BLK_SIZE - 1);
-   n_clen   = ALIGN_NUM((offset % M_DIO_BLK_SIZE) + clen,M_DIO_BLK_SIZE);
+   n_clen   = ALIGN_NUM(clen + (offset - n_offset),M_DIO_BLK_SIZE);
 
    fb_item = VMFS_BLK_FB_ITEM(blk_id);
 
@@ -287,7 +287,10 @@ ssize_t vmfs_block_read_fb(const vmfs_fs_t *fs,uint32_t blk_id,off_t pos,
    if ((n_offset == offset) && (n_clen == clen) &&
        ALIGN_CHECK((uintptr_t)buf,M_DIO_BLK_SIZE))
    {
-      return(vmfs_fs_read(fs,fb_item,n_offset,buf,n_clen));
+      if (vmfs_fs_read(fs,fb_item,n_offset,buf,n_clen) != n_clen)
+         return(-1);
+
+      return(n_clen);
    }
 
    /* Allocate a temporary buffer and copy result to user buffer */
@@ -321,7 +324,7 @@ ssize_t vmfs_block_write_fb(const vmfs_fs_t *fs,uint32_t blk_id,off_t pos,
 
    /* Use "normalized" offset / length to access data (for direct I/O) */
    n_offset = offset & ~(M_DIO_BLK_SIZE - 1);
-   n_clen   = ALIGN_NUM((offset % M_DIO_BLK_SIZE) + clen,M_DIO_BLK_SIZE);
+   n_clen   = ALIGN_NUM(clen + (offset - n_offset),M_DIO_BLK_SIZE);
 
    fb_item = VMFS_BLK_FB_ITEM(blk_id);
 
@@ -332,7 +335,10 @@ ssize_t vmfs_block_write_fb(const vmfs_fs_t *fs,uint32_t blk_id,off_t pos,
    if ((n_offset == offset) && (n_clen == clen) &&
        ALIGN_CHECK((uintptr_t)buf,M_DIO_BLK_SIZE))
    {
-      return(vmfs_fs_write(fs,fb_item,n_offset,buf,n_clen));
+      if (vmfs_fs_write(fs,fb_item,n_offset,buf,n_clen) != n_clen)
+         return(-1);
+
+      return(n_clen);
    }
 
    /* Allocate a temporary buffer */
