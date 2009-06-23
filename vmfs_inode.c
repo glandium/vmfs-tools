@@ -552,6 +552,7 @@ int vmfs_inode_truncate(const vmfs_fs_t *fs,vmfs_inode_t *inode,off_t new_len)
          for(i=start;i<=end;i++) {
             if (inode->blocks[i] != 0) {
                vmfs_block_free(fs,inode->blocks[i]);
+               inode->blk_count--;
                inode->blocks[i] = 0;
             }
          }
@@ -564,6 +565,7 @@ int vmfs_inode_truncate(const vmfs_fs_t *fs,vmfs_inode_t *inode,off_t new_len)
          u_int pb_start,pb_end;
          u_int sub_start,start;
          u_int blk_index;
+         int count;
 
          blk_per_pb = fs->pbc->bmh.data_size / sizeof(uint32_t);
          blk_index = ALIGN_NUM(new_len,inode->blk_size) / inode->blk_size;
@@ -578,7 +580,11 @@ int vmfs_inode_truncate(const vmfs_fs_t *fs,vmfs_inode_t *inode,off_t new_len)
                start = (i == pb_start) ? sub_start : 0;
 
                /* Free blocks contained in PB */
-               vmfs_block_free_pb(fs,inode->blocks[i],start,blk_per_pb);
+               count = vmfs_block_free_pb(fs,inode->blocks[i],
+                                          start,blk_per_pb);
+
+               if (count > 0)
+                  inode->blk_count -= count;
 
                if (start == 0)
                   inode->blocks[i] = 0;
