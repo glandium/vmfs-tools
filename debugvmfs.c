@@ -125,6 +125,28 @@ static int cmd_ls(vmfs_dir_t *base_dir,int argc,char *argv[])
    return(0);
 }
 
+/* "truncate" command */
+static int cmd_truncate(vmfs_dir_t *base_dir,int argc,char *argv[])
+{
+   off_t new_size;
+
+   if (argc < 2) {
+      fprintf(stderr,"Usage: truncate filename size\n");
+      return(-1);
+   }
+
+   new_size = (off_t)strtoul(argv[1],NULL,0);
+
+   if (vmfs_file_truncate_at(base_dir,argv[0],new_size) == -1) {
+      fprintf(stderr,"Unable to truncate file.\n");
+      return(-1);
+   }
+   
+   printf("File truncated to %"PRIu64" (0x%"PRIx64") bytes\n",
+          (uint64_t)new_size,(uint64_t)new_size);
+   return(0);
+}
+
 /* "df" (disk free) command */
 static int cmd_df(vmfs_dir_t *base_dir,int argc,char *argv[])
 {
@@ -684,6 +706,7 @@ static int cmd_shell(vmfs_dir_t *base_dir,int argc,char *argv[]);
 struct cmd cmd_array[] = {
    { "cat", "Concatenate files and print on standard output", cmd_cat },
    { "ls", "List files in specified directory", cmd_ls },
+   { "truncate", "Truncate file", cmd_truncate },
    { "df", "Show available free space", cmd_df },
    { "show_dirent", "Show directory entry", cmd_show_dirent },
    { "show_inode", "Show inode", cmd_show_inode },
