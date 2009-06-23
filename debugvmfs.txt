@@ -65,7 +65,7 @@ Outputs information about the volume bitmaps.
 *check_vol_bitmaps*::
 Checks volume bitmaps consistency.
 
-*bitmaps_usage*::
+*show_bitmaps_usage*::
 Show statistics about bitmaps usage.
 
 *show_heartbeats*::
@@ -89,11 +89,13 @@ Allocate the specified block_id. R/W support must be enabled.
 
 *alloc_block* 'block_type'::
 Allocate a block of the specified type. R/W support must be enabled.
++
 Allowed block types are: 1 (File Block), 2 (Sub-Block), 3 (Pointer Block) 
 and 4 (File Descriptor / Inode).
 
 *free_block* 'block_id'::
 Free the specified block_id. R/W support must be enabled.
++
 Warning: can cause damage since no heartbeat is used at this time and a block
 used by a file can be freed.
 
