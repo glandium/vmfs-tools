@@ -286,13 +286,9 @@ int vmfs_fsck_get_all_block_mappings(const vmfs_fs_t *fs,
       entry = i / fdc_bmp->items_per_bitmap_entry;
       item  = i % fdc_bmp->items_per_bitmap_entry;
 
-      if (vmfs_inode_get(fs,VMFS_BLK_FD_BUILD(entry,item),&inode) == -1) {
-         fprintf(stderr,"Unable to read inode (%u,%u)\n",entry,item);
-         return(-1);
-      }
-
       /* Skip undefined/deleted inodes */
-      if (!inode.nlink)
+      if ((vmfs_inode_get(fs,VMFS_BLK_FD_BUILD(entry,item),&inode) == -1) ||
+          !inode.nlink)
          continue;
 
       vmfs_fsck_store_inode(fs,fi->blk_map,&inode);
