@@ -279,3 +279,24 @@ int vmfs_file_lstat_at(vmfs_dir_t *dir,const char *path,struct stat *buf)
 {   
    return(vmfs_file_stat_internal(dir,path,0,buf));
 }
+
+/* Truncate a file (using a file descriptor) */
+int vmfs_file_truncate(vmfs_file_t *f,off_t length)
+{
+   return(vmfs_inode_truncate(f->fs,&f->inode,length));
+}
+
+/* Truncate a file (using a path) */
+int vmfs_file_truncate_at(vmfs_dir_t *dir,const char *path,off_t length)
+{
+   vmfs_file_t *f;
+   int res;
+
+   if (!(f = vmfs_file_open_at(dir,path)))
+      return(-1);
+
+   res = vmfs_file_truncate(f,length);
+
+   vmfs_file_close(f);
+   return(res);
+}

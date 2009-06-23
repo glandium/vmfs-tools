@@ -86,4 +86,10 @@ int vmfs_file_stat_at(vmfs_dir_t *dir,const char *path,struct stat *buf);
 /* Get file file status (do not follow symlink) */
 int vmfs_file_lstat_at(vmfs_dir_t *dir,const char *path,struct stat *buf);
 
+/* Truncate a file (using a file descriptor) */
+int vmfs_file_truncate(vmfs_file_t *f,off_t length);
+
+/* Truncate a file (using a path) */
+int vmfs_file_truncate_at(vmfs_dir_t *dir,const char *path,off_t length);
+
 #endif
