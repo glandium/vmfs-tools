@@ -32,6 +32,9 @@ Lists files contained at the given location within the VMFS.
 With *-l*, gives some more information, much like the output from *ls*(1)
 when given the *-l* option.
 
+*truncate* 'path' 'length'::
+Truncate the file to the specified length. R/W support must be enabled.
+
 *df*::
 Outputs information about file system size.
 
