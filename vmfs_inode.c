@@ -659,6 +659,9 @@ int vmfs_inode_foreach_block(const vmfs_fs_t *fs,const vmfs_inode_t *inode,
       blk_count = (blk_count + blk_per_pb - 1) / blk_per_pb;
    }
 
+   if (blk_count > VMFS_INODE_BLK_COUNT)
+      return(-1);
+
    for(i=0;i<blk_count;i++) {
       blk_id = inode->blocks[i];
 
