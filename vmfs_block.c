@@ -215,6 +215,44 @@ int vmfs_block_zeroize_fb(const vmfs_fs_t *fs,uint32_t blk_id)
    return(0);
 }
 
+/* Free blocks hold by a pointer block */
+int vmfs_block_free_pb(const vmfs_fs_t *fs,uint32_t pb_blk,                     
+                       u_int start,u_int end)
+{     
+   DECL_ALIGNED_BUFFER(buf,fs->pbc->bmh.data_size);
+   uint32_t pbc_entry,pbc_item;
+   uint32_t blk_id;
+   int i,count = 0;
+
+   if (VMFS_BLK_TYPE(pb_blk) != VMFS_BLK_TYPE_PB)
+      return(-1);
+
+   pbc_entry = VMFS_BLK_PB_ENTRY(pb_blk);
+   pbc_item  = VMFS_BLK_PB_ITEM(pb_blk);
+
+   if (!vmfs_bitmap_get_item(fs->pbc,pbc_entry,pbc_item,buf))
+      return(-1);
+
+   for(i=start;i<end;i++) {
+      blk_id = read_le32(buf,i*sizeof(uint32_t));
+
+      if (blk_id != 0) {
+         vmfs_block_free(fs,blk_id);
+         write_le32(buf,i*sizeof(uint32_t),0);
+         count++;
+      }
+   }
+
+   if ((start == 0) && (end == (buf_len / sizeof(uint32_t))))
+      vmfs_block_free(fs,pb_blk);
+   else {
+      if (!vmfs_bitmap_set_item(fs->pbc,pbc_entry,pbc_item,buf))
+         return(-1);
+   }
+
+   return(count);
+}
+
 /* Read a piece of a sub-block */
 ssize_t vmfs_block_read_sb(const vmfs_fs_t *fs,uint32_t blk_id,off_t pos,
                            u_char *buf,size_t len)

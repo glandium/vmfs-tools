@@ -114,6 +114,10 @@ int vmfs_block_alloc(const vmfs_fs_t *fs,uint32_t blk_type,uint32_t *blk_id);
 /* Zeroize a file block */
 int vmfs_block_zeroize_fb(const vmfs_fs_t *fs,uint32_t blk_id);
 
+/* Free blocks hold by a pointer block */
+int vmfs_block_free_pb(const vmfs_fs_t *fs,uint32_t pb_blk,                     
+                       u_int start,u_int end);
+
 /* Read a piece of a sub-block */
 ssize_t vmfs_block_read_sb(const vmfs_fs_t *fs,uint32_t blk_id,off_t pos,
                            u_char *buf,size_t len);
