@@ -121,6 +121,9 @@ int vmfs_inode_get_block(const vmfs_fs_t *fs,const vmfs_inode_t *inode,
 int vmfs_inode_get_wrblock(const vmfs_fs_t *fs,vmfs_inode_t *inode,off_t pos,
                            uint32_t *blk_id);
 
+/* Truncate file */
+int vmfs_inode_truncate(const vmfs_fs_t *fs,vmfs_inode_t *inode,off_t new_len);
+
 /* Show block list of an inode */
 void vmfs_inode_show_blocks(const vmfs_fs_t *fs,const vmfs_inode_t *inode);
 

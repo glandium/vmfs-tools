@@ -516,6 +516,80 @@ int vmfs_inode_get_wrblock(const vmfs_fs_t *fs,vmfs_inode_t *inode,off_t pos,
    return(0);
 }
 
+/* Truncate file */
+int vmfs_inode_truncate(const vmfs_fs_t *fs,vmfs_inode_t *inode,off_t new_len)
+{
+   u_int i;
+
+   if (new_len == inode->size)
+      return(0);
+
+   if (new_len > inode->size) {
+      if (vmfs_inode_aggregate(fs,inode,new_len) == -1)
+         return(-1);
+
+      inode->size = new_len;
+      vmfs_inode_update(fs,inode,1);
+      return(0);
+   }
+
+   switch(inode->zla) {
+      case VMFS_BLK_TYPE_FB:
+      case VMFS_BLK_TYPE_SB:
+      {
+         u_int start,end;
+
+         start = ALIGN_NUM(new_len,inode->blk_size) / inode->blk_size;
+         end   = inode->size / inode->blk_size;
+
+         for(i=start;i<=end;i++) {
+            if (inode->blocks[i] != 0) {
+               vmfs_block_free(fs,inode->blocks[i]);
+               inode->blocks[i] = 0;
+            }
+         }
+         break;
+      }
+
+      case VMFS_BLK_TYPE_PB:
+      {
+         uint32_t blk_per_pb;
+         u_int pb_start,pb_end;
+         u_int sub_start,start;
+         u_int blk_index;
+
+         blk_per_pb = fs->pbc->bmh.data_size / sizeof(uint32_t);
+         blk_index = ALIGN_NUM(new_len,inode->blk_size) / inode->blk_size;
+
+         pb_start  = blk_index / blk_per_pb;
+         sub_start = blk_index % blk_per_pb;
+
+         pb_end = inode->size / (inode->blk_size * blk_per_pb);
+
+         for(i=pb_start;i<=pb_end;i++) {
+            if (inode->blocks[i] != 0) {
+               start = (i == pb_start) ? sub_start : 0;
+
+               /* Free blocks contained in PB */
+               vmfs_block_free_pb(fs,inode->blocks[i],start,blk_per_pb);
+
+               if (start == 0)
+                  inode->blocks[i] = 0;
+            }
+         }
+
+         break;
+      }
+
+      default:
+         return(-1);
+   }
+
+   inode->size = new_len;
+   vmfs_inode_update(fs,inode,1);
+   return(0);
+}
+
 /* Show block list of an inode */
 void vmfs_inode_show_blocks(const vmfs_fs_t *fs,const vmfs_inode_t *inode)
 {
