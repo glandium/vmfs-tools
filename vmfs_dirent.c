@@ -286,3 +286,34 @@ static int vmfs_dir_create_entry(vmfs_dir_t *d,vmfs_inode_t *inode,char *name)
    inode->nlink++;
    return(0);
 }
+
+/* Create a new directory */
+static int vmfs_dir_create_dir(vmfs_dir_t *d,char *name)
+{
+   vmfs_fs_t *fs = (vmfs_fs_t *)vmfs_dir_get_fs(d);
+   vmfs_dir_t *new_dir;
+   vmfs_inode_t *inode,tmp_inode;
+
+   /* Allocate inode for the new directory */
+   if (vmfs_inode_alloc(fs,&tmp_inode) == -1)
+      return(-1);
+
+   tmp_inode.type = VMFS_FILE_TYPE_DIR;
+
+   if (!(new_dir = vmfs_dir_open_from_inode(fs,&tmp_inode)))
+      goto err_open_dir;
+
+   inode = &new_dir->dir->inode;
+
+   vmfs_dir_create_entry(new_dir,inode,".");
+   vmfs_dir_create_entry(new_dir,&d->dir->inode,"..");
+   vmfs_dir_create_entry(d,inode,name);
+
+   vmfs_inode_update(fs,inode,0);
+   vmfs_inode_update(fs,&d->dir->inode,0);
+   return(0);
+
+ err_open_dir:
+   vmfs_block_free(fs,tmp_inode.id);
+   return(-1);
+}
