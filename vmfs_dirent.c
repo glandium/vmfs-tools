@@ -185,6 +185,27 @@ uint32_t vmfs_dir_resolve_path(vmfs_dir_t *base_dir,const char *path,
    return(ret);
 }
 
+/* Cache content of a directory */
+static int vmfs_dir_cache_entries(vmfs_dir_t *d)
+{
+   off_t dir_size;
+
+   if (d->buf != NULL)
+      free(d->buf);
+
+   dir_size = vmfs_file_get_size(d->dir);
+
+   if (!(d->buf = calloc(1,dir_size)))
+      return(-1);
+
+   if (vmfs_file_pread(d->dir,d->buf,dir_size,0) != dir_size) {
+      free(d->buf);
+      return(-1);
+   }
+
+   return(0);
+}
+
 /* Open a directory file */
 static vmfs_dir_t *vmfs_dir_open_from_file(vmfs_file_t *file)
 {
@@ -200,9 +221,7 @@ static vmfs_dir_t *vmfs_dir_open_from_file(vmfs_file_t *file)
    }
 
    d->dir = file;
-   d->buf = calloc(1,vmfs_file_get_size(file));
-   if (d->buf)
-      vmfs_file_pread(file,d->buf,vmfs_file_get_size(file),0);
+   vmfs_dir_cache_entries(d);
    return d;
 }
 
@@ -271,6 +290,9 @@ static int vmfs_dir_create_entry(vmfs_dir_t *d,vmfs_inode_t *inode,char *name)
    vmfs_dirent_t entry;
    off_t dir_size;
 
+   if (vmfs_dir_lookup(d,name) != NULL)
+      return(-1);
+
    memset(&entry,0,sizeof(entry));
    entry.type      = inode->type;
    entry.block_id  = inode->id;
@@ -284,6 +306,8 @@ static int vmfs_dir_create_entry(vmfs_dir_t *d,vmfs_inode_t *inode,char *name)
       return(-1);
 
    inode->nlink++;
+
+   vmfs_dir_cache_entries(d);
    return(0);
 }
 
@@ -311,6 +335,8 @@ static int vmfs_dir_create_dir(vmfs_dir_t *d,char *name)
 
    vmfs_inode_update(fs,inode,0);
    vmfs_inode_update(fs,&d->dir->inode,0);
+
+   vmfs_dir_close(new_dir);
    return(0);
 
  err_open_dir:
