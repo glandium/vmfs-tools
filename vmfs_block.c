@@ -293,7 +293,7 @@ ssize_t vmfs_block_write_sb(const vmfs_fs_t *fs,uint32_t blk_id,off_t pos,
        !vmfs_bitmap_get_item(fs->sbc,sbc_entry,sbc_item,tmpbuf))
       return(-1);
 
-   memcpy(buf,tmpbuf+offset,clen);
+   memcpy(tmpbuf+offset,buf,clen);
 
    if (!vmfs_bitmap_set_item(fs->sbc,sbc_entry,sbc_item,tmpbuf))
       return(-1);
