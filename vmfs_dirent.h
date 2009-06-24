@@ -91,4 +91,7 @@ static inline void vmfs_dir_seek(vmfs_dir_t *d, uint32_t pos)
 /* Close a directory */
 int vmfs_dir_close(vmfs_dir_t *d);
 
+/* Create a new directory given a path */
+int vmfs_dir_mkdir_at(vmfs_dir_t *d,char *path);
+
 #endif

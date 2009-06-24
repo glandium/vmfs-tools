@@ -343,3 +343,28 @@ static int vmfs_dir_create_dir(vmfs_dir_t *d,char *name)
    vmfs_block_free(fs,tmp_inode.id);
    return(-1);
 }
+
+/* Create a new directory given a path */
+int vmfs_dir_mkdir_at(vmfs_dir_t *d,char *path)
+{
+   char *dir_name,*base_name;
+   vmfs_dir_t *dir;
+   int res = -1;
+
+   dir_name = m_dirname(path);
+   base_name = m_basename(path);
+
+   if (!dir_name || !base_name)
+      goto done;
+
+   if (!(dir = vmfs_dir_open_at(d,dir_name)))
+      goto done;
+   
+   res = vmfs_dir_create_dir(dir,base_name);
+   vmfs_dir_close(dir);
+
+ done:
+   free(dir_name);
+   free(base_name);
+   return(res);
+}
