@@ -147,6 +147,17 @@ static int cmd_truncate(vmfs_dir_t *base_dir,int argc,char *argv[])
    return(0);
 }
 
+/* "mkdir" command */
+static int cmd_mkdir(vmfs_dir_t *base_dir,int argc,char *argv[])
+{
+   if (argc < 1) {
+      fprintf(stderr,"Usage: mkdir dirname\n");
+      return(-1);
+   }
+
+   return(vmfs_dir_mkdir_at(base_dir,argv[0]));
+}
+
 /* "df" (disk free) command */
 static int cmd_df(vmfs_dir_t *base_dir,int argc,char *argv[])
 {
@@ -707,6 +718,7 @@ struct cmd cmd_array[] = {
    { "cat", "Concatenate files and print on standard output", cmd_cat },
    { "ls", "List files in specified directory", cmd_ls },
    { "truncate", "Truncate file", cmd_truncate },
+   { "mkdir", "Create a directory", cmd_mkdir },
    { "df", "Show available free space", cmd_df },
    { "show_dirent", "Show directory entry", cmd_show_dirent },
    { "show_inode", "Show inode", cmd_show_inode },
