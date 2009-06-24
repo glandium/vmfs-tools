@@ -263,3 +263,26 @@ int vmfs_dir_close(vmfs_dir_t *d)
    free(d);
    return(0);
 }
+
+/* Create a directory entry based on name and inode */
+static int vmfs_dir_create_entry(vmfs_dir_t *d,vmfs_inode_t *inode,char *name)
+{
+   u_char buf[VMFS_DIRENT_SIZE];
+   vmfs_dirent_t entry;
+   off_t dir_size;
+
+   memset(&entry,0,sizeof(entry));
+   entry.type      = inode->type;
+   entry.block_id  = inode->id;
+   entry.record_id = inode->id2;
+   strncpy(entry.name,name,VMFS_DIRENT_OFS_NAME_SIZE);
+   vmfs_dirent_write(&entry,buf);
+
+   dir_size = vmfs_file_get_size(d->dir);
+
+   if (vmfs_file_pwrite(d->dir,buf,sizeof(buf),dir_size) != sizeof(buf))
+      return(-1);
+
+   inode->nlink++;
+   return(0);
+}
