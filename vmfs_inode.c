@@ -178,7 +178,7 @@ int vmfs_inode_get(const vmfs_fs_t *fs,uint32_t blk_id,vmfs_inode_t *inode)
 }
 
 /* Allocate a new inode */
-int vmfs_inode_alloc(const vmfs_fs_t *fs,vmfs_inode_t *inode)
+int vmfs_inode_alloc(vmfs_fs_t *fs,vmfs_inode_t *inode)
 {
    vmfs_inode_t *fdc_inode;
    off_t fdc_offset;
@@ -194,6 +194,7 @@ int vmfs_inode_alloc(const vmfs_fs_t *fs,vmfs_inode_t *inode)
    inode->mtime     = ct;
    inode->ctime     = ct;
    inode->atime     = ct;
+   inode->id2       = ++fs->inode_gen;
 
    if (vmfs_block_alloc(fs,VMFS_BLK_TYPE_FD,&inode->id) == -1)
       return(-1);

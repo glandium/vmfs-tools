@@ -98,6 +98,9 @@ struct vmfs_fs {
    uint64_t hb_seq;
    u_int hb_refcount;
    uint64_t hb_expire;
+
+   /* Counter for "gen" field in inodes */
+   uint32_t inode_gen;
 };
 
 /* Get block size of a volume */
