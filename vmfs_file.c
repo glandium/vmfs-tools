@@ -204,8 +204,8 @@ ssize_t vmfs_file_pwrite(vmfs_file_t *f,u_char *buf,size_t len,off_t pos)
    }
 
    /* Update file size */
-   if ((pos + wlen) > vmfs_file_get_size(f)) {
-      f->inode.size = pos + wlen;
+   if (pos > vmfs_file_get_size(f)) {
+      f->inode.size = pos;
       vmfs_inode_update(f->fs,&f->inode,0);
    }
 
