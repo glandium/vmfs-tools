@@ -185,7 +185,7 @@ uint32_t vmfs_dir_resolve_path(vmfs_dir_t *base_dir,const char *path,
    return(ret);
 }
 
-/* Open a directory file using a callback */
+/* Open a directory file */
 static vmfs_dir_t *vmfs_dir_open_from_file(vmfs_file_t *file)
 {
    vmfs_dir_t *d;
