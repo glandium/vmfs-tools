@@ -135,7 +135,7 @@ static int cmd_truncate(vmfs_dir_t *base_dir,int argc,char *argv[])
       return(-1);
    }
 
-   new_size = (off_t)strtoul(argv[1],NULL,0);
+   new_size = (off_t)strtoull(argv[1],NULL,0);
 
    if (vmfs_file_truncate_at(base_dir,argv[0],new_size) == -1) {
       fprintf(stderr,"Unable to truncate file.\n");
@@ -296,7 +296,7 @@ static int cmd_get_file_block(vmfs_dir_t *base_dir,int argc,char *argv[])
       return(-1);
    }
 
-   pos = (off_t)strtoul(argv[1],NULL,16);
+   pos = (off_t)strtoull(argv[1],NULL,16);
 
    if (!vmfs_inode_get_block(fs,&f->inode,pos,&blk_id)) {
       printf("0x%8.8x\n",blk_id);
