@@ -290,7 +290,11 @@ ssize_t vmfs_block_write_sb(const vmfs_fs_t *fs,uint32_t blk_id,off_t pos,
 
    /* If we write completely the sub-block, no need to read something */
    if (!offset && (clen == len) &&
-       !vmfs_bitmap_get_item(fs->sbc,sbc_entry,sbc_item,tmpbuf))
+       !vmfs_bitmap_set_item(fs->sbc,sbc_entry,sbc_item,tmpbuf))
+      return(-1);
+
+   /* Read the full block and update a piece of it */
+   if (!vmfs_bitmap_get_item(fs->sbc,sbc_entry,sbc_item,tmpbuf))
       return(-1);
 
    memcpy(tmpbuf+offset,buf,clen);
