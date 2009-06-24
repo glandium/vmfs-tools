@@ -147,6 +147,26 @@ static int cmd_truncate(vmfs_dir_t *base_dir,int argc,char *argv[])
    return(0);
 }
 
+/* "chmod" command */
+static int cmd_chmod(vmfs_dir_t *base_dir,int argc,char *argv[])
+{
+   mode_t mode;
+
+   if (argc < 2) {
+      fprintf(stderr,"Usage: chmod filename mode\n");
+      return(-1);
+   }
+
+   mode = (mode_t)strtoul(argv[1],NULL,0);
+
+   if (vmfs_file_chmod_at(base_dir,argv[0],mode) == -1) {
+      fprintf(stderr,"Unable to change file permissions.\n");
+      return(-1);
+   }
+
+   return(0);
+}
+
 /* "mkdir" command */
 static int cmd_mkdir(vmfs_dir_t *base_dir,int argc,char *argv[])
 {
@@ -718,6 +738,7 @@ struct cmd cmd_array[] = {
    { "cat", "Concatenate files and print on standard output", cmd_cat },
    { "ls", "List files in specified directory", cmd_ls },
    { "truncate", "Truncate file", cmd_truncate },
+   { "chmod", "Change permissions", cmd_chmod },
    { "mkdir", "Create a directory", cmd_mkdir },
    { "df", "Show available free space", cmd_df },
    { "show_dirent", "Show directory entry", cmd_show_dirent },

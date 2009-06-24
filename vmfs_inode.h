@@ -141,4 +141,7 @@ int vmfs_inode_stat(const vmfs_inode_t *inode,struct stat *buf);
 int vmfs_inode_stat_from_blkid(const vmfs_fs_t *fs,uint32_t blk_id,
                                struct stat *buf);
 
+/* Change permissions */
+int vmfs_inode_chmod(const vmfs_fs_t *fs,vmfs_inode_t *inode,mode_t mode);
+
 #endif

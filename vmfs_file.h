@@ -92,4 +92,10 @@ int vmfs_file_truncate(vmfs_file_t *f,off_t length);
 /* Truncate a file (using a path) */
 int vmfs_file_truncate_at(vmfs_dir_t *dir,const char *path,off_t length);
 
+/* Change permissions of a file */
+int vmfs_file_chmod(vmfs_file_t *f,mode_t mode);
+
+/* Change permissions of a file (using a path) */
+int vmfs_file_chmod_at(vmfs_dir_t *dir,const char *path,mode_t mode);
+
 #endif

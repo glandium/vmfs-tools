@@ -300,3 +300,24 @@ int vmfs_file_truncate_at(vmfs_dir_t *dir,const char *path,off_t length)
    vmfs_file_close(f);
    return(res);
 }
+
+/* Change permissions of a file */
+int vmfs_file_chmod(vmfs_file_t *f,mode_t mode)
+{
+   return(vmfs_inode_chmod(f->fs,&f->inode,mode));
+}
+
+/* Change permissions of a file (using a path) */
+int vmfs_file_chmod_at(vmfs_dir_t *dir,const char *path,mode_t mode)
+{
+   vmfs_file_t *f;
+   int res;
+
+   if (!(f = vmfs_file_open_at(dir,path)))
+      return(-1);
+
+   res = vmfs_file_chmod(f,mode);
+
+   vmfs_file_close(f);
+   return(res);
+}

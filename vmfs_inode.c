@@ -762,3 +762,11 @@ int vmfs_inode_stat_from_blkid(const vmfs_fs_t *fs,uint32_t blk_id,
    vmfs_inode_stat(&inode,buf);
    return(0);
 }
+
+/* Change permissions */
+int vmfs_inode_chmod(const vmfs_fs_t *fs,vmfs_inode_t *inode,mode_t mode)
+{
+   inode->mode = mode;
+   vmfs_inode_update(fs,inode,0);
+   return(0);
+}
