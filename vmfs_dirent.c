@@ -35,6 +35,16 @@ static int vmfs_dirent_read(vmfs_dirent_t *entry,const u_char *buf)
    return(0);
 }
 
+/* Write a directory entry */
+static int vmfs_dirent_write(const vmfs_dirent_t *entry,u_char *buf)
+{
+   write_le32(buf,VMFS_DIRENT_OFS_TYPE,entry->type);
+   write_le32(buf,VMFS_DIRENT_OFS_BLK_ID,entry->block_id);
+   write_le32(buf,VMFS_DIRENT_OFS_REC_ID,entry->record_id);
+   memcpy(buf+VMFS_DIRENT_OFS_NAME,entry->name,VMFS_DIRENT_OFS_NAME_SIZE);
+   return(0);
+}
+
 /* Show a directory entry */
 void vmfs_dirent_show(const vmfs_dirent_t *entry)
 {
