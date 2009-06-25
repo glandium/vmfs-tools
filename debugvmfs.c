@@ -147,6 +147,44 @@ static int cmd_truncate(vmfs_dir_t *base_dir,int argc,char *argv[])
    return(0);
 }
 
+/* "copy_file" command */
+static int cmd_copy_file(vmfs_dir_t *base_dir,int argc,char *argv[])
+{
+   u_char buffer[4096];
+   off_t pos;
+   size_t len;
+   vmfs_file_t *output;
+   FILE *input;
+   
+   if (argc < 2) {
+      fprintf(stderr,"Usage: copy_file local_filename vmfs_filename\n");
+      return(-1);
+   }
+
+   if (!(input = fopen(argv[0],"r"))) {
+      fprintf(stderr,"Unable to open local file\n");
+      return(-1);
+   }
+
+   if (!(output = vmfs_file_create_at(base_dir,argv[1]))) {
+      fprintf(stderr,"Unable to create file.\n");
+      return(-1);
+   }
+
+   pos = 0;
+
+   while(!feof(input)) {
+      len = fread(buffer,1,sizeof(buffer),input);
+      if (!len) break;
+
+      vmfs_file_pwrite(output,buffer,len,pos);
+      pos += len;
+   }
+
+   vmfs_file_close(output);
+   return(0);
+}
+
 /* "chmod" command */
 static int cmd_chmod(vmfs_dir_t *base_dir,int argc,char *argv[])
 {
@@ -738,6 +776,7 @@ struct cmd cmd_array[] = {
    { "cat", "Concatenate files and print on standard output", cmd_cat },
    { "ls", "List files in specified directory", cmd_ls },
    { "truncate", "Truncate file", cmd_truncate },
+   { "copy_file", "Copy a file to VMFS volume", cmd_copy_file },
    { "chmod", "Change permissions", cmd_chmod },
    { "mkdir", "Create a directory", cmd_mkdir },
    { "df", "Show available free space", cmd_df },
