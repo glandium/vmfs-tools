@@ -289,7 +289,7 @@ ssize_t vmfs_block_write_sb(const vmfs_fs_t *fs,uint32_t blk_id,off_t pos,
    sbc_item  = VMFS_BLK_SB_ITEM(blk_id);
 
    /* If we write completely the sub-block, no need to read something */
-   if (!offset && (clen == len)) {
+   if (!offset && (clen == fs->sbc->bmh.data_size)) {
       if (!vmfs_bitmap_set_item(fs->sbc,sbc_entry,sbc_item,tmpbuf))
          return(-1);
       
