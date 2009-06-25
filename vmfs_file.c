@@ -58,10 +58,22 @@ vmfs_file_t *vmfs_file_open_from_blkid(const vmfs_fs_t *fs,uint32_t blk_id)
 vmfs_file_t *vmfs_file_open_at(vmfs_dir_t *dir,const char *path)
 {
    uint32_t blk_id;
+
    if (!(blk_id = vmfs_dir_resolve_path(dir,path,1)))
       return(NULL);
 
    return(vmfs_file_open_from_blkid(vmfs_dir_get_fs(dir),blk_id));
+}
+
+/* Create a file */
+vmfs_file_t *vmfs_file_create_at(vmfs_dir_t *dir,const char *path)
+{
+   vmfs_inode_t inode;
+
+   if (vmfs_dir_create_at(dir,path,&inode) == -1)
+      return NULL;
+
+   return(vmfs_file_open_from_inode(vmfs_dir_get_fs(dir),&inode));
 }
 
 /* Close a file */
