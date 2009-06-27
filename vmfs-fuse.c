@@ -220,11 +220,22 @@ int main(int argc, char *argv[])
    struct fuse_args args = FUSE_ARGS_INIT(argc, argv);
    struct vmfs_fuse_opts opts = { 0, };
    struct fuse_chan *chan;
+   vmfs_flags_t flags;
    int err = -1;
 
    vmfs_host_init();
 
-   if (!(opts.lvm = vmfs_lvm_create(0))) {
+   flags.packed = 0;
+
+#ifdef VMFS_WRITE
+   flags.read_write = 1;
+#endif
+
+#ifdef VMFS_ALLOW_MISSING_EXTENTS
+   flags.allow_missing_extents = 1;
+#endif
+
+   if (!(opts.lvm = vmfs_lvm_create(flags))) {
       fprintf(stderr,"Unable to create LVM structure\n");
       goto cleanup;
    }
