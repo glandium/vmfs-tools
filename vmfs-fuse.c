@@ -186,6 +186,28 @@ static void vmfs_fuse_read(fuse_req_t req, fuse_ino_t ino, size_t size,
    fuse_reply_buf(req, buf, sz);
 }
 
+static void vmfs_fuse_write(fuse_req_t req, fuse_ino_t ino, 
+                            const char *buf, size_t size, off_t off, 
+                            struct fuse_file_info *fi) 
+{
+   ssize_t sz;
+
+   if (!fi->fh) {
+      fuse_reply_err(req, EBADF);
+      return;
+   }
+
+   sz = vmfs_file_pwrite((vmfs_file_t *)(unsigned long)fi->fh,
+                         (u_char *)buf, size, off);
+
+   if (sz < 0) {
+      fuse_reply_err(req, EIO);
+      return;
+   }
+
+   fuse_reply_write(req,sz);
+}
+
 static void vmfs_fuse_release(fuse_req_t req, fuse_ino_t ino,
                               struct fuse_file_info *fi)
 {
@@ -206,6 +228,7 @@ const static struct fuse_lowlevel_ops vmfs_oper = {
    .lookup = vmfs_fuse_lookup,
    .open = vmfs_fuse_open,
    .read = vmfs_fuse_read,
+   .write = vmfs_fuse_write,
    .release = vmfs_fuse_release,
 };
 
