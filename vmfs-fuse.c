@@ -52,6 +52,38 @@ static void vmfs_fuse_getattr(fuse_req_t req, fuse_ino_t ino,
       fuse_reply_err(req, ENOENT);
 }
 
+static void vmfs_fuse_setattr(fuse_req_t req, fuse_ino_t ino, 
+                              struct stat *attr, int to_set, 
+                              struct fuse_file_info *fi) 
+{
+   vmfs_fs_t *fs = (vmfs_fs_t *) fuse_req_userdata(req);
+   struct stat stbuf = { 0, };
+   vmfs_inode_t inode;
+
+   if (vmfs_inode_get(fs,ino2blkid(ino),&inode) == -1) {
+      fuse_reply_err(req, ENOENT);
+      return;
+   }
+
+   if (to_set & FUSE_SET_ATTR_MODE)
+      inode.mode = attr->st_mode;
+
+   if (to_set & FUSE_SET_ATTR_UID)
+      inode.uid = attr->st_uid;
+
+   if (to_set & FUSE_SET_ATTR_GID)
+      inode.gid = attr->st_gid;
+
+   if (to_set & FUSE_SET_ATTR_SIZE)
+      vmfs_inode_truncate(fs,&inode,attr->st_size);
+
+   vmfs_inode_update(fs,&inode,0);
+   vmfs_inode_stat(&inode,&stbuf);
+   stbuf.st_ino = blkid2ino(inode.id);
+
+   fuse_reply_attr(req, &stbuf, 1.0);
+}
+
 static void vmfs_fuse_opendir(fuse_req_t req, fuse_ino_t ino,
                               struct fuse_file_info *fi)
 {
@@ -167,6 +199,7 @@ static void vmfs_fuse_release(fuse_req_t req, fuse_ino_t ino,
 
 const static struct fuse_lowlevel_ops vmfs_oper = {
    .getattr = vmfs_fuse_getattr,
+   .setattr = vmfs_fuse_setattr,
    .opendir = vmfs_fuse_opendir,
    .readdir = vmfs_fuse_readdir,
    .releasedir = vmfs_fuse_releasedir,
