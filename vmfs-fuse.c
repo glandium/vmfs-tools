@@ -74,6 +74,12 @@ static void vmfs_fuse_setattr(fuse_req_t req, fuse_ino_t ino,
    if (to_set & FUSE_SET_ATTR_GID)
       inode.gid = attr->st_gid;
 
+   if (to_set & FUSE_SET_ATTR_ATIME)
+      inode.atime = attr->st_atime;
+
+   if (to_set & FUSE_SET_ATTR_MTIME)
+      inode.atime = attr->st_mtime;
+
    if (to_set & FUSE_SET_ATTR_SIZE)
       vmfs_inode_truncate(fs,&inode,attr->st_size);
 
