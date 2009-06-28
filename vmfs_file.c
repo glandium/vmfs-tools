@@ -66,11 +66,11 @@ vmfs_file_t *vmfs_file_open_at(vmfs_dir_t *dir,const char *path)
 }
 
 /* Create a file */
-vmfs_file_t *vmfs_file_create_at(vmfs_dir_t *dir,const char *path)
+vmfs_file_t *vmfs_file_create_at(vmfs_dir_t *dir,const char *path,mode_t mode)
 {
    vmfs_inode_t inode;
 
-   if (vmfs_dir_create_at(dir,path,&inode) == -1)
+   if (vmfs_dir_create_at(dir,path,mode,&inode) == -1)
       return NULL;
 
    return(vmfs_file_open_from_inode(vmfs_dir_get_fs(dir),&inode));

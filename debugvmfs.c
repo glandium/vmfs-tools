@@ -166,7 +166,7 @@ static int cmd_copy_file(vmfs_dir_t *base_dir,int argc,char *argv[])
       return(-1);
    }
 
-   if (!(output = vmfs_file_create_at(base_dir,argv[1]))) {
+   if (!(output = vmfs_file_create_at(base_dir,argv[1],0644))) {
       fprintf(stderr,"Unable to create file.\n");
       return(-1);
    }
@@ -213,7 +213,7 @@ static int cmd_mkdir(vmfs_dir_t *base_dir,int argc,char *argv[])
       return(-1);
    }
 
-   return(vmfs_dir_mkdir_at(base_dir,argv[0]));
+   return(vmfs_dir_mkdir_at(base_dir,argv[0],0755));
 }
 
 /* "df" (disk free) command */

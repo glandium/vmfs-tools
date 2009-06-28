@@ -92,9 +92,10 @@ static inline void vmfs_dir_seek(vmfs_dir_t *d, uint32_t pos)
 int vmfs_dir_close(vmfs_dir_t *d);
 
 /* Create a new file given a path */
-int vmfs_dir_create_at(vmfs_dir_t *d,char *path,vmfs_inode_t *inode);
+int vmfs_dir_create_at(vmfs_dir_t *d,char *path,mode_t mode,
+                       vmfs_inode_t *inode);
 
 /* Create a new directory given a path */
-int vmfs_dir_mkdir_at(vmfs_dir_t *d,char *path);
+int vmfs_dir_mkdir_at(vmfs_dir_t *d,char *path,mode_t mode);
 
 #endif

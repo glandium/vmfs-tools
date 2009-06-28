@@ -312,7 +312,8 @@ static int vmfs_dir_create_entry(vmfs_dir_t *d,vmfs_inode_t *inode,char *name)
 }
 
 /* Create a new file entry */
-static int vmfs_dir_create_file(vmfs_dir_t *d,char *name,vmfs_inode_t *inode)
+static int vmfs_dir_create_file(vmfs_dir_t *d,char *name,mode_t mode,
+                                vmfs_inode_t *inode)
 {      
    vmfs_fs_t *fs = (vmfs_fs_t *)vmfs_dir_get_fs(d);
 
@@ -325,13 +326,16 @@ static int vmfs_dir_create_file(vmfs_dir_t *d,char *name,vmfs_inode_t *inode)
       return(-1);
    }
 
+   inode->cmode = inode->mode = mode | vmfs_file_type2mode(inode->type);
+
    vmfs_inode_update(fs,inode,0);
    vmfs_dir_cache_entries(d);
    return(0);
 }
 
 /* Create a new file given a path */
-int vmfs_dir_create_at(vmfs_dir_t *d,char *path,vmfs_inode_t *inode)
+int vmfs_dir_create_at(vmfs_dir_t *d,char *path,mode_t mode,
+                       vmfs_inode_t *inode)
 {
    char *dir_name,*base_name;
    vmfs_dir_t *dir;
@@ -346,7 +350,7 @@ int vmfs_dir_create_at(vmfs_dir_t *d,char *path,vmfs_inode_t *inode)
    if (!(dir = vmfs_dir_open_at(d,dir_name)))
       goto done;
    
-   res = vmfs_dir_create_file(dir,base_name,inode);
+   res = vmfs_dir_create_file(dir,base_name,mode,inode);
    vmfs_dir_close(dir);
 
  done:
@@ -356,7 +360,7 @@ int vmfs_dir_create_at(vmfs_dir_t *d,char *path,vmfs_inode_t *inode)
 }
 
 /* Create a new directory */
-static int vmfs_dir_create_dir(vmfs_dir_t *d,char *name)
+static int vmfs_dir_create_dir(vmfs_dir_t *d,char *name,mode_t mode)
 {
    vmfs_fs_t *fs = (vmfs_fs_t *)vmfs_dir_get_fs(d);
    vmfs_dir_t *new_dir;
@@ -377,6 +381,8 @@ static int vmfs_dir_create_dir(vmfs_dir_t *d,char *name)
    vmfs_dir_create_entry(new_dir,&d->dir->inode,"..");
    vmfs_dir_create_entry(d,inode,name);
 
+   inode->cmode = inode->mode = mode | vmfs_file_type2mode(inode->type);
+
    vmfs_inode_update(fs,inode,0);
    vmfs_inode_update(fs,&d->dir->inode,0);
 
@@ -389,7 +395,7 @@ static int vmfs_dir_create_dir(vmfs_dir_t *d,char *name)
 }
 
 /* Create a new directory given a path */
-int vmfs_dir_mkdir_at(vmfs_dir_t *d,char *path)
+int vmfs_dir_mkdir_at(vmfs_dir_t *d,char *path,mode_t mode)
 {
    char *dir_name,*base_name;
    vmfs_dir_t *dir;
@@ -404,7 +410,7 @@ int vmfs_dir_mkdir_at(vmfs_dir_t *d,char *path)
    if (!(dir = vmfs_dir_open_at(d,dir_name)))
       goto done;
    
-   res = vmfs_dir_create_dir(dir,base_name);
+   res = vmfs_dir_create_dir(dir,base_name,mode);
    vmfs_dir_close(dir);
 
  done:
