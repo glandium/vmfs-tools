@@ -90,6 +90,33 @@ static void vmfs_fuse_setattr(fuse_req_t req, fuse_ino_t ino,
    fuse_reply_attr(req, &stbuf, 1.0);
 }
 
+static void vmfs_fuse_mknod(fuse_req_t req,fuse_ino_t parent,const char *name,
+                            mode_t mode, dev_t rdev)
+{   
+   struct fuse_entry_param entry = { 0, };
+   vmfs_inode_t inode;
+   vmfs_dir_t *dir;
+
+   if (!(dir = vmfs_dir_open_from_blkid(fs, ino2blkid(parent)))) {
+      fuse_reply_err(req, ENOENT);
+      return;
+   }        
+
+   if (vmfs_dir_create_at(dir,name,mode,&inode) == -1) {
+      fuse_reply_err(req, EIO);
+      return;
+   }
+
+   vmfs_dir_close(dir);
+
+   vmfs_inode_stat(&inode,&entry.attr);
+   entry.ino = entry.attr.st_ino = blkid2ino(inode.id);
+   entry.generation = 1;
+   entry.attr_timeout = 1.0;
+   entry.entry_timeout = 1.0;
+   fuse_reply_entry(req, &entry);
+}
+
 static void vmfs_fuse_opendir(fuse_req_t req, fuse_ino_t ino,
                               struct fuse_file_info *fi)
 {
@@ -228,6 +255,7 @@ static void vmfs_fuse_release(fuse_req_t req, fuse_ino_t ino,
 const static struct fuse_lowlevel_ops vmfs_oper = {
    .getattr = vmfs_fuse_getattr,
    .setattr = vmfs_fuse_setattr,
+   .mknod = vmfs_fuse_mknod,
    .opendir = vmfs_fuse_opendir,
    .readdir = vmfs_fuse_readdir,
    .releasedir = vmfs_fuse_releasedir,
