@@ -65,6 +65,10 @@ vmfs_file_t *vmfs_file_open_from_blkid(const vmfs_fs_t *fs,uint32_t blk_id);
 /* Open a file */
 vmfs_file_t *vmfs_file_open_at(vmfs_dir_t *dir,const char *path);
 
+/* Create a new file entry */
+int vmfs_file_create(vmfs_dir_t *d,const char *name,mode_t mode,
+                     vmfs_inode_t *inode);
+
 /* Create a file */
 vmfs_file_t *vmfs_file_create_at(vmfs_dir_t *dir,const char *path,mode_t mode);
 

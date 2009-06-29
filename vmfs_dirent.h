@@ -91,11 +91,14 @@ static inline void vmfs_dir_seek(vmfs_dir_t *d, uint32_t pos)
 /* Close a directory */
 int vmfs_dir_close(vmfs_dir_t *d);
 
-/* Create a new file given a path */
-int vmfs_dir_create_at(vmfs_dir_t *d,char *path,mode_t mode,
-                       vmfs_inode_t *inode);
+/* Link an inode to a directory with the specified name */
+int vmfs_dir_link_inode(vmfs_dir_t *d,const char *name,vmfs_inode_t *inode);
+
+/* Create a new directory */
+int vmfs_dir_create(vmfs_dir_t *d,const char *name,mode_t mode,
+                    vmfs_inode_t *inode);
 
 /* Create a new directory given a path */
-int vmfs_dir_mkdir_at(vmfs_dir_t *d,char *path,mode_t mode);
+int vmfs_dir_mkdir_at(vmfs_dir_t *d,const char *path,mode_t mode);
 
 #endif

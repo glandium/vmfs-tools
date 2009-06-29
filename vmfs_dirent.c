@@ -283,8 +283,8 @@ int vmfs_dir_close(vmfs_dir_t *d)
    return(0);
 }
 
-/* Create a directory entry based on name and inode */
-static int vmfs_dir_create_entry(vmfs_dir_t *d,vmfs_inode_t *inode,char *name)
+/* Link an inode to a directory with the specified name */
+int vmfs_dir_link_inode(vmfs_dir_t *d,const char *name,vmfs_inode_t *inode)
 {
    u_char buf[VMFS_DIRENT_SIZE];
    vmfs_dirent_t entry;
@@ -311,63 +311,16 @@ static int vmfs_dir_create_entry(vmfs_dir_t *d,vmfs_inode_t *inode,char *name)
    return(0);
 }
 
-/* Create a new file entry */
-static int vmfs_dir_create_file(vmfs_dir_t *d,char *name,mode_t mode,
-                                vmfs_inode_t *inode)
-{      
-   vmfs_fs_t *fs = (vmfs_fs_t *)vmfs_dir_get_fs(d);
-
-   /* Allocate inode for the new file */
-   if (vmfs_inode_alloc(fs,inode) == -1)
-      return(-1);
-
-   if (vmfs_dir_create_entry(d,inode,name) == -1) {
-      vmfs_block_free(fs,inode->id);
-      return(-1);
-   }
-
-   inode->cmode = inode->mode = mode | vmfs_file_type2mode(inode->type);
-
-   vmfs_inode_update(fs,inode,0);
-   vmfs_dir_cache_entries(d);
-   return(0);
-}
-
-/* Create a new file given a path */
-int vmfs_dir_create_at(vmfs_dir_t *d,char *path,mode_t mode,
-                       vmfs_inode_t *inode)
-{
-   char *dir_name,*base_name;
-   vmfs_dir_t *dir;
-   int res = -1;
-
-   dir_name = m_dirname(path);
-   base_name = m_basename(path);
-
-   if (!dir_name || !base_name)
-      goto done;
-
-   if (!(dir = vmfs_dir_open_at(d,dir_name)))
-      goto done;
-   
-   res = vmfs_dir_create_file(dir,base_name,mode,inode);
-   vmfs_dir_close(dir);
-
- done:
-   free(dir_name);
-   free(base_name);
-   return(res);
-}
-
 /* Create a new directory */
-static int vmfs_dir_create_dir(vmfs_dir_t *d,char *name,mode_t mode)
+int vmfs_dir_create(vmfs_dir_t *d,const char *name,mode_t mode,
+                    vmfs_inode_t *inode)
 {
    vmfs_fs_t *fs = (vmfs_fs_t *)vmfs_dir_get_fs(d);
    vmfs_dir_t *new_dir;
-   vmfs_inode_t *inode,tmp_inode;
+   vmfs_inode_t *new_inode,tmp_inode;
 
    /* Allocate inode for the new directory */
-   if (vmfs_inode_alloc(fs,&tmp_inode) == -1)
+   if (vmfs_inode_alloc(fs,mode,&tmp_inode) == -1)
       return(-1);
 
    tmp_inode.type = VMFS_FILE_TYPE_DIR;
@@ -375,16 +328,17 @@ static int vmfs_dir_create_dir(vmfs_dir_t *d,char *name,mode_t mode)
    if (!(new_dir = vmfs_dir_open_from_inode(fs,&tmp_inode)))
       goto err_open_dir;
 
-   inode = &new_dir->dir->inode;
+   new_inode = &new_dir->dir->inode;
 
-   vmfs_dir_create_entry(new_dir,inode,".");
-   vmfs_dir_create_entry(new_dir,&d->dir->inode,"..");
-   vmfs_dir_create_entry(d,inode,name);
+   vmfs_dir_link_inode(new_dir,".",new_inode);
+   vmfs_dir_link_inode(new_dir,"..",&d->dir->inode);
+   vmfs_dir_link_inode(d,name,new_inode);
 
-   inode->cmode = inode->mode = mode | vmfs_file_type2mode(inode->type);
-
-   vmfs_inode_update(fs,inode,0);
+   vmfs_inode_update(fs,new_inode,0);
    vmfs_inode_update(fs,&d->dir->inode,0);
+
+   if (inode)
+      *inode = *new_inode;
 
    vmfs_dir_close(new_dir);
    return(0);
@@ -395,7 +349,7 @@ static int vmfs_dir_create_dir(vmfs_dir_t *d,char *name,mode_t mode)
 }
 
 /* Create a new directory given a path */
-int vmfs_dir_mkdir_at(vmfs_dir_t *d,char *path,mode_t mode)
+int vmfs_dir_mkdir_at(vmfs_dir_t *d,const char *path,mode_t mode)
 {
    char *dir_name,*base_name;
    vmfs_dir_t *dir;
@@ -410,7 +364,7 @@ int vmfs_dir_mkdir_at(vmfs_dir_t *d,char *path,mode_t mode)
    if (!(dir = vmfs_dir_open_at(d,dir_name)))
       goto done;
    
-   res = vmfs_dir_create_dir(dir,base_name,mode);
+   res = vmfs_dir_create(dir,base_name,mode,NULL);
    vmfs_dir_close(dir);
 
  done:

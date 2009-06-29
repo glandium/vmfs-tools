@@ -65,15 +65,52 @@ vmfs_file_t *vmfs_file_open_at(vmfs_dir_t *dir,const char *path)
    return(vmfs_file_open_from_blkid(vmfs_dir_get_fs(dir),blk_id));
 }
 
+/* Create a new file entry */
+int vmfs_file_create(vmfs_dir_t *d,const char *name,mode_t mode,
+                     vmfs_inode_t *inode)
+{      
+   vmfs_fs_t *fs = (vmfs_fs_t *)vmfs_dir_get_fs(d);
+
+   if (vmfs_inode_alloc(fs,mode,inode) == -1)
+      return(-1);
+
+   if (vmfs_dir_link_inode(d,name,inode) == -1) {
+      vmfs_block_free(fs,inode->id);
+      return(-1);
+   }
+
+   vmfs_inode_update(fs,inode,0);
+   return(0);
+}
+
 /* Create a file */
 vmfs_file_t *vmfs_file_create_at(vmfs_dir_t *dir,const char *path,mode_t mode)
 {
+   char *dir_name,*base_name;
+   vmfs_dir_t *d = NULL;
+   vmfs_file_t *f = NULL;
    vmfs_inode_t inode;
+   int res = -1;
 
-   if (vmfs_dir_create_at(dir,path,mode,&inode) == -1)
-      return NULL;
+   dir_name = m_dirname(path);
+   base_name = m_basename(path);
 
-   return(vmfs_file_open_from_inode(vmfs_dir_get_fs(dir),&inode));
+   if (!dir_name || !base_name)
+      goto done;
+
+   if (!(d = vmfs_dir_open_at(dir,dir_name)))
+      goto done;
+
+   if (vmfs_file_create(d,base_name,mode,&inode) == -1)
+      goto done;
+
+   f = vmfs_file_open_from_inode(vmfs_dir_get_fs(dir),&inode);
+
+ done:
+   vmfs_dir_close(d);
+   free(dir_name);
+   free(base_name);
+   return f;
 }
 
 /* Close a file */

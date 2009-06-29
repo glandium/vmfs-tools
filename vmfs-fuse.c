@@ -135,7 +135,7 @@ static void vmfs_fuse_mknod(fuse_req_t req,fuse_ino_t parent,const char *name,
       return;
    }        
 
-   if (vmfs_dir_create_at(dir,name,mode,&inode) == -1) {
+   if (vmfs_file_create(dir,name,mode,&inode) == -1) {
       fuse_reply_err(req, EIO);
       return;
    }
