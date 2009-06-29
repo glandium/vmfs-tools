@@ -108,7 +108,7 @@ void vmfs_inode_show(const vmfs_inode_t *inode);
 int vmfs_inode_get(const vmfs_fs_t *fs,uint32_t blk_id,vmfs_inode_t *inode);
 
 /* Allocate a new inode */
-int vmfs_inode_alloc(vmfs_fs_t *fs,mode_t mode,vmfs_inode_t *inode);
+int vmfs_inode_alloc(vmfs_fs_t *fs,u_int type,mode_t mode,vmfs_inode_t *inode);
 
 /* 
  * Get block ID corresponding the specified position. Pointer block

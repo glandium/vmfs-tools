@@ -71,7 +71,7 @@ int vmfs_file_create(vmfs_dir_t *d,const char *name,mode_t mode,
 {      
    vmfs_fs_t *fs = (vmfs_fs_t *)vmfs_dir_get_fs(d);
 
-   if (vmfs_inode_alloc(fs,mode,inode) == -1)
+   if (vmfs_inode_alloc(fs,VMFS_FILE_TYPE_FILE,mode,inode) == -1)
       return(-1);
 
    if (vmfs_dir_link_inode(d,name,inode) == -1) {
@@ -90,7 +90,6 @@ vmfs_file_t *vmfs_file_create_at(vmfs_dir_t *dir,const char *path,mode_t mode)
    vmfs_dir_t *d = NULL;
    vmfs_file_t *f = NULL;
    vmfs_inode_t inode;
-   int res = -1;
 
    dir_name = m_dirname(path);
    base_name = m_basename(path);

@@ -320,10 +320,8 @@ int vmfs_dir_create(vmfs_dir_t *d,const char *name,mode_t mode,
    vmfs_inode_t *new_inode,tmp_inode;
 
    /* Allocate inode for the new directory */
-   if (vmfs_inode_alloc(fs,mode,&tmp_inode) == -1)
+   if (vmfs_inode_alloc(fs,VMFS_FILE_TYPE_DIR,mode,&tmp_inode) == -1)
       return(-1);
-
-   tmp_inode.type = VMFS_FILE_TYPE_DIR;
 
    if (!(new_dir = vmfs_dir_open_from_inode(fs,&tmp_inode)))
       goto err_open_dir;
