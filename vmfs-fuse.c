@@ -90,6 +90,39 @@ static void vmfs_fuse_setattr(fuse_req_t req, fuse_ino_t ino,
    fuse_reply_attr(req, &stbuf, 1.0);
 }
 
+static void vmfs_fuse_readlink(fuse_req_t req,fuse_ino_t ino)
+{ 
+   vmfs_fs_t *fs = (vmfs_fs_t *) fuse_req_userdata(req);
+   vmfs_file_t *f;
+   size_t str_len;
+   char *str;
+
+   if (!(f = vmfs_file_open_from_blkid(fs, ino2blkid(ino)))) {
+      fuse_reply_err(req, ENOENT);
+      return;
+   }
+
+   str_len = vmfs_file_get_size(f);
+
+   if (!(str = malloc(str_len+1))) {
+      vmfs_file_close(f);
+      fuse_reply_err(req, ENOMEM);
+      return;
+   }
+
+   if (vmfs_file_pread(f,(u_char *)str,str_len,0) != str_len) {
+      vmfs_file_close(f);
+      free(str);
+      fuse_reply_err(req, EIO);
+      return;
+   }
+
+   str[str_len] = 0;
+
+   fuse_reply_readlink(req,str);
+   free(str);
+}
+
 static void vmfs_fuse_mknod(fuse_req_t req,fuse_ino_t parent,const char *name,
                             mode_t mode, dev_t rdev)
 {   
@@ -255,6 +288,7 @@ static void vmfs_fuse_release(fuse_req_t req, fuse_ino_t ino,
 const static struct fuse_lowlevel_ops vmfs_oper = {
    .getattr = vmfs_fuse_getattr,
    .setattr = vmfs_fuse_setattr,
+   .readlink = vmfs_fuse_readlink,
    .mknod = vmfs_fuse_mknod,
    .opendir = vmfs_fuse_opendir,
    .readdir = vmfs_fuse_readdir,
