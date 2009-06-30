@@ -105,4 +105,7 @@ int vmfs_file_chmod(vmfs_file_t *f,mode_t mode);
 /* Change permissions of a file (using a path) */
 int vmfs_file_chmod_at(vmfs_dir_t *dir,const char *path,mode_t mode);
 
+/* Delete a file */
+int vmfs_file_delete(vmfs_dir_t *dir,const char *name);
+
 #endif

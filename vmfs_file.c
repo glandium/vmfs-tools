@@ -369,3 +369,20 @@ int vmfs_file_chmod_at(vmfs_dir_t *dir,const char *path,mode_t mode)
    vmfs_file_close(f);
    return(res);
 }
+
+/* Delete a file */
+int vmfs_file_delete(vmfs_dir_t *dir,const char *name)
+{
+   vmfs_dirent_t *entry;
+   off_t pos;
+
+   if (!(entry = (vmfs_dirent_t *)vmfs_dir_lookup(dir,name)))
+      return(-1);
+
+   if ((entry->type != VMFS_FILE_TYPE_FILE) &&
+       (entry->type != VMFS_FILE_TYPE_SYMLINK))
+      return(-1);
+
+   pos = (dir->pos - 1) * VMFS_DIRENT_SIZE;
+   return(vmfs_dir_unlink_inode(dir,pos,entry));
+}
