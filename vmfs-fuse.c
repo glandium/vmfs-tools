@@ -223,6 +223,28 @@ static void vmfs_fuse_releasedir(fuse_req_t req, fuse_ino_t ino,
    fuse_reply_err(req, 0);
 }
 
+static void vmfs_fuse_statfs(fuse_req_t req, fuse_ino_t ino)
+{  
+   vmfs_fs_t *fs = (vmfs_fs_t *) fuse_req_userdata(req);
+   struct statvfs st;
+   u_int alloc_count;
+
+   memset(&st,0,sizeof(st));
+
+   /* Blocks */
+   alloc_count = vmfs_bitmap_allocated_items(fs->fbb);
+   st.f_bsize = st.f_frsize = vmfs_fs_get_blocksize(fs);
+   st.f_blocks = fs->fbb->bmh.total_items;
+   st.f_bfree = st.f_bavail = st.f_blocks - alloc_count;
+   
+   /* Inodes */
+   alloc_count = vmfs_bitmap_allocated_items(fs->fdc);
+   st.f_files = fs->fdc->bmh.total_items;
+   st.f_ffree = st.f_favail = st.f_files - alloc_count;
+
+   fuse_reply_statfs(req,&st);
+}
+
 static void vmfs_fuse_lookup(fuse_req_t req, fuse_ino_t parent,
                              const char *name)
 {
@@ -322,6 +344,7 @@ const static struct fuse_lowlevel_ops vmfs_oper = {
    .opendir = vmfs_fuse_opendir,
    .readdir = vmfs_fuse_readdir,
    .releasedir = vmfs_fuse_releasedir,
+   .statfs = vmfs_fuse_statfs,
    .lookup = vmfs_fuse_lookup,
    .open = vmfs_fuse_open,
    .read = vmfs_fuse_read,
