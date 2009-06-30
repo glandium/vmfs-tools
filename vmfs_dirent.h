@@ -94,6 +94,9 @@ int vmfs_dir_close(vmfs_dir_t *d);
 /* Link an inode to a directory with the specified name */
 int vmfs_dir_link_inode(vmfs_dir_t *d,const char *name,vmfs_inode_t *inode);
 
+/* Unlink an inode from a directory */
+int vmfs_dir_unlink_inode(vmfs_dir_t *d,off_t pos,vmfs_dirent_t *entry);
+
 /* Create a new directory */
 int vmfs_dir_create(vmfs_dir_t *d,const char *name,mode_t mode,
                     vmfs_inode_t *inode);

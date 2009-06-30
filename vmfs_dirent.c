@@ -311,6 +311,38 @@ int vmfs_dir_link_inode(vmfs_dir_t *d,const char *name,vmfs_inode_t *inode)
    return(0);
 }
 
+/* Unlink an inode from a directory */
+int vmfs_dir_unlink_inode(vmfs_dir_t *d,off_t pos,vmfs_dirent_t *entry)
+{   
+   vmfs_fs_t *fs = (vmfs_fs_t *)vmfs_dir_get_fs(d);
+   vmfs_inode_t inode;
+   off_t last_entry;
+
+   /* Update the inode, delete it if nlink reaches 0 */
+   if (vmfs_inode_get(fs,entry->block_id,&inode) == -1)
+      return(-1);
+
+   if (!--inode.nlink) {
+      vmfs_inode_truncate(fs,&inode,0);
+      vmfs_block_free(fs,inode.id);
+   }
+
+   /* Remove the entry itself */
+   last_entry = vmfs_file_get_size(d->dir) - VMFS_DIRENT_SIZE;
+
+   if (pos != last_entry) {
+      u_char buf[VMFS_DIRENT_SIZE];
+
+      vmfs_file_pread(d->dir,buf,sizeof(buf),last_entry);
+      vmfs_file_pwrite(d->dir,buf,sizeof(buf),pos);
+   }
+
+   vmfs_file_truncate(d->dir,last_entry);
+
+   vmfs_dir_cache_entries(d);
+   return(0);
+}
+
 /* Create a new directory */
 int vmfs_dir_create(vmfs_dir_t *d,const char *name,mode_t mode,
                     vmfs_inode_t *inode)
