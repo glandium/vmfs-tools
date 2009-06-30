@@ -193,6 +193,21 @@ static void vmfs_fuse_unlink(fuse_req_t req,fuse_ino_t parent,const char *name)
    fuse_reply_err(req,0);
 }
 
+static void vmfs_fuse_rmdir(fuse_req_t req,fuse_ino_t parent,const char *name) 
+{
+   vmfs_dir_t *dir;
+
+   if (!(dir = vmfs_dir_open_from_blkid(fs, ino2blkid(parent)))) {
+      fuse_reply_err(req, ENOENT);
+      return;
+   } 
+
+   vmfs_dir_delete(dir,name);
+   vmfs_dir_close(dir);
+
+   fuse_reply_err(req,0);
+}
+
 static void vmfs_fuse_opendir(fuse_req_t req, fuse_ino_t ino,
                               struct fuse_file_info *fi)
 {
@@ -357,6 +372,7 @@ const static struct fuse_lowlevel_ops vmfs_oper = {
    .mknod = vmfs_fuse_mknod,
    .mkdir = vmfs_fuse_mkdir,
    .unlink = vmfs_fuse_unlink,
+   .rmdir = vmfs_fuse_rmdir,
    .opendir = vmfs_fuse_opendir,
    .readdir = vmfs_fuse_readdir,
    .releasedir = vmfs_fuse_releasedir,
