@@ -325,6 +325,8 @@ int vmfs_dir_unlink_inode(vmfs_dir_t *d,off_t pos,vmfs_dirent_t *entry)
    if (!--inode.nlink) {
       vmfs_inode_truncate(fs,&inode,0);
       vmfs_block_free(fs,inode.id);
+   } else {
+      vmfs_inode_update(fs,&inode,0);
    }
 
    /* Remove the entry itself */
@@ -375,6 +377,40 @@ int vmfs_dir_create(vmfs_dir_t *d,const char *name,mode_t mode,
 
  err_open_dir:
    vmfs_block_free(fs,tmp_inode.id);
+   return(-1);
+}
+
+/* Delete a directory */
+int vmfs_dir_delete(vmfs_dir_t *d,const char *name)
+{   
+   vmfs_fs_t *fs = (vmfs_fs_t *)vmfs_dir_get_fs(d);
+   vmfs_dirent_t *entry;
+   vmfs_dir_t *sub;
+   off_t pos;
+
+   if (!(entry = (vmfs_dirent_t *)vmfs_dir_lookup(d,name)))
+      return(-1);
+
+   if (entry->type != VMFS_FILE_TYPE_DIR)
+      return(-1);
+
+   if (!(sub = vmfs_dir_open_from_blkid(fs,entry->block_id)))
+      return(-1);
+
+   if (vmfs_file_get_size(sub->dir) != (2 * VMFS_DIRENT_SIZE))
+      goto err_subdir;
+
+   d->dir->inode.nlink--;
+   sub->dir->inode.nlink = 1;
+   vmfs_inode_update(fs,&sub->dir->inode,0);
+   vmfs_dir_close(sub);
+
+   /* Update the parent directory */
+   pos = (d->pos - 1) * VMFS_DIRENT_SIZE;
+   return(vmfs_dir_unlink_inode(d,pos,entry));
+
+ err_subdir:
+   vmfs_dir_close(sub);
    return(-1);
 }
 

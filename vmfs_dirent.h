@@ -101,6 +101,9 @@ int vmfs_dir_unlink_inode(vmfs_dir_t *d,off_t pos,vmfs_dirent_t *entry);
 int vmfs_dir_create(vmfs_dir_t *d,const char *name,mode_t mode,
                     vmfs_inode_t *inode);
 
+/* Delete a directory */
+int vmfs_dir_delete(vmfs_dir_t *d,const char *name);
+
 /* Create a new directory given a path */
 int vmfs_dir_mkdir_at(vmfs_dir_t *d,const char *path,mode_t mode);
 
