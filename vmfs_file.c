@@ -73,6 +73,9 @@ int vmfs_file_create(vmfs_dir_t *d,const char *name,mode_t mode,
    vmfs_fs_t *fs = (vmfs_fs_t *)vmfs_dir_get_fs(d);
    int res;
 
+   if (!vmfs_fs_readwrite(fs))
+      return(-EROFS);
+
    if (vmfs_inode_alloc(fs,VMFS_FILE_TYPE_FILE,mode,inode) == -1)
       return(-ENOSPC);
 
@@ -208,6 +211,9 @@ ssize_t vmfs_file_pwrite(vmfs_file_t *f,u_char *buf,size_t len,off_t pos)
    uint64_t blk_size;
    ssize_t res=0,wlen = 0;
    int err;
+
+   if (!vmfs_fs_readwrite(f->fs))
+      return(-EROFS);
 
    /* We don't handle RDM files */
    if (f->inode.type == VMFS_FILE_TYPE_RDM)

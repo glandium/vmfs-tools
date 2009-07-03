@@ -287,11 +287,15 @@ int vmfs_dir_close(vmfs_dir_t *d)
 
 /* Link an inode to a directory with the specified name */
 int vmfs_dir_link_inode(vmfs_dir_t *d,const char *name,vmfs_inode_t *inode)
-{
+{  
+   vmfs_fs_t *fs = (vmfs_fs_t *)vmfs_dir_get_fs(d);
    u_char buf[VMFS_DIRENT_SIZE];
    vmfs_dirent_t entry;
    off_t dir_size;
    ssize_t res;
+
+   if (!vmfs_fs_readwrite(fs))
+      return(-EROFS);
 
    if (vmfs_dir_lookup(d,name) != NULL)
       return(-EEXIST);
@@ -322,6 +326,9 @@ int vmfs_dir_unlink_inode(vmfs_dir_t *d,off_t pos,vmfs_dirent_t *entry)
    vmfs_fs_t *fs = (vmfs_fs_t *)vmfs_dir_get_fs(d);
    vmfs_inode_t inode;
    off_t last_entry;
+
+   if (!vmfs_fs_readwrite(fs))
+      return(-EROFS);
 
    /* Update the inode, delete it if nlink reaches 0 */
    if (vmfs_inode_get(fs,entry->block_id,&inode) == -1)
@@ -358,6 +365,9 @@ int vmfs_dir_create(vmfs_dir_t *d,const char *name,mode_t mode,
    vmfs_dir_t *new_dir;
    vmfs_inode_t *new_inode,tmp_inode;
    int res;
+
+   if (!vmfs_fs_readwrite(fs))
+      return(-EROFS);
 
    if (vmfs_dir_lookup(d,name))
       return(-EEXIST);
@@ -398,6 +408,9 @@ int vmfs_dir_delete(vmfs_dir_t *d,const char *name)
    vmfs_dirent_t *entry;
    vmfs_dir_t *sub;
    off_t pos;
+
+   if (!vmfs_fs_readwrite(fs))
+      return(-EROFS);
 
    if (!(entry = (vmfs_dirent_t *)vmfs_dir_lookup(d,name)))
       return(-ENOENT);

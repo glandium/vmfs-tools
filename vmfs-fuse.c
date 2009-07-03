@@ -333,6 +333,11 @@ static void vmfs_fuse_read(fuse_req_t req, fuse_ino_t ino, size_t size,
    sz = vmfs_file_pread((vmfs_file_t *)(unsigned long)fi->fh,
                         (u_char *)buf, size, off);
 
+   if (sz < 0) {
+      fuse_reply_err(req, -sz);
+      return;
+   }
+
    fuse_reply_buf(req, buf, sz);
 }
 
@@ -351,7 +356,7 @@ static void vmfs_fuse_write(fuse_req_t req, fuse_ino_t ino,
                          (u_char *)buf, size, off);
 
    if (sz < 0) {
-      fuse_reply_err(req, EIO);
+      fuse_reply_err(req, -sz);
       return;
    }
 

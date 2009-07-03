@@ -430,6 +430,9 @@ int vmfs_inode_get_wrblock(const vmfs_fs_t *fs,vmfs_inode_t *inode,off_t pos,
    bool update_inode;
    int res;
 
+   if (!vmfs_fs_readwrite(fs))
+      return(-EROFS);
+
    *blk_id = 0;
    update_inode = 0;
 
@@ -544,6 +547,9 @@ int vmfs_inode_truncate(const vmfs_fs_t *fs,vmfs_inode_t *inode,off_t new_len)
 {
    u_int i;
    int res;
+
+   if (!vmfs_fs_readwrite(fs))
+      return(-EROFS);
 
    if (new_len == inode->size)
       return(0);
