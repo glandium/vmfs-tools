@@ -157,15 +157,15 @@ int vmfs_block_alloc(const vmfs_fs_t *fs,uint32_t blk_type,uint32_t *blk_id)
          bmp = fs->fdc;
          break;
       default:
-         return(-1);
+         return(-EINVAL);
    }
 
    if (vmfs_bitmap_find_free_items(bmp,1,&entry) == -1)
-      return(-1);
+      return(-ENOSPC);
 
    if (vmfs_bitmap_alloc_item(&entry,&item) == -1) {
       vmfs_metadata_unlock((vmfs_fs_t *)fs,&entry.mdh);
-      return(-1);
+      return(-ENOSPC);
    }
 
    vmfs_bme_update(fs,&entry);
@@ -198,7 +198,7 @@ int vmfs_block_zeroize_fb(const vmfs_fs_t *fs,uint32_t blk_id)
    off_t pos,len;
 
    if (VMFS_BLK_TYPE(blk_id) != VMFS_BLK_TYPE_FB)
-      return(-1);
+      return(-EINVAL);
 
    memset(buf,0,buf_len);
    blk_item = VMFS_BLK_FB_ITEM(blk_id);
@@ -207,7 +207,7 @@ int vmfs_block_zeroize_fb(const vmfs_fs_t *fs,uint32_t blk_id)
 
    while(pos < len) {
       if (vmfs_fs_write(fs,blk_item,pos,buf,buf_len) != buf_len)
-         return(-1);
+         return(-EIO);
 
       pos += buf_len;
    }
@@ -225,13 +225,13 @@ int vmfs_block_free_pb(const vmfs_fs_t *fs,uint32_t pb_blk,
    int i,count = 0;
 
    if (VMFS_BLK_TYPE(pb_blk) != VMFS_BLK_TYPE_PB)
-      return(-1);
+      return(-EINVAL);
 
    pbc_entry = VMFS_BLK_PB_ENTRY(pb_blk);
    pbc_item  = VMFS_BLK_PB_ITEM(pb_blk);
 
    if (!vmfs_bitmap_get_item(fs->pbc,pbc_entry,pbc_item,buf))
-      return(-1);
+      return(-EIO);
 
    for(i=start;i<end;i++) {
       blk_id = read_le32(buf,i*sizeof(uint32_t));
@@ -247,7 +247,7 @@ int vmfs_block_free_pb(const vmfs_fs_t *fs,uint32_t pb_blk,
       vmfs_block_free(fs,pb_blk);
    else {
       if (!vmfs_bitmap_set_item(fs->pbc,pbc_entry,pbc_item,buf))
-         return(-1);
+         return(-EIO);
    }
 
    return(count);
@@ -268,7 +268,7 @@ ssize_t vmfs_block_read_sb(const vmfs_fs_t *fs,uint32_t blk_id,off_t pos,
    sbc_item  = VMFS_BLK_SB_ITEM(blk_id);
 
    if (!vmfs_bitmap_get_item(fs->sbc,sbc_entry,sbc_item,tmpbuf))
-      return(-1);
+      return(-EIO);
 
    memcpy(buf,tmpbuf+offset,clen);
    return(clen);
@@ -291,19 +291,19 @@ ssize_t vmfs_block_write_sb(const vmfs_fs_t *fs,uint32_t blk_id,off_t pos,
    /* If we write completely the sub-block, no need to read something */
    if (!offset && (clen == fs->sbc->bmh.data_size)) {
       if (!vmfs_bitmap_set_item(fs->sbc,sbc_entry,sbc_item,tmpbuf))
-         return(-1);
+         return(-EIO);
       
       return(clen);
    }
 
    /* Read the full block and update a piece of it */
    if (!vmfs_bitmap_get_item(fs->sbc,sbc_entry,sbc_item,tmpbuf))
-      return(-1);
+      return(-EIO);
 
    memcpy(tmpbuf+offset,buf,clen);
 
    if (!vmfs_bitmap_set_item(fs->sbc,sbc_entry,sbc_item,tmpbuf))
-      return(-1);
+      return(-EIO);
 
    return(clen);
 }
@@ -333,7 +333,7 @@ ssize_t vmfs_block_read_fb(const vmfs_fs_t *fs,uint32_t blk_id,off_t pos,
        ALIGN_CHECK((uintptr_t)buf,M_DIO_BLK_SIZE))
    {
       if (vmfs_fs_read(fs,fb_item,n_offset,buf,n_clen) != n_clen)
-         return(-1);
+         return(-EIO);
 
       return(n_clen);
    }
@@ -344,7 +344,7 @@ ssize_t vmfs_block_read_fb(const vmfs_fs_t *fs,uint32_t blk_id,off_t pos,
 
    if (vmfs_fs_read(fs,fb_item,n_offset,tmpbuf,n_clen) != n_clen) {
       iobuffer_free(tmpbuf);
-      return(-1);
+      return(-EIO);
    }
 
    memcpy(buf,tmpbuf+(offset-n_offset),clen);
@@ -381,7 +381,7 @@ ssize_t vmfs_block_write_fb(const vmfs_fs_t *fs,uint32_t blk_id,off_t pos,
        ALIGN_CHECK((uintptr_t)buf,M_DIO_BLK_SIZE))
    {
       if (vmfs_fs_write(fs,fb_item,n_offset,buf,n_clen) != n_clen)
-         return(-1);
+         return(-EIO);
 
       return(n_clen);
    }
@@ -405,5 +405,5 @@ ssize_t vmfs_block_write_fb(const vmfs_fs_t *fs,uint32_t blk_id,off_t pos,
 
  err_io:
    iobuffer_free(tmpbuf);
-   return(-1);
+   return(-EIO);
 }

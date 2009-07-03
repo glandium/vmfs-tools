@@ -137,7 +137,7 @@ static int cmd_truncate(vmfs_dir_t *base_dir,int argc,char *argv[])
 
    new_size = (off_t)strtoull(argv[1],NULL,0);
 
-   if (vmfs_file_truncate_at(base_dir,argv[0],new_size) == -1) {
+   if (vmfs_file_truncate_at(base_dir,argv[0],new_size) < 0) {
       fprintf(stderr,"Unable to truncate file.\n");
       return(-1);
    }
@@ -197,7 +197,7 @@ static int cmd_chmod(vmfs_dir_t *base_dir,int argc,char *argv[])
 
    mode = (mode_t)strtoul(argv[1],NULL,0);
 
-   if (vmfs_file_chmod_at(base_dir,argv[0],mode) == -1) {
+   if (vmfs_file_chmod_at(base_dir,argv[0],mode) < 0) {
       fprintf(stderr,"Unable to change file permissions.\n");
       return(-1);
    }

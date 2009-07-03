@@ -21,6 +21,7 @@
 #define _GNU_SOURCE
 #include <stdlib.h>
 #include <string.h>
+#include <errno.h>
 #include <sys/stat.h>
 #include "vmfs.h"
 
@@ -70,13 +71,14 @@ int vmfs_file_create(vmfs_dir_t *d,const char *name,mode_t mode,
                      vmfs_inode_t *inode)
 {      
    vmfs_fs_t *fs = (vmfs_fs_t *)vmfs_dir_get_fs(d);
+   int res;
 
    if (vmfs_inode_alloc(fs,VMFS_FILE_TYPE_FILE,mode,inode) == -1)
-      return(-1);
+      return(-ENOSPC);
 
-   if (vmfs_dir_link_inode(d,name,inode) == -1) {
+   if ((res = vmfs_dir_link_inode(d,name,inode)) < 0) {
       vmfs_block_free(fs,inode->id);
-      return(-1);
+      return(res);
    }
 
    vmfs_inode_update(fs,inode,0);
@@ -100,7 +102,7 @@ vmfs_file_t *vmfs_file_create_at(vmfs_dir_t *dir,const char *path,mode_t mode)
    if (!(d = vmfs_dir_open_at(dir,dir_name)))
       goto done;
 
-   if (vmfs_file_create(d,base_name,mode,&inode) == -1)
+   if (vmfs_file_create(d,base_name,mode,&inode) < 0)
       goto done;
 
    f = vmfs_file_open_from_inode(vmfs_dir_get_fs(dir),&inode);
@@ -130,10 +132,11 @@ ssize_t vmfs_file_pread(vmfs_file_t *f,u_char *buf,size_t len,off_t pos)
    uint64_t file_size,offset;
    ssize_t res=0,rlen = 0;
    size_t exp_len;
+   int err;
 
    /* We don't handle RDM files */
    if (f->inode.type == VMFS_FILE_TYPE_RDM)
-      return(-1);
+      return(-EIO);
 
    blk_size = vmfs_fs_get_blocksize(f->fs);
    file_size = vmfs_file_get_size(f);
@@ -142,8 +145,8 @@ ssize_t vmfs_file_pread(vmfs_file_t *f,u_char *buf,size_t len,off_t pos)
       if (pos >= file_size)
          break;
 
-      if (vmfs_inode_get_block(f->fs,&f->inode,pos,&blk_id) == -1)
-         break;
+      if ((err = vmfs_inode_get_block(f->fs,&f->inode,pos,&blk_id)) < 0)
+         return(err);
 
 #if 0
       if (f->vol->debug_level > 1)
@@ -179,12 +182,12 @@ ssize_t vmfs_file_pread(vmfs_file_t *f,u_char *buf,size_t len,off_t pos)
 
          default:
             fprintf(stderr,"VMFS: unknown block type 0x%2.2x\n",blk_type);
-            return(-1);
+            return(-EIO);
       }
 
       /* Error while reading block, abort immediately */
       if (res < 0)
-         break;
+         return(res);
 
       /* Move file position and keep track of bytes currently read */
       pos += res;
@@ -204,16 +207,17 @@ ssize_t vmfs_file_pwrite(vmfs_file_t *f,u_char *buf,size_t len,off_t pos)
    uint32_t blk_id,blk_type;
    uint64_t blk_size;
    ssize_t res=0,wlen = 0;
+   int err;
 
    /* We don't handle RDM files */
    if (f->inode.type == VMFS_FILE_TYPE_RDM)
-      return(-1);
+      return(-EIO);
 
    blk_size = vmfs_fs_get_blocksize(f->fs);
 
    while(len > 0) {
-      if (vmfs_inode_get_wrblock(f->fs,&f->inode,pos,&blk_id) == -1)
-         return(-1);
+      if ((err = vmfs_inode_get_wrblock(f->fs,&f->inode,pos,&blk_id)) < 0)
+         return(err);
 
 #if 0
       if (f->vol->debug_level > 1)
@@ -235,12 +239,12 @@ ssize_t vmfs_file_pwrite(vmfs_file_t *f,u_char *buf,size_t len,off_t pos)
 
          default:
             fprintf(stderr,"VMFS: unknown block type 0x%2.2x\n",blk_type);
-            return(-1);
+            return(-EIO);
       }
 
       /* Error while writing block, abort immediately */
       if (res < 0)
-         break;
+         return(res);
 
       /* Move file position and keep track of bytes currently written */
       pos += res;
@@ -311,7 +315,7 @@ static int vmfs_file_stat_internal(vmfs_dir_t *dir,const char *path,
    uint32_t blk_id;
 
    if (!(blk_id = vmfs_dir_resolve_path(dir,path,follow_symlink)))
-      return(-1);
+      return(-ENOENT);
 
    return(vmfs_inode_stat_from_blkid(vmfs_dir_get_fs(dir),blk_id,buf));
 }
@@ -341,7 +345,7 @@ int vmfs_file_truncate_at(vmfs_dir_t *dir,const char *path,off_t length)
    int res;
 
    if (!(f = vmfs_file_open_at(dir,path)))
-      return(-1);
+      return(-ENOENT);
 
    res = vmfs_file_truncate(f,length);
 
@@ -362,7 +366,7 @@ int vmfs_file_chmod_at(vmfs_dir_t *dir,const char *path,mode_t mode)
    int res;
 
    if (!(f = vmfs_file_open_at(dir,path)))
-      return(-1);
+      return(-ENOENT);
 
    res = vmfs_file_chmod(f,mode);
 
@@ -377,11 +381,11 @@ int vmfs_file_delete(vmfs_dir_t *dir,const char *name)
    off_t pos;
 
    if (!(entry = (vmfs_dirent_t *)vmfs_dir_lookup(dir,name)))
-      return(-1);
+      return(-ENOENT);
 
    if ((entry->type != VMFS_FILE_TYPE_FILE) &&
        (entry->type != VMFS_FILE_TYPE_SYMLINK))
-      return(-1);
+      return(-EPERM);
 
    pos = (dir->pos - 1) * VMFS_DIRENT_SIZE;
    return(vmfs_dir_unlink_inode(dir,pos,entry));
