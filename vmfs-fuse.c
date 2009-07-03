@@ -129,14 +129,15 @@ static void vmfs_fuse_mknod(fuse_req_t req,fuse_ino_t parent,const char *name,
    struct fuse_entry_param entry = { 0, };
    vmfs_inode_t inode;
    vmfs_dir_t *dir;
+   int res;
 
    if (!(dir = vmfs_dir_open_from_blkid(fs, ino2blkid(parent)))) {
       fuse_reply_err(req, ENOENT);
       return;
    }        
 
-   if (vmfs_file_create(dir,name,mode,&inode) == -1) {
-      fuse_reply_err(req, EIO);
+   if ((res = vmfs_file_create(dir,name,mode,&inode)) < 0) {
+      fuse_reply_err(req, -res);
       return;
    }
 
@@ -156,14 +157,15 @@ static void vmfs_fuse_mkdir(fuse_req_t req, fuse_ino_t parent,
    struct fuse_entry_param entry = { 0, };
    vmfs_inode_t inode;
    vmfs_dir_t *dir;
+   int res;
 
    if (!(dir = vmfs_dir_open_from_blkid(fs, ino2blkid(parent)))) {
       fuse_reply_err(req, ENOENT);
       return;
    }        
 
-   if (vmfs_dir_create(dir,name,mode,&inode) == -1) {
-      fuse_reply_err(req, EIO);
+   if ((res = vmfs_dir_create(dir,name,mode,&inode)) < 0) {
+      fuse_reply_err(req, -res);
       return;
    }
 
@@ -181,31 +183,33 @@ static void vmfs_fuse_mkdir(fuse_req_t req, fuse_ino_t parent,
 static void vmfs_fuse_unlink(fuse_req_t req,fuse_ino_t parent,const char *name) 
 {
    vmfs_dir_t *dir;
+   int res;
 
    if (!(dir = vmfs_dir_open_from_blkid(fs, ino2blkid(parent)))) {
       fuse_reply_err(req, ENOENT);
       return;
    } 
 
-   vmfs_file_delete(dir,name);
+   res = vmfs_file_delete(dir,name);
    vmfs_dir_close(dir);
 
-   fuse_reply_err(req,0);
+   fuse_reply_err(req,-res);
 }
 
 static void vmfs_fuse_rmdir(fuse_req_t req,fuse_ino_t parent,const char *name) 
 {
    vmfs_dir_t *dir;
+   int res;
 
    if (!(dir = vmfs_dir_open_from_blkid(fs, ino2blkid(parent)))) {
       fuse_reply_err(req, ENOENT);
       return;
    } 
 
-   vmfs_dir_delete(dir,name);
+   res = vmfs_dir_delete(dir,name);
    vmfs_dir_close(dir);
 
-   fuse_reply_err(req,0);
+   fuse_reply_err(req,-res);
 }
 
 static void vmfs_fuse_opendir(fuse_req_t req, fuse_ino_t ino,

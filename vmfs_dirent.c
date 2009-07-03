@@ -22,6 +22,7 @@
 #define _GNU_SOURCE
 #include <stdlib.h>
 #include <string.h>
+#include <errno.h>
 #include "vmfs.h"
 
 /* Read a directory entry */
@@ -278,6 +279,7 @@ int vmfs_dir_close(vmfs_dir_t *d)
 
    if (d->buf)
       free(d->buf);
+
    vmfs_file_close(d->dir);
    free(d);
    return(0);
@@ -289,9 +291,10 @@ int vmfs_dir_link_inode(vmfs_dir_t *d,const char *name,vmfs_inode_t *inode)
    u_char buf[VMFS_DIRENT_SIZE];
    vmfs_dirent_t entry;
    off_t dir_size;
+   ssize_t res;
 
    if (vmfs_dir_lookup(d,name) != NULL)
-      return(-1);
+      return(-EEXIST);
 
    memset(&entry,0,sizeof(entry));
    entry.type      = inode->type;
@@ -302,8 +305,10 @@ int vmfs_dir_link_inode(vmfs_dir_t *d,const char *name,vmfs_inode_t *inode)
 
    dir_size = vmfs_file_get_size(d->dir);
 
-   if (vmfs_file_pwrite(d->dir,buf,sizeof(buf),dir_size) != sizeof(buf))
-      return(-1);
+   res = vmfs_file_pwrite(d->dir,buf,sizeof(buf),dir_size);
+
+   if (res != sizeof(buf))
+      return((res < 0) ? res : -ENOSPC);
 
    inode->nlink++;
 
@@ -320,7 +325,7 @@ int vmfs_dir_unlink_inode(vmfs_dir_t *d,off_t pos,vmfs_dirent_t *entry)
 
    /* Update the inode, delete it if nlink reaches 0 */
    if (vmfs_inode_get(fs,entry->block_id,&inode) == -1)
-      return(-1);
+      return(-ENOENT);
 
    if (!--inode.nlink) {
       vmfs_inode_truncate(fs,&inode,0);
@@ -352,13 +357,19 @@ int vmfs_dir_create(vmfs_dir_t *d,const char *name,mode_t mode,
    vmfs_fs_t *fs = (vmfs_fs_t *)vmfs_dir_get_fs(d);
    vmfs_dir_t *new_dir;
    vmfs_inode_t *new_inode,tmp_inode;
+   int res;
+
+   if (vmfs_dir_lookup(d,name))
+      return(-EEXIST);
 
    /* Allocate inode for the new directory */
    if (vmfs_inode_alloc(fs,VMFS_FILE_TYPE_DIR,mode,&tmp_inode) == -1)
-      return(-1);
+      return(-ENOSPC);
 
-   if (!(new_dir = vmfs_dir_open_from_inode(fs,&tmp_inode)))
+   if (!(new_dir = vmfs_dir_open_from_inode(fs,&tmp_inode))) {
+      res = -ENOENT;
       goto err_open_dir;
+   }
 
    new_inode = &new_dir->dir->inode;
 
@@ -377,7 +388,7 @@ int vmfs_dir_create(vmfs_dir_t *d,const char *name,mode_t mode,
 
  err_open_dir:
    vmfs_block_free(fs,tmp_inode.id);
-   return(-1);
+   return(res);
 }
 
 /* Delete a directory */
@@ -389,16 +400,19 @@ int vmfs_dir_delete(vmfs_dir_t *d,const char *name)
    off_t pos;
 
    if (!(entry = (vmfs_dirent_t *)vmfs_dir_lookup(d,name)))
-      return(-1);
+      return(-ENOENT);
 
    if (entry->type != VMFS_FILE_TYPE_DIR)
-      return(-1);
+      return(-ENOTDIR);
 
    if (!(sub = vmfs_dir_open_from_blkid(fs,entry->block_id)))
-      return(-1);
+      return(-ENOENT);
 
-   if (vmfs_file_get_size(sub->dir) != (2 * VMFS_DIRENT_SIZE))
-      goto err_subdir;
+   /* The directory must be empty (excepted for . and ..) */
+   if (vmfs_file_get_size(sub->dir) != (2 * VMFS_DIRENT_SIZE)) {
+      vmfs_dir_close(sub);
+      return(-ENOTEMPTY);
+   }
 
    d->dir->inode.nlink--;
    sub->dir->inode.nlink = 1;
@@ -408,10 +422,6 @@ int vmfs_dir_delete(vmfs_dir_t *d,const char *name)
    /* Update the parent directory */
    pos = (d->pos - 1) * VMFS_DIRENT_SIZE;
    return(vmfs_dir_unlink_inode(d,pos,entry));
-
- err_subdir:
-   vmfs_dir_close(sub);
-   return(-1);
 }
 
 /* Create a new directory given a path */
@@ -419,16 +429,20 @@ int vmfs_dir_mkdir_at(vmfs_dir_t *d,const char *path,mode_t mode)
 {
    char *dir_name,*base_name;
    vmfs_dir_t *dir;
-   int res = -1;
+   int res;
 
    dir_name = m_dirname(path);
    base_name = m_basename(path);
 
-   if (!dir_name || !base_name)
+   if (!dir_name || !base_name) {
+      res = -EFAULT;
       goto done;
+   }
 
-   if (!(dir = vmfs_dir_open_at(d,dir_name)))
+   if (!(dir = vmfs_dir_open_at(d,dir_name))) {
+      res = -ENOENT;
       goto done;
+   }
    
    res = vmfs_dir_create(dir,base_name,mode,NULL);
    vmfs_dir_close(dir);
