@@ -34,8 +34,8 @@ typedef struct vmfs_blk_array vmfs_blk_array_t;
 typedef struct vmfs_blk_list vmfs_blk_list_t;
 typedef struct vmfs_file vmfs_file_t;
 typedef struct vmfs_volume vmfs_volume_t;
-typedef struct vmfs_fs vmfs_fs_t;
 typedef struct vmfs_lvm vmfs_lvm_t;
+typedef struct vmfs_fs vmfs_fs_t;
 
 union vmfs_flags {
    int packed;
@@ -57,8 +57,8 @@ typedef union vmfs_flags vmfs_flags_t __attribute__((transparent_union));
 #include "vmfs_dirent.h"
 #include "vmfs_file.h"
 #include "vmfs_volume.h"
-#include "vmfs_fs.h"
 #include "vmfs_lvm.h"
+#include "vmfs_fs.h"
 #include "vmfs_host.h"
 
 #endif
