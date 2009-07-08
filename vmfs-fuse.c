@@ -83,7 +83,6 @@ static void vmfs_fuse_setattr(fuse_req_t req, fuse_ino_t ino,
    if (to_set & FUSE_SET_ATTR_SIZE)
       vmfs_inode_truncate(inode,attr->st_size);
 
-   vmfs_inode_update(inode,0);
    vmfs_inode_stat(inode,&stbuf);
    stbuf.st_ino = blkid2ino(inode->id);
 

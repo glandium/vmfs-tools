@@ -337,7 +337,7 @@ int vmfs_dir_unlink_inode(vmfs_dir_t *d,off_t pos,vmfs_dirent_t *entry)
       vmfs_inode_truncate(inode,0);
       vmfs_block_free(fs,inode->id);
    } else {
-      vmfs_inode_update(inode,0);
+      inode->update_flags |= VMFS_INODE_SYNC_META;
    }
 
    vmfs_inode_release(inode);

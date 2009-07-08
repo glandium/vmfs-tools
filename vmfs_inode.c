@@ -420,7 +420,7 @@ static int vmfs_inode_aggregate_fb(vmfs_inode_t *inode)
    inode->blocks[0] = fb_blk;
    inode->zla = VMFS_BLK_TYPE_FB;
    inode->blk_size = vmfs_fs_get_blocksize(fs);
-   vmfs_inode_update(inode,1);
+   inode->update_flags |= VMFS_INODE_SYNC_BLK;
 
    iobuffer_free(buf);
    return(0);
@@ -471,8 +471,7 @@ static int vmfs_inode_aggregate_pb(vmfs_inode_t *inode)
    memset(inode->blocks,0,sizeof(inode->blocks));
    inode->blocks[0] = pb_blk;
    inode->zla = VMFS_BLK_TYPE_PB;
-
-   vmfs_inode_update(inode,1);
+   inode->update_flags |= VMFS_INODE_SYNC_BLK;
 
    iobuffer_free(buf);
    return(0);
@@ -511,14 +510,12 @@ int vmfs_inode_get_wrblock(vmfs_inode_t *inode,off_t pos,uint32_t *blk_id)
 {
    const vmfs_fs_t *fs = inode->fs;
    u_int blk_index;
-   bool update_inode;
    int res;
 
    if (!vmfs_fs_readwrite(fs))
       return(-EROFS);
 
    *blk_id = 0;
-   update_inode = 0;
 
    if ((res = vmfs_inode_aggregate(inode,pos)) < 0)
       return(res);
@@ -551,7 +548,7 @@ int vmfs_inode_get_wrblock(vmfs_inode_t *inode,off_t pos,uint32_t *blk_id)
 
          memset(buf,0,fs->pbc->bmh.data_size);
          inode->blocks[pb_index] = pb_blk_id;
-         update_inode = 1;
+         inode->update_flags |= VMFS_INODE_SYNC_BLK;
          update_pb = 1;
       } else {
          if (!vmfs_bitmap_get_item(fs->pbc,
@@ -569,7 +566,7 @@ int vmfs_inode_get_wrblock(vmfs_inode_t *inode,off_t pos,uint32_t *blk_id)
 
          write_le32(buf,sub_index*sizeof(uint32_t),*blk_id);
          inode->blk_count++;
-         update_inode = 1;
+         inode->update_flags |= VMFS_INODE_SYNC_BLK;
          update_pb = 1;
       } else {
          if (VMFS_BLK_FB_TBZ(*blk_id)) {
@@ -579,7 +576,7 @@ int vmfs_inode_get_wrblock(vmfs_inode_t *inode,off_t pos,uint32_t *blk_id)
             *blk_id &= ~VMFS_BLK_FB_TBZ_MASK;
             write_le32(buf,sub_index*sizeof(uint32_t),*blk_id);
             inode->tbz--;
-            update_inode = 1;
+            inode->update_flags |= VMFS_INODE_SYNC_BLK;
             update_pb = 1;
          }
       }
@@ -605,7 +602,7 @@ int vmfs_inode_get_wrblock(vmfs_inode_t *inode,off_t pos,uint32_t *blk_id)
 
          inode->blocks[blk_index] = *blk_id;
          inode->blk_count++;
-         update_inode = 1;
+         inode->update_flags |= VMFS_INODE_SYNC_BLK;
       } else {
          if ((inode->zla == VMFS_BLK_TYPE_FB) && VMFS_BLK_FB_TBZ(*blk_id)) {
             if ((res = vmfs_block_zeroize_fb(fs,*blk_id)) < 0)
@@ -614,14 +611,10 @@ int vmfs_inode_get_wrblock(vmfs_inode_t *inode,off_t pos,uint32_t *blk_id)
             *blk_id &= ~VMFS_BLK_FB_TBZ_MASK;
             inode->blocks[blk_index] = *blk_id;
             inode->tbz--;
-            update_inode = 1;
+            inode->update_flags |= VMFS_INODE_SYNC_BLK;
          }
       }
    }
-
-   /* Update inode if it has been modified */
-   if (update_inode)
-      vmfs_inode_update(inode,1);
 
    return(0);
 }
@@ -644,7 +637,7 @@ int vmfs_inode_truncate(vmfs_inode_t *inode,off_t new_len)
          return(res);
 
       inode->size = new_len;
-      vmfs_inode_update(inode,1);
+      inode->update_flags |= VMFS_INODE_SYNC_META;
       return(0);
    }
 
@@ -707,7 +700,7 @@ int vmfs_inode_truncate(vmfs_inode_t *inode,off_t new_len)
    }
 
    inode->size = new_len;
-   vmfs_inode_update(inode,1);
+   inode->update_flags |= VMFS_INODE_SYNC_BLK;
    return(0);
 }
 
@@ -877,6 +870,6 @@ int vmfs_inode_stat_from_blkid(const vmfs_fs_t *fs,uint32_t blk_id,
 int vmfs_inode_chmod(vmfs_inode_t *inode,mode_t mode)
 {
    inode->mode = mode;
-   vmfs_inode_update(inode,0);
+   inode->update_flags |= VMFS_INODE_SYNC_META;
    return(0);
 }
