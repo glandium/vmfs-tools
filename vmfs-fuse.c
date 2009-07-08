@@ -485,7 +485,7 @@ int main(int argc, char *argv[])
          fuse_daemonize(opts.foreground);
          if (fuse_set_signal_handlers(session) != -1) {
             fuse_session_add_chan(session, chan);
-            err = fuse_session_loop_mt(session);
+            err = fuse_session_loop(session);
             fuse_remove_signal_handlers(session);
             fuse_session_remove_chan(chan);
          }
