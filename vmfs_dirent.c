@@ -386,9 +386,7 @@ int vmfs_dir_create(vmfs_dir_t *d,const char *name,mode_t mode,
    vmfs_dir_link_inode(new_dir,"..",d->dir->inode);
    vmfs_dir_link_inode(d,name,new_inode);
 
-   if (inode)
-      *inode = new_inode;
-
+   *inode = new_inode;
    return(0);
 
  err_open_dir:

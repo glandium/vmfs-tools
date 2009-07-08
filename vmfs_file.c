@@ -79,8 +79,7 @@ int vmfs_file_create(vmfs_dir_t *d,const char *name,mode_t mode,
       return(res);
    }
 
-   if (*inode)
-      *inode = new_inode;
+   *inode = new_inode;
    return(0);
 }
 
