@@ -41,6 +41,7 @@ int vmfs_metadata_hdr_read(vmfs_metadata_hdr_t *mdh,const u_char *buf)
 /* Write a metadata header */
 int vmfs_metadata_hdr_write(const vmfs_metadata_hdr_t *mdh,u_char *buf)
 {
+   memset(buf,0,VMFS_METADATA_HDR_SIZE);
    write_le32(buf,VMFS_MDH_OFS_MAGIC,mdh->magic);
    write_le64(buf,VMFS_MDH_OFS_POS,mdh->pos);
    write_le64(buf,VMFS_MDH_OFS_HB_POS,mdh->hb_pos);
