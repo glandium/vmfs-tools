@@ -323,6 +323,43 @@ static void vmfs_fuse_open(fuse_req_t req, fuse_ino_t ino,
       fuse_reply_err(req, ENOTDIR);
 }
 
+static void vmfs_fuse_create(fuse_req_t req, fuse_ino_t parent,
+                             const char *name, mode_t mode,
+                             struct fuse_file_info *fi)
+{   
+   struct fuse_entry_param entry = { 0, };
+   vmfs_dir_t *dir;
+   vmfs_inode_t *inode;
+   vmfs_file_t *f;
+   int res;
+
+   if (!(dir = vmfs_dir_open_from_blkid(fs, ino2blkid(parent)))) {
+      fuse_reply_err(req, ENOENT);
+      return;
+   }      
+
+   if ((res = vmfs_file_create(dir,name,mode,&inode)) < 0) {
+      fuse_reply_err(req, -res);
+      return;
+   }
+
+   vmfs_dir_close(dir);
+
+   if (!(f = vmfs_file_open_from_inode(inode))) {
+      vmfs_inode_release(inode);
+      fuse_reply_err(req,ENOMEM);
+   }
+
+   fi->fh = (uint64_t)(unsigned long)f;
+
+   vmfs_inode_stat(inode,&entry.attr);
+   entry.ino = entry.attr.st_ino = blkid2ino(inode->id);
+   entry.generation = 1;
+   entry.attr_timeout = 1.0;
+   entry.entry_timeout = 1.0;
+   fuse_reply_create(req,&entry,fi);
+}
+
 static void vmfs_fuse_read(fuse_req_t req, fuse_ino_t ino, size_t size,
                            off_t off, struct fuse_file_info *fi)
 {
@@ -392,6 +429,7 @@ const static struct fuse_lowlevel_ops vmfs_oper = {
    .statfs = vmfs_fuse_statfs,
    .lookup = vmfs_fuse_lookup,
    .open = vmfs_fuse_open,
+   .create = vmfs_fuse_create,
    .read = vmfs_fuse_read,
    .write = vmfs_fuse_write,
    .release = vmfs_fuse_release,
