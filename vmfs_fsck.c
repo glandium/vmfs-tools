@@ -236,8 +236,7 @@ vmfs_blk_map_t *vmfs_block_map_get(vmfs_blk_map_t **ht,uint32_t blk_id)
 }
 
 /* Store block mapping of an inode */
-static void vmfs_fsck_store_block(const vmfs_fs_t *fs,
-                                  const vmfs_inode_t *inode,
+static void vmfs_fsck_store_block(const vmfs_inode_t *inode,
                                   uint32_t pb_blk,
                                   uint32_t blk_id,
                                   void *opt_arg)
@@ -252,7 +251,7 @@ static void vmfs_fsck_store_block(const vmfs_fs_t *fs,
       map->inode_id[map->ref_count] = inode->id;
 
    map->ref_count++;
-   map->status = vmfs_block_get_status(fs,blk_id);
+   map->status = vmfs_block_get_status(inode->fs,blk_id);
 }
 
 /* Store inode info */
@@ -292,7 +291,7 @@ int vmfs_fsck_get_all_block_mappings(const vmfs_fs_t *fs,
          continue;
 
       vmfs_fsck_store_inode(fs,fi->blk_map,&inode);
-      vmfs_inode_foreach_block(fs,&inode,vmfs_fsck_store_block,fi->blk_map);
+      vmfs_inode_foreach_block(&inode,vmfs_fsck_store_block,fi->blk_map);
    }
 
    return(0);

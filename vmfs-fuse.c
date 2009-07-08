@@ -58,36 +58,37 @@ static void vmfs_fuse_setattr(fuse_req_t req, fuse_ino_t ino,
 {
    vmfs_fs_t *fs = (vmfs_fs_t *) fuse_req_userdata(req);
    struct stat stbuf = { 0, };
-   vmfs_inode_t inode;
+   vmfs_inode_t *inode;
 
-   if (vmfs_inode_get(fs,ino2blkid(ino),&inode) == -1) {
+   if (!(inode = vmfs_inode_acquire(fs,ino2blkid(ino)))) {
       fuse_reply_err(req, ENOENT);
       return;
    }
 
    if (to_set & FUSE_SET_ATTR_MODE)
-      inode.mode = attr->st_mode;
+      inode->mode = attr->st_mode;
 
    if (to_set & FUSE_SET_ATTR_UID)
-      inode.uid = attr->st_uid;
+      inode->uid = attr->st_uid;
 
    if (to_set & FUSE_SET_ATTR_GID)
-      inode.gid = attr->st_gid;
+      inode->gid = attr->st_gid;
 
    if (to_set & FUSE_SET_ATTR_ATIME)
-      inode.atime = attr->st_atime;
+      inode->atime = attr->st_atime;
 
    if (to_set & FUSE_SET_ATTR_MTIME)
-      inode.atime = attr->st_mtime;
+      inode->atime = attr->st_mtime;
 
    if (to_set & FUSE_SET_ATTR_SIZE)
-      vmfs_inode_truncate(fs,&inode,attr->st_size);
+      vmfs_inode_truncate(inode,attr->st_size);
 
-   vmfs_inode_update(fs,&inode,0);
-   vmfs_inode_stat(&inode,&stbuf);
-   stbuf.st_ino = blkid2ino(inode.id);
+   vmfs_inode_update(inode,0);
+   vmfs_inode_stat(inode,&stbuf);
+   stbuf.st_ino = blkid2ino(inode->id);
 
    fuse_reply_attr(req, &stbuf, 1.0);
+   vmfs_inode_release(inode);
 }
 
 static void vmfs_fuse_readlink(fuse_req_t req,fuse_ino_t ino)
@@ -127,7 +128,7 @@ static void vmfs_fuse_mknod(fuse_req_t req,fuse_ino_t parent,const char *name,
                             mode_t mode, dev_t rdev)
 {   
    struct fuse_entry_param entry = { 0, };
-   vmfs_inode_t inode;
+   vmfs_inode_t *inode;
    vmfs_dir_t *dir;
    int res;
 
@@ -143,19 +144,21 @@ static void vmfs_fuse_mknod(fuse_req_t req,fuse_ino_t parent,const char *name,
 
    vmfs_dir_close(dir);
 
-   vmfs_inode_stat(&inode,&entry.attr);
-   entry.ino = entry.attr.st_ino = blkid2ino(inode.id);
+   vmfs_inode_stat(inode,&entry.attr);
+   entry.ino = entry.attr.st_ino = blkid2ino(inode->id);
    entry.generation = 1;
    entry.attr_timeout = 1.0;
    entry.entry_timeout = 1.0;
    fuse_reply_entry(req, &entry);
+
+   vmfs_inode_release(inode);
 }
 
 static void vmfs_fuse_mkdir(fuse_req_t req, fuse_ino_t parent,
                             const char *name, mode_t mode) 
 {
    struct fuse_entry_param entry = { 0, };
-   vmfs_inode_t inode;
+   vmfs_inode_t *inode;
    vmfs_dir_t *dir;
    int res;
 
@@ -171,13 +174,15 @@ static void vmfs_fuse_mkdir(fuse_req_t req, fuse_ino_t parent,
 
    vmfs_dir_close(dir);
 
-   vmfs_inode_stat(&inode,&entry.attr);
-   entry.ino = entry.attr.st_ino = blkid2ino(inode.id);
+   vmfs_inode_stat(inode,&entry.attr);
+   entry.ino = entry.attr.st_ino = blkid2ino(inode->id);
    entry.generation = 1;
    entry.attr_timeout = 1.0;
    entry.entry_timeout = 1.0;
 
    fuse_reply_entry(req, &entry);
+
+   vmfs_inode_release(inode);
 }
 
 static void vmfs_fuse_unlink(fuse_req_t req,fuse_ino_t parent,const char *name) 

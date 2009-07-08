@@ -216,7 +216,7 @@ static vmfs_dir_t *vmfs_dir_open_from_file(vmfs_file_t *file)
       return NULL;
 
    if (!(d = calloc(1, sizeof(*d))) ||
-       (file->inode.type != VMFS_FILE_TYPE_DIR)) {
+       (file->inode->type != VMFS_FILE_TYPE_DIR)) {
       vmfs_file_close(file);
       return NULL;
    }
@@ -227,10 +227,9 @@ static vmfs_dir_t *vmfs_dir_open_from_file(vmfs_file_t *file)
 }
 
 /* Open a directory based on an inode buffer */
-vmfs_dir_t *vmfs_dir_open_from_inode(const vmfs_fs_t *fs,
-                                    const vmfs_inode_t *inode)
+vmfs_dir_t *vmfs_dir_open_from_inode(const vmfs_inode_t *inode)
 {
-   return vmfs_dir_open_from_file(vmfs_file_open_from_inode(fs,inode));
+   return vmfs_dir_open_from_file(vmfs_file_open_from_inode(inode));
 }
 
 /* Open a directory based on a directory entry */
@@ -324,22 +323,24 @@ int vmfs_dir_link_inode(vmfs_dir_t *d,const char *name,vmfs_inode_t *inode)
 int vmfs_dir_unlink_inode(vmfs_dir_t *d,off_t pos,vmfs_dirent_t *entry)
 {   
    vmfs_fs_t *fs = (vmfs_fs_t *)vmfs_dir_get_fs(d);
-   vmfs_inode_t inode;
+   vmfs_inode_t *inode;
    off_t last_entry;
 
    if (!vmfs_fs_readwrite(fs))
       return(-EROFS);
 
    /* Update the inode, delete it if nlink reaches 0 */
-   if (vmfs_inode_get(fs,entry->block_id,&inode) == -1)
+   if (!(inode = vmfs_inode_acquire(fs,entry->block_id)))
       return(-ENOENT);
 
-   if (!--inode.nlink) {
-      vmfs_inode_truncate(fs,&inode,0);
-      vmfs_block_free(fs,inode.id);
+   if (!--inode->nlink) {
+      vmfs_inode_truncate(inode,0);
+      vmfs_block_free(fs,inode->id);
    } else {
-      vmfs_inode_update(fs,&inode,0);
+      vmfs_inode_update(inode,0);
    }
+
+   vmfs_inode_release(inode);
 
    /* Remove the entry itself */
    last_entry = vmfs_file_get_size(d->dir) - VMFS_DIRENT_SIZE;
@@ -359,11 +360,11 @@ int vmfs_dir_unlink_inode(vmfs_dir_t *d,off_t pos,vmfs_dirent_t *entry)
 
 /* Create a new directory */
 int vmfs_dir_create(vmfs_dir_t *d,const char *name,mode_t mode,
-                    vmfs_inode_t *inode)
+                    vmfs_inode_t **inode)
 {
    vmfs_fs_t *fs = (vmfs_fs_t *)vmfs_dir_get_fs(d);
    vmfs_dir_t *new_dir;
-   vmfs_inode_t *new_inode,tmp_inode;
+   vmfs_inode_t *new_inode;
    int res;
 
    if (!vmfs_fs_readwrite(fs))
@@ -373,31 +374,25 @@ int vmfs_dir_create(vmfs_dir_t *d,const char *name,mode_t mode,
       return(-EEXIST);
 
    /* Allocate inode for the new directory */
-   if (vmfs_inode_alloc(fs,VMFS_FILE_TYPE_DIR,mode,&tmp_inode) == -1)
-      return(-ENOSPC);
+   if ((res = vmfs_inode_alloc(fs,VMFS_FILE_TYPE_DIR,mode,&new_inode)) < 0)
+      return(res);
 
-   if (!(new_dir = vmfs_dir_open_from_inode(fs,&tmp_inode))) {
+   if (!(new_dir = vmfs_dir_open_from_inode(new_inode))) {
       res = -ENOENT;
       goto err_open_dir;
    }
 
-   new_inode = &new_dir->dir->inode;
-
    vmfs_dir_link_inode(new_dir,".",new_inode);
-   vmfs_dir_link_inode(new_dir,"..",&d->dir->inode);
+   vmfs_dir_link_inode(new_dir,"..",d->dir->inode);
    vmfs_dir_link_inode(d,name,new_inode);
 
-   vmfs_inode_update(fs,new_inode,0);
-   vmfs_inode_update(fs,&d->dir->inode,0);
-
    if (inode)
-      *inode = *new_inode;
+      *inode = new_inode;
 
-   vmfs_dir_close(new_dir);
    return(0);
 
  err_open_dir:
-   vmfs_block_free(fs,tmp_inode.id);
+   vmfs_inode_release(new_inode);
    return(res);
 }
 
@@ -427,14 +422,16 @@ int vmfs_dir_delete(vmfs_dir_t *d,const char *name)
       return(-ENOTEMPTY);
    }
 
-   d->dir->inode.nlink--;
-   sub->dir->inode.nlink = 1;
-   vmfs_inode_update(fs,&sub->dir->inode,0);
-   vmfs_dir_close(sub);
+   d->dir->inode->nlink--;
+   sub->dir->inode->nlink = 1;
+   sub->dir->inode->update_flags |= VMFS_INODE_SYNC_META;
 
    /* Update the parent directory */
    pos = (d->pos - 1) * VMFS_DIRENT_SIZE;
-   return(vmfs_dir_unlink_inode(d,pos,entry));
+   vmfs_dir_unlink_inode(d,pos,entry);
+
+   vmfs_dir_close(sub);
+   return(0);
 }
 
 /* Create a new directory given a path */
@@ -442,6 +439,7 @@ int vmfs_dir_mkdir_at(vmfs_dir_t *d,const char *path,mode_t mode)
 {
    char *dir_name,*base_name;
    vmfs_dir_t *dir;
+   vmfs_inode_t *new_inode = NULL;
    int res;
 
    dir_name = m_dirname(path);
@@ -457,7 +455,11 @@ int vmfs_dir_mkdir_at(vmfs_dir_t *d,const char *path,mode_t mode)
       goto done;
    }
    
-   res = vmfs_dir_create(dir,base_name,mode,NULL);
+   res = vmfs_dir_create(dir,base_name,mode,&new_inode);
+
+   if (new_inode)
+      vmfs_inode_release(new_inode);
+
    vmfs_dir_close(dir);
 
  done:

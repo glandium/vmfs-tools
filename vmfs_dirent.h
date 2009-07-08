@@ -68,8 +68,7 @@ uint32_t vmfs_dir_resolve_path(vmfs_dir_t *base_dir,const char *path,
                                int follow_symlink);
 
 /* Open a directory based on an inode buffer */
-vmfs_dir_t *vmfs_dir_open_from_inode(const vmfs_fs_t *fs,
-                                     const vmfs_inode_t *inode);
+vmfs_dir_t *vmfs_dir_open_from_inode(const vmfs_inode_t *inode);
 
 /* Open a directory based on a directory entry */
 vmfs_dir_t *vmfs_dir_open_from_blkid(const vmfs_fs_t *fs,uint32_t blk_id);
@@ -99,7 +98,7 @@ int vmfs_dir_unlink_inode(vmfs_dir_t *d,off_t pos,vmfs_dirent_t *entry);
 
 /* Create a new directory */
 int vmfs_dir_create(vmfs_dir_t *d,const char *name,mode_t mode,
-                    vmfs_inode_t *inode);
+                    vmfs_inode_t **inode);
 
 /* Delete a directory */
 int vmfs_dir_delete(vmfs_dir_t *d,const char *name);

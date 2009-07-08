@@ -80,6 +80,8 @@ struct vmfs_fsinfo {
 };
 
 /* === VMFS filesystem === */
+#define VMFS_INODE_HASH_BUCKETS  256
+
 struct vmfs_fs {
    int debug_level;
 
@@ -101,6 +103,10 @@ struct vmfs_fs {
 
    /* Counter for "gen" field in inodes */
    uint32_t inode_gen;
+
+   /* In-core inodes hash table */
+   u_int inode_hash_buckets;
+   vmfs_inode_t **inodes;
 };
 
 /* Get block size of a volume */

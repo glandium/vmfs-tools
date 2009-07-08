@@ -26,33 +26,26 @@
 #include "vmfs.h"
 
 /* Open a file based on an inode buffer */
-vmfs_file_t *vmfs_file_open_from_inode(const vmfs_fs_t *fs,
-                                       const vmfs_inode_t *inode)
+vmfs_file_t *vmfs_file_open_from_inode(const vmfs_inode_t *inode)
 {
    vmfs_file_t *f;
 
    if (!(f = calloc(1,sizeof(*f))))
       return NULL;
 
-   f->fs = fs;
-
-   memcpy(&f->inode, inode, sizeof(*inode));
-
+   f->inode = (vmfs_inode_t *)inode;
    return f;
 }
 
 /* Open a file based on a directory entry */
 vmfs_file_t *vmfs_file_open_from_blkid(const vmfs_fs_t *fs,uint32_t blk_id)
 {
-   vmfs_inode_t inode;
+   vmfs_inode_t *inode;
 
-   /* Read the inode */
-   if (vmfs_inode_get(fs,blk_id,&inode) == -1) {
-      fprintf(stderr,"VMFS: Unable to get inode 0x%8.8x\n",blk_id);
+   if (!(inode = vmfs_inode_acquire(fs,blk_id)))
       return NULL;
-   }
 
-   return(vmfs_file_open_from_inode(fs,&inode));
+   return(vmfs_file_open_from_inode(inode));
 }
 
 /* Open a file */
@@ -68,23 +61,26 @@ vmfs_file_t *vmfs_file_open_at(vmfs_dir_t *dir,const char *path)
 
 /* Create a new file entry */
 int vmfs_file_create(vmfs_dir_t *d,const char *name,mode_t mode,
-                     vmfs_inode_t *inode)
+                     vmfs_inode_t **inode)
 {      
    vmfs_fs_t *fs = (vmfs_fs_t *)vmfs_dir_get_fs(d);
+   vmfs_inode_t *new_inode;
    int res;
 
    if (!vmfs_fs_readwrite(fs))
       return(-EROFS);
 
-   if (vmfs_inode_alloc(fs,VMFS_FILE_TYPE_FILE,mode,inode) == -1)
-      return(-ENOSPC);
+   if ((res = vmfs_inode_alloc(fs,VMFS_FILE_TYPE_FILE,mode,&new_inode)) < 0)
+      return(res);
 
-   if ((res = vmfs_dir_link_inode(d,name,inode)) < 0) {
-      vmfs_block_free(fs,inode->id);
+   if ((res = vmfs_dir_link_inode(d,name,new_inode)) < 0) {
+      vmfs_block_free(fs,new_inode->id);
+      vmfs_inode_release(new_inode);
       return(res);
    }
 
-   vmfs_inode_update(fs,inode,0);
+   if (*inode)
+      *inode = new_inode;
    return(0);
 }
 
@@ -94,7 +90,7 @@ vmfs_file_t *vmfs_file_create_at(vmfs_dir_t *dir,const char *path,mode_t mode)
    char *dir_name,*base_name;
    vmfs_dir_t *d = NULL;
    vmfs_file_t *f = NULL;
-   vmfs_inode_t inode;
+   vmfs_inode_t *inode;
 
    dir_name = m_dirname(path);
    base_name = m_basename(path);
@@ -108,7 +104,8 @@ vmfs_file_t *vmfs_file_create_at(vmfs_dir_t *dir,const char *path,mode_t mode)
    if (vmfs_file_create(d,base_name,mode,&inode) < 0)
       goto done;
 
-   f = vmfs_file_open_from_inode(vmfs_dir_get_fs(dir),&inode);
+   if (!(f = vmfs_file_open_from_inode(inode)))
+      vmfs_inode_release(inode);
 
  done:
    vmfs_dir_close(d);
@@ -123,6 +120,7 @@ int vmfs_file_close(vmfs_file_t *f)
    if (f == NULL)
       return(-1);
 
+   vmfs_inode_release(f->inode);
    free(f);
    return(0);
 }
@@ -130,6 +128,7 @@ int vmfs_file_close(vmfs_file_t *f)
 /* Read data from a file at the specified position */
 ssize_t vmfs_file_pread(vmfs_file_t *f,u_char *buf,size_t len,off_t pos)
 {
+   const vmfs_fs_t *fs = vmfs_file_get_fs(f);
    uint32_t blk_id,blk_type;
    uint64_t blk_size,blk_len;
    uint64_t file_size,offset;
@@ -138,17 +137,17 @@ ssize_t vmfs_file_pread(vmfs_file_t *f,u_char *buf,size_t len,off_t pos)
    int err;
 
    /* We don't handle RDM files */
-   if (f->inode.type == VMFS_FILE_TYPE_RDM)
+   if (f->inode->type == VMFS_FILE_TYPE_RDM)
       return(-EIO);
 
-   blk_size = vmfs_fs_get_blocksize(f->fs);
+   blk_size = vmfs_fs_get_blocksize(fs);
    file_size = vmfs_file_get_size(f);
 
    while(len > 0) {
       if (pos >= file_size)
          break;
 
-      if ((err = vmfs_inode_get_block(f->fs,&f->inode,pos,&blk_id)) < 0)
+      if ((err = vmfs_inode_get_block(f->inode,pos,&blk_id)) < 0)
          return(err);
 
 #if 0
@@ -172,14 +171,14 @@ ssize_t vmfs_file_pread(vmfs_file_t *f,u_char *buf,size_t len,off_t pos)
          /* File-Block */
          case VMFS_BLK_TYPE_FB: {
             exp_len = m_min(len,file_size - pos);
-            res = vmfs_block_read_fb(f->fs,blk_id,pos,buf,exp_len);
+            res = vmfs_block_read_fb(fs,blk_id,pos,buf,exp_len);
             break;
          }
 
          /* Sub-Block */
          case VMFS_BLK_TYPE_SB: {
             exp_len = m_min(len,file_size - pos);
-            res = vmfs_block_read_sb(f->fs,blk_id,pos,buf,exp_len);
+            res = vmfs_block_read_sb(fs,blk_id,pos,buf,exp_len);
             break;
          }
 
@@ -206,23 +205,24 @@ ssize_t vmfs_file_pread(vmfs_file_t *f,u_char *buf,size_t len,off_t pos)
 
 /* Write data to a file at the specified position */
 ssize_t vmfs_file_pwrite(vmfs_file_t *f,u_char *buf,size_t len,off_t pos)
-{
+{   
+   const vmfs_fs_t *fs = vmfs_file_get_fs(f);
    uint32_t blk_id,blk_type;
    uint64_t blk_size;
    ssize_t res=0,wlen = 0;
    int err;
 
-   if (!vmfs_fs_readwrite(f->fs))
+   if (!vmfs_fs_readwrite(fs))
       return(-EROFS);
 
    /* We don't handle RDM files */
-   if (f->inode.type == VMFS_FILE_TYPE_RDM)
+   if (f->inode->type == VMFS_FILE_TYPE_RDM)
       return(-EIO);
 
-   blk_size = vmfs_fs_get_blocksize(f->fs);
+   blk_size = vmfs_fs_get_blocksize(fs);
 
    while(len > 0) {
-      if ((err = vmfs_inode_get_wrblock(f->fs,&f->inode,pos,&blk_id)) < 0)
+      if ((err = vmfs_inode_get_wrblock(f->inode,pos,&blk_id)) < 0)
          return(err);
 
 #if 0
@@ -235,12 +235,12 @@ ssize_t vmfs_file_pwrite(vmfs_file_t *f,u_char *buf,size_t len,off_t pos)
       switch(blk_type) {
          /* File-Block */
          case VMFS_BLK_TYPE_FB:
-            res = vmfs_block_write_fb(f->fs,blk_id,pos,buf,len);
+            res = vmfs_block_write_fb(fs,blk_id,pos,buf,len);
             break;
 
          /* Sub-Block */
          case VMFS_BLK_TYPE_SB:
-            res = vmfs_block_write_sb(f->fs,blk_id,pos,buf,len);
+            res = vmfs_block_write_sb(fs,blk_id,pos,buf,len);
             break;
 
          default:
@@ -263,8 +263,8 @@ ssize_t vmfs_file_pwrite(vmfs_file_t *f,u_char *buf,size_t len,off_t pos)
 
    /* Update file size */
    if (pos > vmfs_file_get_size(f)) {
-      f->inode.size = pos;
-      vmfs_inode_update(f->fs,&f->inode,0);
+      f->inode->size = pos;
+      f->inode->update_flags |= VMFS_INODE_SYNC_META;
    }
 
    return(wlen);
@@ -310,7 +310,7 @@ int vmfs_file_dump(vmfs_file_t *f,off_t pos,uint64_t len,FILE *fd_out)
 /* Get file status */
 int vmfs_file_fstat(const vmfs_file_t *f,struct stat *buf)
 {
-   return(vmfs_inode_stat(&f->inode,buf));
+   return(vmfs_inode_stat(f->inode,buf));
 }
 
 /* Get file status (similar to fstat(), but with a path) */
@@ -341,7 +341,7 @@ int vmfs_file_lstat_at(vmfs_dir_t *dir,const char *path,struct stat *buf)
 /* Truncate a file (using a file descriptor) */
 int vmfs_file_truncate(vmfs_file_t *f,off_t length)
 {
-   return(vmfs_inode_truncate(f->fs,&f->inode,length));
+   return(vmfs_inode_truncate(f->inode,length));
 }
 
 /* Truncate a file (using a path) */
@@ -362,7 +362,7 @@ int vmfs_file_truncate_at(vmfs_dir_t *dir,const char *path,off_t length)
 /* Change permissions of a file */
 int vmfs_file_chmod(vmfs_file_t *f,mode_t mode)
 {
-   return(vmfs_inode_chmod(f->fs,&f->inode,mode));
+   return(vmfs_inode_chmod(f->inode,mode));
 }
 
 /* Change permissions of a file (using a path) */

@@ -27,15 +27,21 @@
 #define VMFS_FILE_TYPE_META     0x05
 #define VMFS_FILE_TYPE_RDM      0x06
 
+/* File flags */
+#define VMFS_FILE_FLAG_RW  0x01
+
 /* === VMFS file abstraction === */
 struct vmfs_file {
-   const vmfs_fs_t *fs;
-   vmfs_inode_t inode;
+   vmfs_inode_t *inode;
+   u_int flags;
 };
 
 static inline const vmfs_fs_t *vmfs_file_get_fs(vmfs_file_t *f)
 {
-   return f ? f->fs : NULL;
+   if (f && f->inode)
+      return(f->inode->fs);
+
+   return NULL;
 }
 
 static inline mode_t vmfs_file_type2mode(uint32_t type) {
@@ -52,12 +58,11 @@ static inline mode_t vmfs_file_type2mode(uint32_t type) {
 /* Get file size */
 static inline uint64_t vmfs_file_get_size(const vmfs_file_t *f)
 {
-   return(f->inode.size);
+   return(f->inode->size);
 }
 
 /* Open a file based on an inode buffer */
-vmfs_file_t *vmfs_file_open_from_inode(const vmfs_fs_t *fs,
-                                       const vmfs_inode_t *inode);
+vmfs_file_t *vmfs_file_open_from_inode(const vmfs_inode_t *inode);
 
 /* Open a file based on a block id */
 vmfs_file_t *vmfs_file_open_from_blkid(const vmfs_fs_t *fs,uint32_t blk_id);
@@ -67,7 +72,7 @@ vmfs_file_t *vmfs_file_open_at(vmfs_dir_t *dir,const char *path);
 
 /* Create a new file entry */
 int vmfs_file_create(vmfs_dir_t *d,const char *name,mode_t mode,
-                     vmfs_inode_t *inode);
+                     vmfs_inode_t **inode);
 
 /* Create a file */
 vmfs_file_t *vmfs_file_create_at(vmfs_dir_t *dir,const char *path,mode_t mode);

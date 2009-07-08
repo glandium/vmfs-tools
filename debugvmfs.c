@@ -290,7 +290,7 @@ static int cmd_show_inode(vmfs_dir_t *base_dir,int argc,char *argv[])
       return(-1);
    }
 
-   vmfs_inode_show(&f->inode);
+   vmfs_inode_show(f->inode);
    vmfs_file_close(f);
    return(0);
 }
@@ -298,7 +298,6 @@ static int cmd_show_inode(vmfs_dir_t *base_dir,int argc,char *argv[])
 /* Show file blocks */
 static int cmd_show_file_blocks(vmfs_dir_t *base_dir,int argc,char *argv[])
 {
-   const vmfs_fs_t *fs = vmfs_dir_get_fs(base_dir);
    vmfs_file_t *f;
 
    if (argc == 0) {
@@ -311,7 +310,7 @@ static int cmd_show_file_blocks(vmfs_dir_t *base_dir,int argc,char *argv[])
       return(-1);
    }
 
-   vmfs_inode_show_blocks(fs,&f->inode);
+   vmfs_inode_show_blocks(f->inode);
    vmfs_file_close(f);
    return(0);
 }
@@ -319,7 +318,6 @@ static int cmd_show_file_blocks(vmfs_dir_t *base_dir,int argc,char *argv[])
 /* Get file block corresponding to specified position */
 static int cmd_get_file_block(vmfs_dir_t *base_dir,int argc,char *argv[])
 {
-   const vmfs_fs_t *fs = vmfs_dir_get_fs(base_dir);
    vmfs_file_t *f;
    uint32_t blk_id;
    off_t pos;
@@ -336,7 +334,7 @@ static int cmd_get_file_block(vmfs_dir_t *base_dir,int argc,char *argv[])
 
    pos = (off_t)strtoull(argv[1],NULL,16);
 
-   if (!vmfs_inode_get_block(fs,&f->inode,pos,&blk_id)) {
+   if (!vmfs_inode_get_block(f->inode,pos,&blk_id)) {
       printf("0x%8.8x\n",blk_id);
    } else {
       fprintf(stderr,"Unable to get block info\n");
@@ -349,7 +347,6 @@ static int cmd_get_file_block(vmfs_dir_t *base_dir,int argc,char *argv[])
 /* Check file blocks */
 static int cmd_check_file_blocks(vmfs_dir_t *base_dir,int argc,char *argv[])
 {
-   const vmfs_fs_t *fs = vmfs_dir_get_fs(base_dir);
    vmfs_file_t *f;
    int res;
 
@@ -363,7 +360,7 @@ static int cmd_check_file_blocks(vmfs_dir_t *base_dir,int argc,char *argv[])
       return(-1);
    }
 
-   res = vmfs_inode_check_blocks(fs,&f->inode);
+   res = vmfs_inode_check_blocks(f->inode);
 
    if (res > 0)
       fprintf(stderr,"%d allocation errors detected.\n",res);

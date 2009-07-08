@@ -150,8 +150,7 @@ int vmfs_bitmap_check(vmfs_bitmap_t *b);
 /* Open a bitmap file */
 vmfs_bitmap_t *vmfs_bitmap_open_at(vmfs_dir_t *d, const char *name);
 
-vmfs_bitmap_t *vmfs_bitmap_open_from_inode(const vmfs_fs_t *fs,
-                                           const vmfs_inode_t *inode);
+vmfs_bitmap_t *vmfs_bitmap_open_from_inode(const vmfs_inode_t *inode);
 
 /* Close a bitmap file */
 void vmfs_bitmap_close(vmfs_bitmap_t *b);

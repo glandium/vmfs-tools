@@ -204,6 +204,7 @@ static int vmfs_read_fdc_base(vmfs_fs_t *fs)
    if (fs->debug_level > 0)
       printf("FDC base = block #%u\n", fdc_base);
 
+   inode.fs = fs;
    inode.mdh.magic = VMFS_INODE_MAGIC;
    inode.size = fs->fs_info.block_size;
    inode.type = VMFS_FILE_TYPE_META;
@@ -211,8 +212,9 @@ static int vmfs_read_fdc_base(vmfs_fs_t *fs)
    inode.blk_count = 1;
    inode.zla = VMFS_BLK_TYPE_FB;
    inode.blocks[0] = VMFS_BLK_FB_BUILD(fdc_base);
+   inode.ref_count = 1;
 
-   fs->fdc = vmfs_bitmap_open_from_inode(fs,&inode);
+   fs->fdc = vmfs_bitmap_open_from_inode(&inode);
 
    if (fs->debug_level > 0) {
       printf("FDC bitmap:\n");
@@ -237,6 +239,14 @@ vmfs_fs_t *vmfs_fs_create(vmfs_lvm_t *lvm)
 
    if (!(fs = calloc(1,sizeof(*fs))))
       return NULL;
+
+   fs->inode_hash_buckets = VMFS_INODE_HASH_BUCKETS;
+   fs->inodes = calloc(fs->inode_hash_buckets,sizeof(vmfs_inode_t *));
+
+   if (!fs->inodes) {
+      free(fs);
+      return NULL;
+   }
 
    fs->lvm = lvm;
    fs->debug_level = lvm->flags.debug_level;
@@ -274,6 +284,27 @@ int vmfs_fs_open(vmfs_fs_t *fs)
    return(0);
 }
 
+/* 
+ * Check that all inodes have been released, and synchronize them if this 
+ * is not the case. 
+ */
+static void vmfs_fs_sync_inodes(vmfs_fs_t *fs)
+{
+   vmfs_inode_t *inode;
+   int i;
+
+   for(i=0;i<VMFS_INODE_HASH_BUCKETS;i++) {
+      for(inode=fs->inodes[i];inode;inode=inode->next) {
+#if 0
+         printf("Inode 0x%8.8x: ref_count=%u, update_flags=0x%x\n",
+                inode->id,inode->ref_count,inode->update_flags);
+#endif
+         if (inode->update_flags)
+            vmfs_inode_update(inode,inode->update_flags & VMFS_INODE_SYNC_BLK);
+      }
+   }
+}
+
 /* Close a FS */
 void vmfs_fs_close(vmfs_fs_t *fs)
 {
@@ -292,7 +323,11 @@ void vmfs_fs_close(vmfs_fs_t *fs)
    vmfs_bitmap_close(fs->fdc);
    vmfs_bitmap_close(fs->pbc);
    vmfs_bitmap_close(fs->sbc);
+
+   vmfs_fs_sync_inodes(fs);
+
    vmfs_lvm_close(fs->lvm);
+   free(fs->inodes);
    free(fs->fs_info.label);
    free(fs);
 }

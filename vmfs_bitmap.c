@@ -312,12 +312,14 @@ int vmfs_bitmap_area_find_free_items(vmfs_bitmap_t *b,
                                      u_int area,u_int num_items,
                                      vmfs_bitmap_entry_t *entry)
 {
+   vmfs_fs_t *fs;
    u_char *buf,*ptr;
    size_t buf_len;
    off_t pos;
    int res = -1;
    int i;
 
+   fs = (vmfs_fs_t *)vmfs_file_get_fs(b->f);
    pos = vmfs_bitmap_get_area_addr(&b->bmh,area);
    buf_len = b->bmh.bmp_entries_per_area * VMFS_BITMAP_ENTRY_SIZE;
 
@@ -335,14 +337,14 @@ int vmfs_bitmap_area_find_free_items(vmfs_bitmap_t *b,
          continue;
 
       /* We now have to re-read the bitmap entry with the reservation taken */
-      if (!vmfs_metadata_lock((vmfs_fs_t *)b->f->fs,entry->mdh.pos,
+      if (!vmfs_metadata_lock(fs,entry->mdh.pos,
                               ptr,VMFS_BITMAP_ENTRY_SIZE,
                               &entry->mdh))
       {      
          vmfs_bme_read(entry,ptr,1);
 
          if (entry->free < num_items) {
-            vmfs_metadata_unlock((vmfs_fs_t *)b->f->fs,&entry->mdh);
+            vmfs_metadata_unlock(fs,&entry->mdh);
             continue;
          }
 
@@ -564,10 +566,9 @@ vmfs_bitmap_t *vmfs_bitmap_open_at(vmfs_dir_t *d,const char *name)
    return vmfs_bitmap_open_from_file(vmfs_file_open_at(d, name));
 }
 
-vmfs_bitmap_t *vmfs_bitmap_open_from_inode(const vmfs_fs_t *fs,
-                                           const vmfs_inode_t *inode)
+vmfs_bitmap_t *vmfs_bitmap_open_from_inode(const vmfs_inode_t *inode)
 {
-   return vmfs_bitmap_open_from_file(vmfs_file_open_from_inode(fs, inode));
+   return vmfs_bitmap_open_from_file(vmfs_file_open_from_inode(inode));
 }
 
 
