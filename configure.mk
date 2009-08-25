@@ -12,8 +12,10 @@ $(call PATH_LOOKUP,xsltproc)
 
 $(call checking,docbook.xsl)
 __DOCBOOK_XSL := http://docbook.sourceforge.net/release/xsl/current/manpages/docbook.xsl
+ifneq (,$(XSLTPROC))
 ifneq (,$(shell $(XSLTPROC) --nonet --noout $(__DOCBOOK_XSL) 2> /dev/null && echo ok))
 DOCBOOK_XSL := $(__DOCBOOK_XSL)
+endif
 endif
 $(call result,$(DOCBOOK_XSL))
 
