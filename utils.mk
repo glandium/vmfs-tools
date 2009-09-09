@@ -8,9 +8,10 @@ result = $(shell echo $(if $(1),yes,no) >&2)
 # Sets NAME to the full path of name
 define _PATH_LOOKUP
 __path_lookup := $(call UC,$(1))
-ifndef $$(__path_lookup)
+ifndef __$$(__path_lookup)
 $$(call checking,$(1))
 $$(__path_lookup) := $$(firstword $$(wildcard $$(foreach path,$$(subst :, ,$(PATH)),$$(path)/$(1))))
+__$$(__path_lookup) := 1
 $$(call result,$$($$(__path_lookup)))
 endif
 endef
