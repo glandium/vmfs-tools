@@ -18,6 +18,7 @@
 #ifndef SCSI_H
 #define SCSI_H
 
+#ifdef __linux__
 #include <scsi/scsi.h>
 #include <sys/ioctl.h>
 
@@ -25,15 +26,20 @@ struct scsi_idlun {
    int four_in_one;
    int host_unique_id;
 };
+#endif
 
 static inline int scsi_get_lun(int fd) 
 {
+#if __linux__
    struct scsi_idlun idlun;
 
    if (ioctl(fd, SCSI_IOCTL_GET_IDLUN, &idlun))
+#endif
       return(-1);
 
+#if __linux__
    return((idlun.four_in_one >> 8) & 0xff);
+#endif
 }
 
 /* Send a SCSI "reserve" command */

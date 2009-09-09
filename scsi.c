@@ -21,8 +21,10 @@
 #include <string.h>
 #include <errno.h>
 #include <sys/types.h>
+#ifdef __linux__
 #include <scsi/scsi.h>
 #include <scsi/sg.h>
+#endif
 #include <sys/ioctl.h>
 
 /* SCSI "reserve" command */
@@ -36,6 +38,7 @@
 /* Send a SCSI "reserve" command */
 int scsi_reserve(int fd)
 {
+#ifdef __linux__
    sg_io_hdr_t io_hdr;  
    u_char sense_buffer[32];
    u_char cmd[SCSI_CMD_LEN_RESERVE] = { SCSI_CMD_RESERVE, 0, 0, 0, 0, 0 };
@@ -54,12 +57,14 @@ int scsi_reserve(int fd)
       return(-1);
    }
    
+#endif
    return(0);
 }
 
 /* Send a SCSI "release" command */
 int scsi_release(int fd)
 {
+#ifdef __linux__
    sg_io_hdr_t io_hdr;  
    u_char sense_buffer[32];
    u_char cmd[SCSI_CMD_LEN_RELEASE] = { SCSI_CMD_RELEASE, 0, 0, 0, 0, 0 };
@@ -77,6 +82,6 @@ int scsi_release(int fd)
       perror("ioctl");
       return(-1);
    }
-   
+#endif
    return(0);
 }
