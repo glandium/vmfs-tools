@@ -20,7 +20,7 @@
 
 #include <stdio.h>
 #include <string.h>
-#include <uuid/uuid.h>
+#include <uuid.h>
 #include <inttypes.h>
 
 /* Max and min macro */

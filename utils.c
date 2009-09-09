@@ -27,7 +27,7 @@
 #include <time.h>
 #include <sys/types.h>
 #include <sys/stat.h>
-#include <uuid/uuid.h>
+#include <uuid.h>
 #include <libgen.h>
 
 #include "utils.h"

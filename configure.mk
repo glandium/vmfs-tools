@@ -5,7 +5,7 @@ ifneq (,$(shell test config.cache -nt configure.mk || echo no))
 __VARS := $(.VARIABLES)
 
 # configure rules really start here
-$(call PKG_CONFIG_CHK,uuid,,-luuid)
+$(call PKG_CONFIG_CHK,uuid,-I/usr/include/uuid,-luuid)
 $(call PKG_CONFIG_CHK,fuse)
 $(call PATH_LOOKUP,asciidoc)
 $(call PATH_LOOKUP,xsltproc)
