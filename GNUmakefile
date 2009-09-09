@@ -6,7 +6,7 @@ PACKAGE := vmfs-tools
 CC := gcc
 OPTIMFLAGS := -O2
 CFLAGS := -Wall $(OPTIMFLAGS) -g -D_FILE_OFFSET_BITS=64 $(EXTRA_CFLAGS)
-CFLAGS += $(UUID_CFLAGS)
+CFLAGS += $(UUID_CFLAGS) $(if $(HAS_STRNDUP),,-DNO_STRNDUP=1)
 LDFLAGS := $(UUID_LDFLAGS)
 SRC := $(wildcard *.c)
 HEADERS := $(wildcard *.h)

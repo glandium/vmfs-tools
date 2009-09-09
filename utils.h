@@ -181,4 +181,16 @@ char *m_dirname(const char *path);
 /* Returns base name */
 char *m_basename(const char *path);
 
+#ifdef NO_STRNDUP
+static inline char *strndup(const char *s, size_t n) {
+   char *result;
+   n = strnlen(s, n);
+   result = malloc(n + 1);
+   if (!result)
+      return NULL;
+   memcpy(result, s, n);
+   result[n + 1] = 0;
+}
+#endif
+
 #endif
