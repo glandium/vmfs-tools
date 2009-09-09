@@ -1,5 +1,5 @@
 #Usage: $(call checking,message])
-checking = $(shell echo -n Checking for $(1)... >&2)
+checking = $(shell sh -c "echo -n Checking for $(1)... " >&2)
 
 #Usage: $(call result,value)
 result = $(shell echo $(if $(1),yes,no) >&2)
