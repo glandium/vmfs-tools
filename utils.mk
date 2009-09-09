@@ -34,15 +34,15 @@ define _PKG_CONFIG_CHK
 $$(call PATH_LOOKUP,pkg-config)
 $$(call checking,$(1))
 __name := $(call UC,$(1))
-$$(__name)_LDFLAGS := $(if $(PKG_CONFIG),$$(strip $$(shell $$(PKG_CONFIG) --libs $(1) 2> /dev/null || echo __)),__)
-$$(__name)_CFLAGS := $(if $(PKG_CONFIG),$$(strip $$(shell $$(PKG_CONFIG) --cflags $(1) 2> /dev/null || echo __)),__)
+$$(__name)_LDFLAGS := $$(if $$(PKG_CONFIG),$$(strip $$(shell $$(PKG_CONFIG) --libs $(1) 2> /dev/null || echo __)),__)
+$$(__name)_CFLAGS := $$(if $$(PKG_CONFIG),$$(strip $$(shell $$(PKG_CONFIG) --cflags $(1) 2> /dev/null || echo __)),__)
 ifeq (__,$$($$(__name)_LDFLAGS))
 $$(__name)_LDFLAGS := $(3)
 endif
 ifeq (__,$$($$(__name)_CFLAGS))
 $$(__name)_CFLAGS := $(2)
 endif
-$$(call result,$$(__name))
+$$(call result,$$($$(__name)_CFLAGS)$$($$(__name)_LDFLAGS))
 endef
 PKG_CONFIG_CHK = $(eval $(call _PKG_CONFIG_CHK,$(1),$(2),$(3)))
 
