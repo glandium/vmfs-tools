@@ -201,8 +201,16 @@ vmfs_volume_t *vmfs_vol_create(const char *filename,vmfs_flags_t flags)
    vol->flags = flags;
    fstat(vol->fd,&st);
    vol->is_blkdev = S_ISBLK(st.st_mode);
+#if defined(O_DIRECT) || defined(DIRECTIO_ON)
    if (vol->is_blkdev)
+#ifdef O_DIRECT
       fcntl(vol->fd, F_SETFL, O_DIRECT);
+#else
+#ifdef DIRECTIO_ON
+      directio(vol->fd, DIRECTIO_ON);
+#endif
+#endif
+#endif
 
    return vol;
 
