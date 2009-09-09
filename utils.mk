@@ -46,6 +46,23 @@ $$(call result,$$($$(__name)_CFLAGS)$$($$(__name)_LDFLAGS))
 endef
 PKG_CONFIG_CHK = $(eval $(call _PKG_CONFIG_CHK,$(1),$(2),$(3)))
 
+#Usage: $(call LINK_CHECK,func,ldflags)
+# Try to link a simple program with a call to func() with given ldflags
+# Sets FUNC_LDFLAGS and HAS_FUNC
+define _LINK_CHECK
+$$(call checking,$(if $(2),$(1) in $(2),$(1)))
+__name := $(call UC,$(1))
+__$$(__name) := $$(shell echo "char $(1)(); int main(void) { $(1)(); return(0); }" > __conftest.c; $(CC) -o __conftest __conftest.c $(2) 2> /dev/null && echo yes || echo no; rm -f __conftest*)
+ifeq ($$(__$$(__name)),yes)
+HAS_$$(__name) := 1
+ifneq (,$(2))
+$$(__name)_LDFLAGS := $(2)
+endif
+endif
+$$(call result,$$(HAS_$$(__name)))
+endef
+LINK_CHECK = $(eval $(call _LINK_CHECK,$(1),$(2)))
+
 GEN_VERSION = $(shell \
 	(if [ -d .git ]; then \
 		VER=$$(git describe --match "v[0-9].*" --abbrev=0 HEAD); \

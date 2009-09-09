@@ -18,6 +18,10 @@ DOCBOOK_XSL := $(__DOCBOOK_XSL)
 endif
 endif
 $(call result,$(DOCBOOK_XSL))
+$(call LINK_CHECK,dlopen,-ldl)
+ifeq (,$(HAS_DLOPEN))
+$(call LINK_CHECK,dlopen)
+endif
 
 # Generate cache file
 $(shell ($(foreach var,$(filter-out $(__VARS) __%,$(.VARIABLES)),echo $(var) := $($(var));)) > config.cache)
