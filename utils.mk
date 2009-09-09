@@ -11,7 +11,7 @@ __path_lookup := $(call UC,$(1))
 ifndef $$(__path_lookup)
 $$(call checking,$(1))
 $$(__path_lookup) := $$(firstword $$(wildcard $$(foreach path,$$(subst :, ,$(PATH)),$$(path)/$(1))))
-$$(call result,$$(__path_lookup))
+$$(call result,$$($$(__path_lookup)))
 endif
 endef
 PATH_LOOKUP = $(eval $(call _PATH_LOOKUP,$(1)))
