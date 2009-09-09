@@ -37,6 +37,8 @@ struct vmfs_heartbeart_raw {
    uint64_t uptime;
    uuid_t uuid;
    uint32_t journal_block;
+   uint32_t vol_version;     /* from fs_info (?) */
+   uint32_t version;         /* from fs_info (?) */
 } __attribute__((packed));
 
 #define VMFS_HB_OFS_MAGIC        offsetof(struct vmfs_heartbeart_raw, magic)
