@@ -17,8 +17,8 @@ ifneq (,$(shell $(XSLTPROC) --nonet --noout $(__DOCBOOK_XSL) 2> /dev/null && ech
 DOCBOOK_XSL := $(__DOCBOOK_XSL)
 endif
 endif
-$(call LINK_CHECK,strndup)
 $(call result,$(DOCBOOK_XSL))
+$(call LINK_CHECK,strndup)
 $(call LINK_CHECK,dlopen,-ldl)
 ifeq (,$(HAS_DLOPEN))
 $(call LINK_CHECK,dlopen)
