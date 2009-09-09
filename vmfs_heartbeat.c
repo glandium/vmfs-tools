@@ -24,7 +24,6 @@
 #include <errno.h>
 #include <string.h>
 #include <sys/types.h>
-#include <uuid/uuid.h>
 
 #include "utils.h"
 #include "vmfs.h"
