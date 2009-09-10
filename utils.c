@@ -29,6 +29,9 @@
 #include <sys/stat.h>
 #include <uuid.h>
 #include <libgen.h>
+#ifdef NO_POSIX_MEMALIGN
+#include <malloc.h>
+#endif
 
 #include "utils.h"
 
@@ -173,7 +176,11 @@ u_char *iobuffer_alloc(size_t len)
 
    buf_len = ALIGN_NUM(len,M_DIO_BLK_SIZE);
 
-   if (posix_memalign(&buf,M_DIO_BLK_SIZE,buf_len) != 0)
+#ifdef NO_POSIX_MEMALIGN
+   if (!(buf = memalign(M_DIO_BLK_SIZE,buf_len)))
+#else
+   if (posix_memalign((void **)&buf,M_DIO_BLK_SIZE,buf_len))
+#endif
       return NULL;
 
    return buf;

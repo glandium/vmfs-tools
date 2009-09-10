@@ -48,6 +48,8 @@ debugvmfs_EXTRA_SRCS := readcmd.c
 debugvmfs: LDFLAGS+= $(DLOPEN_LDFLAGS)
 debugvmfs.o: CFLAGS+=-DVERSION=\"$(VERSION)\"
 
+utils.o: CFLAGS += $(if $(HAS_POSIX_MEMALIGN),,-DNO_POSIX_MEMALIGN=1)
+
 vmfs_fsck.o: CFLAGS+=-DVERSION=\"$(VERSION)\"
 
 define program_template
