@@ -281,7 +281,7 @@ int vmfs_file_dump(vmfs_file_t *f,off_t pos,uint64_t len,FILE *fd_out)
 
    buf_len = 0x100000;
 
-   if (posix_memalign((void **)&buf,M_DIO_BLK_SIZE,buf_len) != 0)
+   if (!(buf = iobuffer_alloc(buf_len)))
       return(-1);
 
    for(;pos < len; pos+=clen) {

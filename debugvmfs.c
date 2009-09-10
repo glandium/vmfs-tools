@@ -519,7 +519,7 @@ static int read_dump_block(vmfs_dir_t *base_dir,int argc,char *argv[],int action
 
    blk_size = vmfs_fs_get_blocksize(fs);
 
-   if (posix_memalign((void **)&buf,M_SECTOR_SIZE,blk_size))
+   if (!(buf = iobuffer_alloc(blk_size)))
       return(-1);
 
    for(i=0;i<argc;i++) {
