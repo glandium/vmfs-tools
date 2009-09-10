@@ -44,8 +44,8 @@ the command `make install prefix=/some/where'.
 Supported platforms
 -------------------
 
-vmfs-tools has been verified to build on GNU/Linux, FreeBSD 7.2 and
-Opensolaris 2009.06.
+vmfs-tools has been verified to build on GNU/Linux, FreeBSD 7.2,
+Opensolaris 2009.06 and Cygwin 1.5.25.
 
 On FreeBSD 7.2, you will need to install e2fsprogs-libuuid and pkg-config
 so that the system uuid.h header is not used: it provides an incompatible
@@ -55,3 +55,7 @@ On Opensolaris, if you use the gcc-4.3.2 package instead of SUNWgcc, you
 need to set EXTRA_LDFLAGS to -L/lib. This can be done with the command
 `make EXTRA_LDFLAGS=-L/lib'. (you may need to use `gmake' instead of `make',
 depending on your system)
+
+On Cygwin, you need to EXTRA_LDFLAGS to -L/usr/lib/e2fsprogs to get libuuid
+from there. This can be done with the command
+`make EXTRA_LDFLAGS=-L/usr/lib/e2fsprogs'.
