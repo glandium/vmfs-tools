@@ -187,8 +187,8 @@ static enum block_type detect_block_type(const u_char *buf)
    if (buf == NULL)
       return none;
 
-   for (i = 0; i < BLK_SIZE; i++)
-      if (buf[i])
+   for (i = 0; i < BLK_SIZE / 8; i++)
+      if (((uint64_t *)buf)[i])
          return raw;
 
    return zero;
