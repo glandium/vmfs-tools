@@ -22,7 +22,7 @@ MANSRCS := $(wildcard $(buildPROGRAMS:%=%.txt))
 MANDOCBOOK := $(MANSRCS:%.txt=%.xml)
 MANPAGES := $(foreach man,$(MANSRCS),$(shell sed '1{s/(/./;s/)//;q;}' $(man)))
 
-EXTRA_DIST := LICENSE README TODO AUTHORS
+EXTRA_DIST := LICENSE README TODO AUTHORS test.img
 LIB := libvmfs.a
 
 prefix := /usr/local
@@ -31,7 +31,7 @@ sbindir := $(exec_prefix)/sbin
 datarootdir := $(prefix)/share
 mandir := $(datarootdir)/man
 
-all: $(buildPROGRAMS) $(wildcard .gitignore)
+all: $(buildPROGRAMS) $(wildcard .gitignore) test.img
 
 ALL_MAKEFILES = $(filter-out config.cache,$(MAKEFILE_LIST))
 
@@ -108,6 +108,11 @@ $(installMANPAGES): $(DESTDIR)$(mandir)/man8/%: % $(DESTDIR)$(mandir)/man8
 	install -m 0755 $< $(dir $@)
 
 install: $(installPROGRAMS) $(installMANPAGES)
+
+test.img: imager.c | imager
+	./imager -x $@ | ./imager > $@.new
+	diff $@ $@.new
+	mv -f $@.new $@
 
 .PHONY: all clean dist install doc
 
