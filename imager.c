@@ -23,14 +23,17 @@
  * Backwards compatibility is to be preserved.
  *
  * The following sequence descriptor codes are used:
- * 0x00: following 512B are a raw block.
+ * 0x00: In format version >= 2, following byte is the number of 32-bit words
+ *       constituting the beginning of a 512B block, followed by that number
+ *       of 32-bit words.
+ *       In format version < 2, following 512B are a raw block.
  * 0x01: following chars are the number of blocks (512B) with zeroed data - 1
  *       in a variable-length encoding.
  * 0x7f: following 4 bytes is the little-endian encoded Adler-32 checksum.
  *
  */
 
-#define FORMAT_VERSION 1
+#define FORMAT_VERSION 2
 
 #ifdef __linux__
 #include <sys/ioctl.h>
@@ -181,6 +184,7 @@ static void write_blocks(const u_char *buf, size_t blks)
 static void do_extract_(void (*write_blocks)(const u_char *, size_t))
 {
    u_char buf[BLK_SIZE];
+   u_char version;
    u_char desc;
    uint32_t num;
 
@@ -189,13 +193,18 @@ static void do_extract_(void (*write_blocks)(const u_char *, size_t))
    if (strncmp((char *)buf, "VMFSIMG", 7))
       die("extract: not a VMFS image\n");
 
-   if (buf[7] > FORMAT_VERSION)
+   if ((version = buf[7]) > FORMAT_VERSION)
       die("extract: unsupported image format\n");
 
    while (do_read(&desc, 1)) {
       switch (desc) {
       case 0x00:
-         do_read(buf, BLK_SIZE);
+         if (version >= 2) {
+            num = do_read_number() * 4;
+            memset(&buf[num], 0, BLK_SIZE - num);
+         } else
+            num = BLK_SIZE;
+         do_read(buf, num);
          write_blocks(buf, 1);
          break;
       case 0x01:
@@ -290,9 +299,16 @@ static void import_blocks(const u_char *buf, size_t blks)
          consecutive++;
          break;
       case raw:
-         do_write("\0", 1);
-         do_write(buf, BLK_SIZE);
-         adler32_add(buf, 1);
+         do {
+            int i;
+            for (i = BLK_SIZE / 4; i;i--)
+               if (((uint32_t *)buf)[i - 1])
+                  break;
+            do_write("\0", 1);
+            do_write_number(i);
+            do_write(buf, i * 4);
+            adler32_add(buf, 1);
+         } while(0);
          break;
       case none:
          do {
