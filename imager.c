@@ -16,10 +16,21 @@
  */
 
 #include <libgen.h>
+#include <stdarg.h>
+#include <stdlib.h>
 #include <unistd.h>
 #include <fcntl.h>
 #include <errno.h>
 #include "vmfs.h"
+
+static void die(char *fmt, ...)
+{
+   va_list ap;
+   va_start(ap, fmt);
+   vfprintf(stderr, fmt, ap);
+   va_end(ap);
+   exit(1);
+}
 
 static void show_usage(char *prog_name)
 {
@@ -28,24 +39,40 @@ static void show_usage(char *prog_name)
    fprintf(stderr, "Syntax: %s [-x] <image>\n",name);
 }
 
+static size_t do_read(void *buf, size_t count)
+{
+   ssize_t hlen = 0, len;
+
+   while (hlen < count) {
+      len = read(0, buf, count-hlen);
+      if ((len < 0) && (errno != EINTR))
+         die("Read error\n");
+      if (len == 0)
+         break;
+      hlen += len;
+      buf += len;
+   }
+   if ((hlen > 0) && (hlen != count))
+      die("Short read\n");
+   return(hlen);
+}
+
 #define BUF_SIZE 4096
 
 static void do_extract(void)
 {
    u_char buf[BUF_SIZE];
-   ssize_t len;
 
-   while ((len = read(0, buf, BUF_SIZE)))
-      write(1, buf, len);
+   while (do_read(buf, BUF_SIZE))
+      write(1, buf, BUF_SIZE);
 }
 
 static void do_import(void)
 {
    u_char buf[BUF_SIZE];
-   ssize_t len;
 
-   while ((len = read(0, buf, BUF_SIZE)))
-      write(1, buf, len);
+   while (do_read(buf, BUF_SIZE))
+      write(1, buf, BUF_SIZE);
 }
 
 int main(int argc,char *argv[])
