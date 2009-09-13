@@ -197,16 +197,20 @@ static void end_consecutive_blocks(enum block_type type, uint32_t blks)
    }
 }
 
+static void do_init_image(void)
+{
+   const u_char const buf[8] =
+      { 'V', 'M', 'F', 'S', 'I', 'M', 'G', FORMAT_VERSION };
+   do_write(buf, 8);
+}
+
 static void do_import(void)
 {
    u_char buf[BLK_SIZE];
    enum block_type last = none, current;
    uint32_t consecutive = 0;
 
-   /* Write the file header */
-   do_write("VMFSIMG", 7);
-   buf[0] = FORMAT_VERSION;
-   do_write(buf, 1);
+   do_init_image();
 
    while (do_read(buf, BLK_SIZE)) {
       current = detect_block_type(buf);
