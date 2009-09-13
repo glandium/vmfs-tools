@@ -57,6 +57,23 @@ static size_t do_read(void *buf, size_t count)
    return(hlen);
 }
 
+static void do_write(const void *buf, size_t count)
+{
+   ssize_t hlen = 0, len;
+
+   while (hlen < count) {
+      len = write(1, buf, count-hlen);
+      if ((len < 0) && (errno != EINTR))
+         die("Write error\n");
+      if (len == 0)
+         break;
+      hlen += len;
+      buf += len;
+   }
+   if (hlen != count)
+      die("Short write\n");
+}
+
 #define BUF_SIZE 4096
 
 static void do_extract(void)
@@ -64,7 +81,7 @@ static void do_extract(void)
    u_char buf[BUF_SIZE];
 
    while (do_read(buf, BUF_SIZE))
-      write(1, buf, BUF_SIZE);
+      do_write(buf, BUF_SIZE);
 }
 
 static void do_import(void)
@@ -72,7 +89,7 @@ static void do_import(void)
    u_char buf[BUF_SIZE];
 
    while (do_read(buf, BUF_SIZE))
-      write(1, buf, BUF_SIZE);
+      do_write(buf, BUF_SIZE);
 }
 
 int main(int argc,char *argv[])
