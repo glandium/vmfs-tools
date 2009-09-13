@@ -325,6 +325,11 @@ static void do_reimport(void)
    import_blocks(NULL, 0);
 }
 
+static void do_verify(void)
+{
+   do_extract_(adler32_add);
+}
+
 int main(int argc,char *argv[])
 {
    char *arg = NULL;
@@ -337,6 +342,9 @@ int main(int argc,char *argv[])
          argc--;
       } else if (strcmp(argv[1],"-r") == 0) {
          func = do_reimport;
+         argc--;
+      } else if (strcmp(argv[1],"-v") == 0) {
+         func = do_verify;
          argc--;
       }
       if (argc == 2)
