@@ -105,10 +105,14 @@ static struct {
 static void adler32_add(const u_char *buf, size_t blks)
 {
    size_t i;
-   if (buf == zero_blk)
-      for (i = 0; i < blks * BLK_SIZE; i++)
-         adler32.sum2 = (adler32.sum2 + adler32.sum1) % ADLER32_MODULO;
-   else
+   if (buf == zero_blk) {
+      i = blks;
+      while (i >= 65536 / BLK_SIZE) {
+         adler32.sum2 = (adler32.sum2 + 65536 * adler32.sum1) % ADLER32_MODULO;
+         i -= 65536 / BLK_SIZE;
+      }
+      adler32.sum2 = (adler32.sum2 + i * BLK_SIZE * adler32.sum1) % ADLER32_MODULO;
+   } else
       for (i = 0; i < blks * BLK_SIZE; i++) {
          adler32.sum1 = (adler32.sum1 + buf[i]) % ADLER32_MODULO;
          adler32.sum2 = (adler32.sum2 + adler32.sum1) % ADLER32_MODULO;
