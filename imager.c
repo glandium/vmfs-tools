@@ -26,10 +26,11 @@
  * 0x00: following 512B are a raw block.
  * 0x01: following chars are the number of blocks (512B) with zeroed data - 1
  *       in a variable-length encoding.
+ * 0x7f: following 4 bytes is the little-endian encoded Adler-32 checksum.
  *
  */
 
-#define FORMAT_VERSION 0
+#define FORMAT_VERSION 1
 
 #include <sys/stat.h>
 #include <libgen.h>
@@ -95,6 +96,30 @@ static void do_write(const void *buf, size_t count)
 
 static const u_char const zero_blk[BLK_SIZE] = {0,};
 
+#define ADLER32_MODULO 65521
+
+static struct {
+   uint32_t sum1, sum2;
+} adler32 = { 1, 0 };
+
+static void adler32_add(const u_char *buf, size_t blks)
+{
+   size_t i;
+   if (buf == zero_blk)
+      for (i = 0; i < blks * BLK_SIZE; i++)
+         adler32.sum2 = (adler32.sum2 + adler32.sum1) % ADLER32_MODULO;
+   else
+      for (i = 0; i < blks * BLK_SIZE; i++) {
+         adler32.sum1 = (adler32.sum1 + buf[i]) % ADLER32_MODULO;
+         adler32.sum2 = (adler32.sum2 + adler32.sum1) % ADLER32_MODULO;
+      }
+}
+
+static uint32_t adler32_sum()
+{
+   return adler32.sum1 | (adler32.sum2 << 16);
+}
+
 static uint32_t do_read_number(void)
 {
    u_char num;
@@ -122,6 +147,8 @@ static void (*write_zero_blocks)(size_t blks) = write_zero_blocks_;
 
 static void write_blocks(const u_char *buf, size_t blks)
 {
+   adler32_add(buf, blks);
+
    if (buf == zero_blk)
       write_zero_blocks(blks);
    else
@@ -151,6 +178,12 @@ static void do_extract_(void (*write_blocks)(const u_char *, size_t))
       case 0x01:
          num = do_read_number();
          write_blocks(zero_blk, num + 1);
+         break;
+      case 0x7f:
+         do_read(buf, 4);
+         num = read_le32(buf, 0);
+         if (num != adler32_sum())
+            die("extract: checksum mismatch\n");
          break;
       default:
          die("extract: corrupted image\n");
@@ -226,16 +259,25 @@ static void import_blocks(const u_char *buf, size_t blks)
          if (buf == zero_blk) {
             if (consecutive > (uint32_t) -blks)
                end_consecutive_blocks(zero, (uint32_t) -1);
+            adler32_add(zero_blk, blks);
             consecutive += blks;
             return;
          }
+         adler32_add(zero_blk, 1);
          consecutive++;
          break;
       case raw:
          do_write("\0", 1);
          do_write(buf, BLK_SIZE);
+         adler32_add(buf, 1);
          break;
       case none:
+         do {
+            uint32_t sum = adler32_sum();
+            u_char b[5] = { 0x7f, sum & 0xff, (sum >> 8) & 0xff,
+                            (sum >> 16) & 0xff, (sum >> 24) & 0xff };
+            do_write(b, 5);
+         } while(0);
          return;
       }
       buf += BLK_SIZE;
