@@ -57,12 +57,12 @@ static void show_usage(char *prog_name)
    fprintf(stderr, "Syntax: %s [-x|-r] <image>\n",name);
 }
 
-static size_t do_read(void *buf, size_t count)
+static size_t do_reads(void *buf, size_t sz, size_t count)
 {
    ssize_t hlen = 0, len;
 
-   while (hlen < count) {
-      len = read(0, buf, count-hlen);
+   while (hlen < count * sz) {
+      len = read(0, buf, count * sz - hlen);
       if ((len < 0) && (errno != EINTR))
          die("Read error\n");
       if (len == 0)
@@ -70,9 +70,14 @@ static size_t do_read(void *buf, size_t count)
       hlen += len;
       buf += len;
    }
-   if ((hlen > 0) && (hlen != count))
+   if ((hlen > 0) && (hlen % sz))
       die("Short read\n");
    return(hlen);
+}
+
+static size_t do_read(void *buf, size_t count)
+{
+   return do_reads(buf, count, 1);
 }
 
 static void do_write(const void *buf, size_t count)
@@ -300,12 +305,13 @@ static void import_blocks(const u_char *buf, size_t blks)
 
 static void do_import(void)
 {
-   u_char buf[BLK_SIZE];
+   u_char buf[BLK_SIZE * 16];
+   size_t len;
 
    do_init_image();
 
-   while (do_read(buf, BLK_SIZE) == BLK_SIZE)
-      import_blocks(buf, 1);
+   while ((len = do_reads(buf, BLK_SIZE, 16)))
+      import_blocks(buf, len / BLK_SIZE);
 
    import_blocks(NULL, 0);
 }
