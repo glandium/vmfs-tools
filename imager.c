@@ -92,6 +92,8 @@ static void do_write(const void *buf, size_t count)
 
 #define BLK_SIZE 512
 
+static const u_char const zero_blk[BLK_SIZE] = {0,};
+
 static uint32_t do_read_number(void)
 {
    u_char num;
@@ -101,10 +103,23 @@ static uint32_t do_read_number(void)
    return (uint32_t) num;
 }
 
+static void write_zero_blocks(size_t blks)
+{
+   while (blks--)
+      do_write(zero_blk, BLK_SIZE);
+}
+
+static void write_blocks(const u_char *buf, size_t blks)
+{
+   if (buf == zero_blk)
+      write_zero_blocks(blks);
+   else
+      do_write(buf, blks * BLK_SIZE);
+}
+
 static void do_extract(void)
 {
    u_char buf[BLK_SIZE];
-   u_char zero_blk[BLK_SIZE] = {0,};
    u_char desc;
    uint32_t num;
 
@@ -120,13 +135,11 @@ static void do_extract(void)
       switch (desc) {
       case 0x00:
          do_read(buf, BLK_SIZE);
-         do_write(buf, BLK_SIZE);
+         write_blocks(buf, 1);
          break;
       case 0x01:
          num = do_read_number();
-         do {
-            do_write(zero_blk, BLK_SIZE);
-         } while (num--);
+         write_blocks(zero_blk, num + 1);
          break;
       default:
          die("extract: corrupted image\n");
