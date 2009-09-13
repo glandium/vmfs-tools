@@ -112,11 +112,21 @@ static void adler32_add(const u_char *buf, size_t blks)
          i -= 65536 / BLK_SIZE;
       }
       adler32.sum2 = (adler32.sum2 + i * BLK_SIZE * adler32.sum1) % ADLER32_MODULO;
-   } else
-      for (i = 0; i < blks * BLK_SIZE; i++) {
-         adler32.sum1 = (adler32.sum1 + buf[i]) % ADLER32_MODULO;
-         adler32.sum2 = (adler32.sum2 + adler32.sum1) % ADLER32_MODULO;
+   } else {
+      uint32_t sum;
+      while(blks--) {
+         for (i = 0, sum = 0; i < BLK_SIZE / 16; i++) {
+            #define adler32_step sum += (*buf++); adler32.sum2 += sum
+            #define fourtimes(stuff) stuff; stuff; stuff; stuff
+            fourtimes(fourtimes(adler32_step));
+         }
+         adler32.sum2 += adler32.sum1 * BLK_SIZE;
+         adler32.sum1 += sum;
+
+         adler32.sum1 %= ADLER32_MODULO;
+         adler32.sum2 %= ADLER32_MODULO;
       }
+   }
 }
 
 static uint32_t adler32_sum()
