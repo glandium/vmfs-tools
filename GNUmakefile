@@ -111,7 +111,7 @@ install: $(installPROGRAMS) $(installMANPAGES)
 
 test.img: imager.c | imager
 	./imager -r $@ > $@.new
-	diff $@ $@.new
+	diff $@ $@.new || ./imager -v $@.new
 	mv -f $@.new $@
 
 .PHONY: all clean dist install doc
