@@ -110,7 +110,7 @@ $(installMANPAGES): $(DESTDIR)$(mandir)/man8/%: % $(DESTDIR)$(mandir)/man8
 install: $(installPROGRAMS) $(installMANPAGES)
 
 test.img: imager.c | imager
-	./imager -x $@ | ./imager > $@.new
+	./imager -r $@ > $@.new
 	diff $@ $@.new
 	mv -f $@.new $@
 

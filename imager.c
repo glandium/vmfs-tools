@@ -53,7 +53,7 @@ static void show_usage(char *prog_name)
 {
    char *name = basename(prog_name);
 
-   fprintf(stderr, "Syntax: %s [-x] <image>\n",name);
+   fprintf(stderr, "Syntax: %s [-x|-r] <image>\n",name);
 }
 
 static size_t do_read(void *buf, size_t count)
@@ -128,7 +128,7 @@ static void write_blocks(const u_char *buf, size_t blks)
       do_write(buf, blks * BLK_SIZE);
 }
 
-static void do_extract(void)
+static void do_extract_(void (*write_blocks)(const u_char *, size_t))
 {
    u_char buf[BLK_SIZE];
    u_char desc;
@@ -156,6 +156,11 @@ static void do_extract(void)
          die("extract: corrupted image\n");
       }
    }
+}
+
+static void do_extract(void)
+{
+   do_extract_(write_blocks);
 }
 
 static void do_write_number(uint32_t num)
@@ -204,15 +209,12 @@ static void do_init_image(void)
    do_write(buf, 8);
 }
 
-static void do_import(void)
+static void import_blocks(const u_char *buf, size_t blks)
 {
-   u_char buf[BLK_SIZE];
-   enum block_type last = none, current;
-   uint32_t consecutive = 0;
+   static enum block_type last = none, current;
+   static uint32_t consecutive = 0;
 
-   do_init_image();
-
-   while (do_read(buf, BLK_SIZE)) {
+   do {
       current = detect_block_type(buf);
       if ((last != none) && (current != last)) {
          end_consecutive_blocks(last, consecutive);
@@ -221,6 +223,12 @@ static void do_import(void)
       last = current;
       switch (current) {
       case zero:
+         if (buf == zero_blk) {
+            if (consecutive > (uint32_t) -blks)
+               end_consecutive_blocks(zero, (uint32_t) -1);
+            consecutive += blks;
+            return;
+         }
          consecutive++;
          break;
       case raw:
@@ -230,8 +238,29 @@ static void do_import(void)
       case none:
          return;
       }
-   }
-   end_consecutive_blocks(last, consecutive);
+      buf += BLK_SIZE;
+   } while (--blks);
+}
+
+static void do_import(void)
+{
+   u_char buf[BLK_SIZE];
+
+   do_init_image();
+
+   while (do_read(buf, BLK_SIZE) == BLK_SIZE)
+      import_blocks(buf, 1);
+
+   import_blocks(NULL, 0);
+}
+
+static void do_reimport(void)
+{
+   do_init_image();
+
+   do_extract_(import_blocks);
+
+   import_blocks(NULL, 0);
 }
 
 int main(int argc,char *argv[])
@@ -243,6 +272,9 @@ int main(int argc,char *argv[])
    if (argc > 1) {
       if (strcmp(argv[1],"-x") == 0) {
          func = do_extract;
+         argc--;
+      } else if (strcmp(argv[1],"-r") == 0) {
+         func = do_reimport;
          argc--;
       }
       if (argc == 2)
