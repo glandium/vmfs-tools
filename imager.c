@@ -32,6 +32,10 @@
 
 #define FORMAT_VERSION 1
 
+#ifdef __linux__
+#include <sys/ioctl.h>
+#include <linux/fs.h>
+#endif
 #include <sys/stat.h>
 #include <libgen.h>
 #include <stdarg.h>
@@ -307,9 +311,40 @@ static void do_import(void)
 {
    u_char buf[BLK_SIZE * 16];
    size_t len;
+#ifdef __linux__
+   struct stat st;
+   int blocksize = 0;
+   off_t filesize = 0;
+
+   if ((fstat(0, &st) == 0) && S_ISREG(st.st_mode)) {
+      ioctl(0, FIGETBSZ, &blocksize);
+      filesize = st.st_size;
+   }
+#endif
 
    do_init_image();
 
+#ifdef __linux__
+   if (blocksize) {
+      int i, max = (int) ((filesize + blocksize - 1) / blocksize);
+      for (i = 0; i < max; i++) {
+         int block = i;
+         if (ioctl(0, FIBMAP, &block) < 0)
+            goto fallback;
+         if (block) {
+            lseek(0, (off_t) i * blocksize, SEEK_SET);
+            len = do_reads(buf, BLK_SIZE, blocksize / BLK_SIZE);
+            import_blocks(buf, len / BLK_SIZE);
+         } else if (i < max - 1)
+            import_blocks(zero_blk, blocksize / BLK_SIZE);
+         else
+            import_blocks(zero_blk, (filesize % blocksize) / BLK_SIZE);
+      }
+      import_blocks(NULL, 0);
+      return;
+   }
+fallback:
+#endif
    while ((len = do_reads(buf, BLK_SIZE, 16)))
       import_blocks(buf, len / BLK_SIZE);
 
