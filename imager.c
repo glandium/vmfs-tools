@@ -31,6 +31,7 @@
 
 #define FORMAT_VERSION 0
 
+#include <sys/stat.h>
 #include <libgen.h>
 #include <stdarg.h>
 #include <stdlib.h>
@@ -103,11 +104,21 @@ static uint32_t do_read_number(void)
    return (uint32_t) num;
 }
 
-static void write_zero_blocks(size_t blks)
+static void skip_zero_blocks(size_t blks)
+{
+   off_t pos;
+   if ((pos = lseek(1, BLK_SIZE * blks, SEEK_CUR)) == -1)
+      die("Seek error\n");
+   ftruncate(1, pos);
+}
+
+static void write_zero_blocks_(size_t blks)
 {
    while (blks--)
       do_write(zero_blk, BLK_SIZE);
 }
+
+static void (*write_zero_blocks)(size_t blks) = write_zero_blocks_;
 
 static void write_blocks(const u_char *buf, size_t blks)
 {
@@ -223,6 +234,7 @@ int main(int argc,char *argv[])
 {
    char *arg = NULL;
    void (*func)(void) = do_import;
+   struct stat st;
 
    if (argc > 1) {
       if (strcmp(argv[1],"-x") == 0) {
@@ -246,6 +258,10 @@ int main(int argc,char *argv[])
       dup2(fd,0);
       close(fd);
    }
+
+   if ((fstat(1, &st) == 0) && S_ISREG(st.st_mode) &&
+       ((st.st_size == 0) || !(fcntl(1, F_GETFL) & O_APPEND)))
+      write_zero_blocks = skip_zero_blocks;
 
    func();
    return(0);
