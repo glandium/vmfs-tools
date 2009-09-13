@@ -7,3 +7,4 @@ config.cache
 debugvmfs
 vmfs_fsck
 vmfs-fuse
+imager

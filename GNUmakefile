@@ -11,7 +11,7 @@ LDFLAGS := $(UUID_LDFLAGS) $(EXTRA_LDFLAGS)
 SRC := $(wildcard *.c)
 HEADERS := $(wildcard *.h)
 OBJS := $(SRC:%.c=%.o)
-PROGRAMS := debugvmfs vmfs_fsck vmfs-fuse
+PROGRAMS := debugvmfs vmfs_fsck vmfs-fuse imager
 buildPROGRAMS := $(PROGRAMS)
 ifeq (,$(FUSE_LDFLAGS))
 ifneq (clean,$(MAKECMDGOALS))
@@ -98,7 +98,7 @@ endif
 $(DESTDIR)/%:
 	install -d -m 0755 $@
 
-installPROGRAMS := $(buildPROGRAMS:%=$(DESTDIR)$(sbindir)/%)
+installPROGRAMS := $(filter-out %/imager,$(buildPROGRAMS:%=$(DESTDIR)$(sbindir)/%))
 installMANPAGES := $(MANPAGES:%=$(DESTDIR)$(mandir)/man8/%)
 
 $(installPROGRAMS): $(DESTDIR)$(sbindir)/%: % $(DESTDIR)$(sbindir)
