@@ -109,10 +109,12 @@ $(installMANPAGES): $(DESTDIR)$(mandir)/man8/%: % $(DESTDIR)$(mandir)/man8
 
 install: $(installPROGRAMS) $(installMANPAGES)
 
+ifeq (,$(filter dist clean,$(MAKECMDGOALS)))
 test.img: imager.c | imager
 	./imager -r $@ > $@.new
 	diff $@ $@.new || ./imager -v $@.new
 	mv -f $@.new $@
+endif
 
 .PHONY: all clean dist install doc
 
