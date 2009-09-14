@@ -182,6 +182,8 @@ char *m_dirname(const char *path);
 char *m_basename(const char *path);
 
 #ifdef NO_STRNDUP
+#include <stdlib.h>
+
 static inline char *strndup(const char *s, size_t n) {
    char *result;
    n = strnlen(s, n);
