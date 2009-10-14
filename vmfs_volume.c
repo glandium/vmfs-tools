@@ -178,8 +178,8 @@ void vmfs_vol_show(const vmfs_volume_t *vol)
    printf("\n");
 }
 
-/* Create a volume structure */
-vmfs_volume_t *vmfs_vol_create(const char *filename,vmfs_flags_t flags)
+/* Open a VMFS volume */
+vmfs_volume_t *vmfs_vol_open(const char *filename,vmfs_flags_t flags)
 {
    vmfs_volume_t *vol;
    struct stat st;
@@ -212,18 +212,6 @@ vmfs_volume_t *vmfs_vol_create(const char *filename,vmfs_flags_t flags)
 #endif
 #endif
 
-   return vol;
-
- err_open:
-   free(vol->filename);
- err_filename:
-   free(vol);
-   return NULL;
-}
-
-/* Open a VMFS volume */
-int vmfs_vol_open(vmfs_volume_t *vol)
-{
    vol->vmfs_base = VMFS_VOLINFO_BASE;
 
    /* Read volume information */
@@ -237,15 +225,15 @@ int vmfs_vol_open(vmfs_volume_t *vol)
       if ((magic == 0xaa55) && (buf[450] == 0xfb)) {
          vol->vmfs_base += read_le32(buf, 454) * 512;
          if (vmfs_volinfo_read(vol) == -1)
-            return(-1);
+            goto err_open;
       } else
-         return(-1);
+         goto err_open;
    }
 
    /* We support only VMFS3 */
    if (vol->vol_info.version != 3) {
       fprintf(stderr,"VMFS: Unsupported version %u\n",vol->vol_info.version);
-      return(-1);
+      goto err_open;
    }
 
    if (vol->is_blkdev && (scsi_get_lun(vol->fd) != vol->vol_info.lun))
@@ -258,7 +246,13 @@ int vmfs_vol_open(vmfs_volume_t *vol)
       printf("VMFS: volume opened successfully\n");
    }
 
-   return(0);
+   return vol;
+
+ err_open:
+   free(vol->filename);
+ err_filename:
+   free(vol);
+   return NULL;
 }
 
 /* Close a VMFS volume */

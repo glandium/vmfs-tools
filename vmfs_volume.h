@@ -150,11 +150,8 @@ int vmfs_vol_check_reservation(vmfs_volume_t *vol);
 /* Show volume information */
 void vmfs_vol_show(const vmfs_volume_t *vol);
 
-/* Create a volume structure */
-vmfs_volume_t *vmfs_vol_create(const char *filename,vmfs_flags_t flags);
-
 /* Open a VMFS volume */
-int vmfs_vol_open(vmfs_volume_t *vol);
+vmfs_volume_t *vmfs_vol_open(const char *filename,vmfs_flags_t flags);
 
 /* Close a VMFS volume */
 void vmfs_vol_close(vmfs_volume_t *vol);

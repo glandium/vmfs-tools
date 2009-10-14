@@ -144,10 +144,7 @@ int vmfs_lvm_add_extent(vmfs_lvm_t *lvm, const char *filename)
 {
    vmfs_volume_t *vol;
 
-   if (!(vol = vmfs_vol_create(filename, lvm->flags)))
-      return(-1);
-
-   if (vmfs_vol_open(vol))
+   if (!(vol = vmfs_vol_open(filename, lvm->flags)))
       return(-1);
 
    if (lvm->loaded_extents == 0) {
