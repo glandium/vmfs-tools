@@ -140,11 +140,9 @@ vmfs_lvm_t *vmfs_lvm_create(vmfs_flags_t flags)
 }
 
 /* Add an extent to the LVM */
-int vmfs_lvm_add_extent(vmfs_lvm_t *lvm, const char *filename)
+int vmfs_lvm_add_extent(vmfs_lvm_t *lvm, vmfs_volume_t *vol)
 {
-   vmfs_volume_t *vol;
-
-   if (!(vol = vmfs_vol_open(filename, lvm->flags)))
+   if (!vol)
       return(-1);
 
    if (lvm->loaded_extents == 0) {
@@ -153,13 +151,13 @@ int vmfs_lvm_add_extent(vmfs_lvm_t *lvm, const char *filename)
       lvm->lvm_info.blocks = vol->vol_info.blocks;
       lvm->lvm_info.num_extents = vol->vol_info.num_extents;
    } else if (uuid_compare(lvm->lvm_info.uuid, vol->vol_info.lvm_uuid)) {
-      fprintf(stderr, "VMFS: The %s file/device is not part of the LVM\n", filename);
+      fprintf(stderr, "VMFS: The %s file/device is not part of the LVM\n", vol->filename);
       return(-1);
    } else if ((lvm->lvm_info.size != vol->vol_info.lvm_size) ||
               (lvm->lvm_info.blocks != vol->vol_info.blocks) ||
               (lvm->lvm_info.num_extents != vol->vol_info.num_extents)) {
       fprintf(stderr, "VMFS: LVM information mismatch for the %s"
-                      " file/device\n", filename);
+                      " file/device\n", vol->filename);
       return(-1);
    }
 

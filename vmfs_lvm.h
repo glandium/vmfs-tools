@@ -60,7 +60,7 @@ void vmfs_lvm_show(const vmfs_lvm_t *lvm);
 vmfs_lvm_t *vmfs_lvm_create(vmfs_flags_t flags);
 
 /* Add an extent to the LVM */
-int vmfs_lvm_add_extent(vmfs_lvm_t *lvm, const char *filename);
+int vmfs_lvm_add_extent(vmfs_lvm_t *lvm, vmfs_volume_t *vol);
 
 /* Open an LVM */
 int vmfs_lvm_open(vmfs_lvm_t *lvm);

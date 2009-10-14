@@ -464,7 +464,8 @@ static int vmfs_fuse_opts_func(void *data, const char *arg, int key,
       if (S_ISDIR(st.st_mode)) {
          opts->mountpoint = strdup(arg);
       } else if (S_ISREG(st.st_mode) || S_ISBLK(st.st_mode)) {
-         if (vmfs_lvm_add_extent(opts->lvm,arg) == -1) {
+         if (vmfs_lvm_add_extent(opts->lvm,
+                                 vmfs_vol_open(arg, opts->lvm->flags)) == -1) {
             fprintf(stderr,"Unable to open device/file \"%s\".\n",arg);
             return -1;
          }

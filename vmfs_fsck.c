@@ -548,7 +548,7 @@ int main(int argc,char *argv[])
    }
 
    for(i=1;i<argc;i++) {
-      if (vmfs_lvm_add_extent(lvm,argv[i]) == -1) {
+      if (vmfs_lvm_add_extent(lvm, vmfs_vol_open(argv[i], flags)) == -1) {
          fprintf(stderr,"Unable to open device/file \"%s\".\n",argv[i]);
          exit(EXIT_FAILURE);
       }
