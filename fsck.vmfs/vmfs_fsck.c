@@ -529,11 +529,9 @@ static void show_usage(char *prog_name)
 int main(int argc,char *argv[])
 {
    vmfs_fsck_info_t fsck_info;
-   vmfs_lvm_t *lvm;
    vmfs_fs_t *fs;
    vmfs_flags_t flags;
    vmfs_dir_t *root_dir;
-   int i;
 
    if (argc < 2) {
       show_usage(argv[0]);
@@ -542,19 +540,7 @@ int main(int argc,char *argv[])
 
    flags.packed = 0;
 
-   if (!(lvm = vmfs_lvm_create(flags))) {
-      fprintf(stderr,"Unable to create LVM structure\n");
-      exit(EXIT_FAILURE);
-   }
-
-   for(i=1;i<argc;i++) {
-      if (vmfs_lvm_add_extent(lvm, vmfs_vol_open(argv[i], flags)) == -1) {
-         fprintf(stderr,"Unable to open device/file \"%s\".\n",argv[i]);
-         exit(EXIT_FAILURE);
-      }
-   }
-
-   if (!(fs = vmfs_fs_open(lvm))) {
+   if (!(fs = vmfs_fs_open(&argv[1], flags))) {
       fprintf(stderr,"Unable to open filesystem\n");
       exit(EXIT_FAILURE);
    }

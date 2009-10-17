@@ -233,9 +233,27 @@ static int vmfs_read_fdc_base(vmfs_fs_t *fs)
 }
 
 /* Open a filesystem */
-vmfs_fs_t *vmfs_fs_open(vmfs_lvm_t *lvm)
+vmfs_fs_t *vmfs_fs_open(char **paths, vmfs_flags_t flags)
 {
    vmfs_fs_t *fs;
+   vmfs_lvm_t *lvm;
+
+   if (!(lvm = vmfs_lvm_create(flags))) {
+      fprintf(stderr,"Unable to create LVM structure\n");
+      return NULL;
+   }
+
+   for (; *paths; paths++) {
+      if (vmfs_lvm_add_extent(lvm, vmfs_vol_open(*paths, flags)) == -1) {
+         fprintf(stderr,"Unable to open device/file \"%s\".\n",*paths);
+         return NULL;
+      }
+   }
+
+   if (vmfs_lvm_open(lvm)) {
+      vmfs_lvm_close(lvm);
+      return NULL;
+   }
 
    if (!(fs = calloc(1,sizeof(*fs))))
       return NULL;
@@ -249,12 +267,7 @@ vmfs_fs_t *vmfs_fs_open(vmfs_lvm_t *lvm)
    }
 
    fs->lvm = lvm;
-   fs->debug_level = lvm->flags.debug_level;
-
-   if (vmfs_lvm_open(lvm)) {
-      vmfs_fs_close(fs);
-      return NULL;
-   }
+   fs->debug_level = flags.debug_level;
 
    /* Read FS info */
    if (vmfs_fsinfo_read(fs) == -1) {
@@ -263,7 +276,7 @@ vmfs_fs_t *vmfs_fs_open(vmfs_lvm_t *lvm)
       return NULL;
    }
 
-   if (uuid_compare(fs->fs_info.lvm_uuid, lvm->lvm_info.uuid)) {
+   if (uuid_compare(fs->fs_info.lvm_uuid, fs->lvm->lvm_info.uuid)) {
       fprintf(stderr,"VMFS: FS doesn't belong to the underlying LVM\n");
       vmfs_fs_close(fs);
       return NULL;

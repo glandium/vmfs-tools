@@ -136,7 +136,7 @@ void vmfs_fs_show(const vmfs_fs_t *fs);
 int vmfs_fs_dump_bitmaps(const vmfs_fs_t *vol);
 
 /* Open a FS */
-vmfs_fs_t *vmfs_fs_open(vmfs_lvm_t *lvm);
+vmfs_fs_t *vmfs_fs_open(char **paths, vmfs_flags_t flags);
 
 /* Close a FS */
 void vmfs_fs_close(vmfs_fs_t *fs);
