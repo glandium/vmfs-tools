@@ -131,9 +131,6 @@ struct vmfs_volume {
    vmfs_volinfo_t vol_info;
 };
 
-/* Check if physical volume support reservation */
-int vmfs_vol_check_reservation(vmfs_volume_t *vol);
-
 /* Show volume information */
 void vmfs_vol_show(const vmfs_volume_t *vol);
 

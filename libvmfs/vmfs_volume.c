@@ -68,7 +68,7 @@ static int vmfs_vol_release(const vmfs_device_t *dev)
  * Check if physical volume support reservation.
  * TODO: We should probably check some capabilities info.
  */
-int vmfs_vol_check_reservation(vmfs_volume_t *vol)
+static int vmfs_vol_check_reservation(vmfs_volume_t *vol)
 {
    int res[2];
 
