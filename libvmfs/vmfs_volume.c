@@ -63,20 +63,16 @@ ssize_t vmfs_vol_write(const vmfs_volume_t *vol,off_t pos,
 }
 
 /* Volume reservation */
-int vmfs_vol_reserve(const vmfs_volume_t *vol)
+static int vmfs_vol_reserve(const vmfs_device_t *dev)
 {
-   if (!vol->scsi_reservation)
-      return(0);
-
+   vmfs_volume_t *vol = (vmfs_volume_t *) dev;
    return(scsi_reserve(vol->fd));
 }
 
 /* Volume release */
-int vmfs_vol_release(const vmfs_volume_t *vol)
+static int vmfs_vol_release(const vmfs_device_t *dev)
 {
-   if (!vol->scsi_reservation)
-      return(0);
-
+   vmfs_volume_t *vol = (vmfs_volume_t *) dev;
    return(scsi_release(vol->fd));
 }
 
@@ -100,7 +96,8 @@ int vmfs_vol_check_reservation(vmfs_volume_t *vol)
    if ((res[0] < 0) || (res[1] < 0))
       return(0);
 
-   vol->scsi_reservation = 1;
+   vol->dev.reserve = vmfs_vol_reserve;
+   vol->dev.release = vmfs_vol_release;
    return(1);
 }
 

@@ -117,6 +117,7 @@ struct vmfs_volinfo {
 
 /* === VMFS mounted-volume === */
 struct vmfs_volume {
+   vmfs_device_t dev;
    char *filename;
    int fd;
    vmfs_flags_t flags;
@@ -137,12 +138,6 @@ ssize_t vmfs_vol_read(const vmfs_volume_t *vol,off_t pos,
 /* Write a raw block of data on logical volume */
 ssize_t vmfs_vol_write(const vmfs_volume_t *vol,off_t pos,
                        const u_char *buf,size_t len);
-
-/* Volume reservation */
-int vmfs_vol_reserve(const vmfs_volume_t *vol);
-
-/* Volume release */
-int vmfs_vol_release(const vmfs_volume_t *vol);
 
 /* Check if physical volume support reservation */
 int vmfs_vol_check_reservation(vmfs_volume_t *vol);

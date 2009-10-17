@@ -91,7 +91,7 @@ int vmfs_lvm_reserve(const vmfs_lvm_t *lvm,off_t pos)
    if (!extent)
       return(-1);
 
-   return(vmfs_vol_reserve(extent));
+   return(vmfs_device_reserve(&extent->dev));
 }
 
 /* Release the underlying volume given a LVM position */
@@ -102,7 +102,7 @@ int vmfs_lvm_release(const vmfs_lvm_t *lvm,off_t pos)
    if (!extent)
       return(-1);
 
-   return(vmfs_vol_release(extent));
+   return(vmfs_device_release(&extent->dev));
 }
 
 /* Show lvm information */
