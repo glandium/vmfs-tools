@@ -135,11 +135,8 @@ void vmfs_fs_show(const vmfs_fs_t *fs);
 /* Dump volume bitmaps */
 int vmfs_fs_dump_bitmaps(const vmfs_fs_t *vol);
 
-/* Create a FS structure */
-vmfs_fs_t *vmfs_fs_create(vmfs_lvm_t *lvm);
-
 /* Open a FS */
-int vmfs_fs_open(vmfs_fs_t *fs);
+vmfs_fs_t *vmfs_fs_open(vmfs_lvm_t *lvm);
 
 /* Close a FS */
 void vmfs_fs_close(vmfs_fs_t *fs);

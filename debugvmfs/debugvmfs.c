@@ -976,16 +976,11 @@ int main(int argc,char *argv[])
       }
    }
 
-   if (!(fs = vmfs_fs_create(lvm))) {
+   if (!(fs = vmfs_fs_open(lvm))) {
       fprintf(stderr,"Unable to open filesystem\n");
       exit(EXIT_FAILURE);
    }
    
-   if (vmfs_fs_open(fs) == -1) {
-      fprintf(stderr,"Unable to open volume.\n");
-      exit(EXIT_FAILURE);
-   }
-
    if (!(root_dir = vmfs_dir_open_from_blkid(fs,VMFS_BLK_FD_BUILD(0,0)))) {
       fprintf(stderr,"Unable to open root directory\n");
       exit(EXIT_FAILURE);

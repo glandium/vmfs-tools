@@ -232,8 +232,8 @@ static int vmfs_read_fdc_base(vmfs_fs_t *fs)
    return(0);
 }
 
-/* Create a FS structure */
-vmfs_fs_t *vmfs_fs_create(vmfs_lvm_t *lvm)
+/* Open a filesystem */
+vmfs_fs_t *vmfs_fs_open(vmfs_lvm_t *lvm)
 {
    vmfs_fs_t *fs;
 
@@ -250,24 +250,23 @@ vmfs_fs_t *vmfs_fs_create(vmfs_lvm_t *lvm)
 
    fs->lvm = lvm;
    fs->debug_level = lvm->flags.debug_level;
-   return fs;
-}
 
-/* Open a filesystem */
-int vmfs_fs_open(vmfs_fs_t *fs)
-{
-   if (vmfs_lvm_open(fs->lvm))
-      return(-1);
+   if (vmfs_lvm_open(lvm)) {
+      vmfs_fs_close(fs);
+      return NULL;
+   }
 
    /* Read FS info */
    if (vmfs_fsinfo_read(fs) == -1) {
       fprintf(stderr,"VMFS: Unable to read FS information\n");
-      return(-1);
+      vmfs_fs_close(fs);
+      return NULL;
    }
 
-   if (uuid_compare(fs->fs_info.lvm_uuid, fs->lvm->lvm_info.uuid)) {
+   if (uuid_compare(fs->fs_info.lvm_uuid, lvm->lvm_info.uuid)) {
       fprintf(stderr,"VMFS: FS doesn't belong to the underlying LVM\n");
-      return(-1);
+      vmfs_fs_close(fs);
+      return NULL;
    }
 
    if (fs->debug_level > 0)
@@ -276,12 +275,13 @@ int vmfs_fs_open(vmfs_fs_t *fs)
    /* Read FDC base information */
    if (vmfs_read_fdc_base(fs) == -1) {
       fprintf(stderr,"VMFS: Unable to read FDC information\n");
-      return(-1);
+      vmfs_fs_close(fs);
+      return NULL;
    }
 
    if (fs->debug_level > 0)
       printf("VMFS: filesystem opened successfully\n");
-   return(0);
+   return fs;
 }
 
 /* 

@@ -504,13 +504,8 @@ int main(int argc, char *argv[])
       goto cleanup;
    }
 
-   if (!(fs = vmfs_fs_create(opts.lvm))) {
+   if (!(fs = vmfs_fs_open(opts.lvm))) {
       fprintf(stderr,"Unable to open filesystem\n");
-      goto cleanup;
-   }
-
-   if (vmfs_fs_open(fs) == -1) {
-      fprintf(stderr,"Unable to open volume.\n");
       goto cleanup;
    }
 

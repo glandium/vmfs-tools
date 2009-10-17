@@ -554,16 +554,11 @@ int main(int argc,char *argv[])
       }
    }
 
-   if (!(fs = vmfs_fs_create(lvm))) {
+   if (!(fs = vmfs_fs_open(lvm))) {
       fprintf(stderr,"Unable to open filesystem\n");
       exit(EXIT_FAILURE);
    }
    
-   if (vmfs_fs_open(fs) == -1) {
-      fprintf(stderr,"Unable to open volume.\n");
-      exit(EXIT_FAILURE);
-   }
-
    vmfs_fsck_init(&fsck_info);
    vmfs_fsck_get_all_block_mappings(fs,&fsck_info);
 
