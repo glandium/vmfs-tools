@@ -39,7 +39,7 @@ ssize_t vmfs_fs_read(const vmfs_fs_t *fs,uint32_t blk,off_t offset,
    pos  = (uint64_t)blk * vmfs_fs_get_blocksize(fs);
    pos += offset;
 
-   return(vmfs_lvm_read(fs->lvm,pos,buf,len));
+   return(vmfs_device_read(&fs->lvm->dev,pos,buf,len));
 }
 
 /* Write a block to the filesystem */
@@ -51,7 +51,7 @@ ssize_t vmfs_fs_write(const vmfs_fs_t *fs,uint32_t blk,off_t offset,
    pos  = (uint64_t)blk * vmfs_fs_get_blocksize(fs);
    pos += offset;
 
-   return(vmfs_lvm_write(fs->lvm,pos,buf,len));
+   return(vmfs_device_write(&fs->lvm->dev,pos,buf,len));
 }
 
 /* Read filesystem information */
@@ -60,7 +60,7 @@ static int vmfs_fsinfo_read(vmfs_fs_t *fs)
    DECL_ALIGNED_BUFFER(buf,512);
    vmfs_fsinfo_t *fsi = &fs->fs_info;
 
-   if (vmfs_lvm_read(fs->lvm,VMFS_FSINFO_BASE,buf,buf_len) != buf_len)
+   if (vmfs_device_read(&fs->lvm->dev,VMFS_FSINFO_BASE,buf,buf_len) != buf_len)
       return(-1);
 
    fsi->magic = read_le32(buf,VMFS_FSINFO_OFS_MAGIC);

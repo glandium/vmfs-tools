@@ -84,7 +84,7 @@ int vmfs_metadata_lock(vmfs_fs_t *fs,off_t pos,u_char *buf,size_t buf_len,
    }
 
    /* Read the complete metadata for the caller */
-   if (vmfs_lvm_read(fs->lvm,pos,buf,buf_len) != buf_len) {
+   if (vmfs_device_read(&fs->lvm->dev,pos,buf,buf_len) != buf_len) {
       fprintf(stderr,"VMFS: unable to read metadata.\n");
       goto err_io;
    }
@@ -103,7 +103,7 @@ int vmfs_metadata_lock(vmfs_fs_t *fs,off_t pos,u_char *buf,size_t buf_len,
    vmfs_metadata_hdr_write(mdh,buf);
 
    /* Rewrite the metadata header only */
-   if (vmfs_lvm_write(fs->lvm,pos,buf,VMFS_METADATA_HDR_SIZE) 
+   if (vmfs_device_write(&fs->lvm->dev,pos,buf,VMFS_METADATA_HDR_SIZE)
        != VMFS_METADATA_HDR_SIZE)
    {
       fprintf(stderr,"VMFS: unable to write metadata header.\n");
@@ -130,7 +130,7 @@ int vmfs_metadata_unlock(vmfs_fs_t *fs,vmfs_metadata_hdr_t *mdh)
    vmfs_metadata_hdr_write(mdh,buf);
 
    /* Rewrite the metadata header only */
-   if (vmfs_lvm_write(fs->lvm,mdh->pos,buf,buf_len) != buf_len) 
+   if (vmfs_device_write(&fs->lvm->dev,mdh->pos,buf,buf_len) != buf_len)
    {
       fprintf(stderr,"VMFS: unable to write metadata header.\n");
       return(-1);

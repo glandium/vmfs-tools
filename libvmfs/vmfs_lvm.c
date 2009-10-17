@@ -72,14 +72,18 @@ static inline ssize_t vmfs_lvm_io(const vmfs_lvm_t *lvm,off_t pos,u_char *buf,
 }
 
 /* Read a raw block of data on logical volume */
-ssize_t vmfs_lvm_read(const vmfs_lvm_t *lvm,off_t pos,u_char *buf,size_t len)
+static ssize_t vmfs_lvm_read(const vmfs_device_t *dev,off_t pos,
+                             u_char *buf,size_t len)
 {
+   vmfs_lvm_t *lvm = (vmfs_lvm_t *)dev;
    return(vmfs_lvm_io(lvm,pos,buf,len,vmfs_device_read));
 }
 
 /* Write a raw block of data on logical volume */
-ssize_t vmfs_lvm_write(const vmfs_lvm_t *lvm,off_t pos,const u_char *buf,size_t len)
+static ssize_t vmfs_lvm_write(const vmfs_device_t *dev,off_t pos,
+                              const u_char *buf,size_t len)
 {
+   vmfs_lvm_t *lvm = (vmfs_lvm_t *)dev;
    return(vmfs_lvm_io(lvm,pos,(u_char *)buf,len,(vmfs_vol_io_func)vmfs_device_write));
 }
 
@@ -176,6 +180,8 @@ int vmfs_lvm_open(vmfs_lvm_t *lvm)
       return(-1);
    }
 
+   lvm->dev.read = vmfs_lvm_read;
+   lvm->dev.write = vmfs_lvm_write;
    return(0);
 }
 
