@@ -30,27 +30,13 @@
 #include "vmfs.h"
 #include "scsi.h"
 
-/* Read a data block from the physical volume */
-static ssize_t vmfs_vol_read_data(const vmfs_volume_t *vol,off_t pos,
-                                  u_char *buf,size_t len)
-{
-   return(m_pread(vol->fd,buf,len,pos));
-}
-
 /* Read a raw block of data on logical volume */
 ssize_t vmfs_vol_read(const vmfs_volume_t *vol,off_t pos,
                       u_char *buf,size_t len)
 {
    pos += vol->vmfs_base + 0x1000000;
 
-   return(vmfs_vol_read_data(vol,pos,buf,len));
-}
-
-/* Write a data block to the physical volume */
-static ssize_t vmfs_vol_write_data(const vmfs_volume_t *vol,off_t pos,
-                                   const u_char *buf,size_t len)
-{
-   return(m_pwrite(vol->fd,buf,len,pos));
+   return(m_pread(vol->fd,buf,len,pos));
 }
 
 /* Write a raw block of data on logical volume */
@@ -59,7 +45,7 @@ ssize_t vmfs_vol_write(const vmfs_volume_t *vol,off_t pos,
 {
    pos += vol->vmfs_base + 0x1000000;
 
-   return(vmfs_vol_write_data(vol,pos,buf,len));
+   return(m_pwrite(vol->fd,buf,len,pos));
 }
 
 /* Volume reservation */
