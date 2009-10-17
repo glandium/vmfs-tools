@@ -20,9 +20,25 @@
 #include "vmfs.h"
 
 struct vmfs_device {
+   ssize_t (*read)(const vmfs_device_t *dev, off_t pos,
+                   u_char *buf, size_t len);
+   ssize_t (*write)(const vmfs_device_t *dev, off_t pos,
+                    const u_char *buf, size_t len);
    int (*reserve)(const vmfs_device_t *dev);
    int (*release)(const vmfs_device_t *dev);
 };
+
+static inline ssize_t vmfs_device_read(const vmfs_device_t *dev, off_t pos,
+                                       u_char *buf, size_t len)
+{
+   return dev->read(dev, pos, buf, len);
+}
+
+static inline ssize_t vmfs_device_write(const vmfs_device_t *dev, off_t pos,
+                                        const u_char *buf, size_t len)
+{
+   return dev->write(dev, pos, buf, len);
+}
 
 static inline int vmfs_device_reserve(const vmfs_device_t *dev)
 {

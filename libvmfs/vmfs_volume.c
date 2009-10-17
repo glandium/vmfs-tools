@@ -31,18 +31,20 @@
 #include "scsi.h"
 
 /* Read a raw block of data on logical volume */
-ssize_t vmfs_vol_read(const vmfs_volume_t *vol,off_t pos,
-                      u_char *buf,size_t len)
+static ssize_t vmfs_vol_read(const vmfs_device_t *dev,off_t pos,
+                             u_char *buf,size_t len)
 {
+   vmfs_volume_t *vol = (vmfs_volume_t *) dev;
    pos += vol->vmfs_base + 0x1000000;
 
    return(m_pread(vol->fd,buf,len,pos));
 }
 
 /* Write a raw block of data on logical volume */
-ssize_t vmfs_vol_write(const vmfs_volume_t *vol,off_t pos,
-                       const u_char *buf,size_t len)
+static ssize_t vmfs_vol_write(const vmfs_device_t *dev,off_t pos,
+                              const u_char *buf,size_t len)
 {
+   vmfs_volume_t *vol = (vmfs_volume_t *) dev;
    pos += vol->vmfs_base + 0x1000000;
 
    return(m_pwrite(vol->fd,buf,len,pos));
@@ -228,6 +230,9 @@ vmfs_volume_t *vmfs_vol_open(const char *filename,vmfs_flags_t flags)
       vmfs_vol_show(vol);
       printf("VMFS: volume opened successfully\n");
    }
+
+   vol->dev.read = vmfs_vol_read;
+   vol->dev.write = vmfs_vol_write;
 
    return vol;
 

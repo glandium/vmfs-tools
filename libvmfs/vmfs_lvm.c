@@ -50,7 +50,7 @@ static inline uint64_t vmfs_lvm_extent_size(const vmfs_volume_t *extent)
    return((uint64_t)extent->vol_info.num_segments * VMFS_LVM_SEGMENT_SIZE);
 }
 
-typedef ssize_t (*vmfs_vol_io_func)(const vmfs_volume_t *,off_t,u_char *,size_t);
+typedef ssize_t (*vmfs_vol_io_func)(const vmfs_device_t *,off_t,u_char *,size_t);
 
 /* Read a raw block of data on logical volume */
 static inline ssize_t vmfs_lvm_io(const vmfs_lvm_t *lvm,off_t pos,u_char *buf,
@@ -68,19 +68,19 @@ static inline ssize_t vmfs_lvm_io(const vmfs_lvm_t *lvm,off_t pos,u_char *buf,
       return(-1);
    }
 
-   return(func(extent,pos,buf,len));
+   return(func(&extent->dev,pos,buf,len));
 }
 
 /* Read a raw block of data on logical volume */
 ssize_t vmfs_lvm_read(const vmfs_lvm_t *lvm,off_t pos,u_char *buf,size_t len)
 {
-   return(vmfs_lvm_io(lvm,pos,buf,len,vmfs_vol_read));
+   return(vmfs_lvm_io(lvm,pos,buf,len,vmfs_device_read));
 }
 
 /* Write a raw block of data on logical volume */
 ssize_t vmfs_lvm_write(const vmfs_lvm_t *lvm,off_t pos,const u_char *buf,size_t len)
 {
-   return(vmfs_lvm_io(lvm,pos,(u_char *)buf,len,(vmfs_vol_io_func)vmfs_vol_write));
+   return(vmfs_lvm_io(lvm,pos,(u_char *)buf,len,(vmfs_vol_io_func)vmfs_device_write));
 }
 
 /* Reserve the underlying volume given a LVM position */
