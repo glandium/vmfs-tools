@@ -183,7 +183,8 @@ int vmfs_lvm_open(vmfs_lvm_t *lvm)
    }
 
    lvm->dev.read = vmfs_lvm_read;
-   lvm->dev.write = vmfs_lvm_write;
+   if (lvm->flags.read_write)
+      lvm->dev.write = vmfs_lvm_write;
    lvm->dev.reserve = vmfs_lvm_reserve;
    lvm->dev.release = vmfs_lvm_release;
    return(0);

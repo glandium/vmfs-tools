@@ -232,7 +232,8 @@ vmfs_volume_t *vmfs_vol_open(const char *filename,vmfs_flags_t flags)
    }
 
    vol->dev.read = vmfs_vol_read;
-   vol->dev.write = vmfs_vol_write;
+   if (vol->flags.read_write)
+      vol->dev.write = vmfs_vol_write;
 
    return vol;
 

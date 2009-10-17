@@ -37,7 +37,9 @@ static inline ssize_t vmfs_device_read(const vmfs_device_t *dev, off_t pos,
 static inline ssize_t vmfs_device_write(const vmfs_device_t *dev, off_t pos,
                                         const u_char *buf, size_t len)
 {
-   return dev->write(dev, pos, buf, len);
+   if (dev->write)
+      return dev->write(dev, pos, buf, len);
+   return -1;
 }
 
 static inline int vmfs_device_reserve(const vmfs_device_t *dev, off_t pos)
