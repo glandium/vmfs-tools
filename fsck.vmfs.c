@@ -290,6 +290,7 @@ int vmfs_fsck_get_all_block_mappings(const vmfs_fs_t *fs,
           !inode.nlink)
          continue;
 
+      inode.fs = fs;
       vmfs_fsck_store_inode(fs,fi->blk_map,&inode);
       vmfs_inode_foreach_block(&inode,vmfs_fsck_store_block,fi->blk_map);
    }
