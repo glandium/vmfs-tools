@@ -43,12 +43,6 @@ struct vmfs_lvm {
    vmfs_volume_t *extents[VMFS_LVM_MAX_EXTENTS];
 };
 
-/* Reserve the underlying volume given a LVM position */
-int vmfs_lvm_reserve(const vmfs_lvm_t *lvm,off_t pos);
-
-/* Release the underlying volume given a LVM position */
-int vmfs_lvm_release(const vmfs_lvm_t *lvm,off_t pos);
-
 /* Show lvm information */
 void vmfs_lvm_show(const vmfs_lvm_t *lvm);
 

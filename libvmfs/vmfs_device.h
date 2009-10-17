@@ -24,8 +24,8 @@ struct vmfs_device {
                    u_char *buf, size_t len);
    ssize_t (*write)(const vmfs_device_t *dev, off_t pos,
                     const u_char *buf, size_t len);
-   int (*reserve)(const vmfs_device_t *dev);
-   int (*release)(const vmfs_device_t *dev);
+   int (*reserve)(const vmfs_device_t *dev, off_t pos);
+   int (*release)(const vmfs_device_t *dev, off_t pos);
 };
 
 static inline ssize_t vmfs_device_read(const vmfs_device_t *dev, off_t pos,
@@ -40,17 +40,17 @@ static inline ssize_t vmfs_device_write(const vmfs_device_t *dev, off_t pos,
    return dev->write(dev, pos, buf, len);
 }
 
-static inline int vmfs_device_reserve(const vmfs_device_t *dev)
+static inline int vmfs_device_reserve(const vmfs_device_t *dev, off_t pos)
 {
    if (dev->reserve)
-     return dev->reserve(dev);
+     return dev->reserve(dev, pos);
    return 0;
 }
 
-static inline int vmfs_device_release(const vmfs_device_t *dev)
+static inline int vmfs_device_release(const vmfs_device_t *dev, off_t pos)
 {
    if (dev->release)
-     return dev->release(dev);
+     return dev->release(dev, pos);
    return 0;
 }
 

@@ -78,7 +78,7 @@ int vmfs_metadata_lock(vmfs_fs_t *fs,off_t pos,u_char *buf,size_t buf_len,
       return(-1);
 
    /* Reserve volume */
-   if (vmfs_lvm_reserve(fs->lvm,pos) == -1) {
+   if (vmfs_device_reserve(&fs->lvm->dev,pos) == -1) {
       fprintf(stderr,"VMFS: unable to reserve volume.\n");
       goto err_reserve;
    }
@@ -110,11 +110,11 @@ int vmfs_metadata_lock(vmfs_fs_t *fs,off_t pos,u_char *buf,size_t buf_len,
       goto err_io;
    }
 
-   vmfs_lvm_release(fs->lvm,pos);
+   vmfs_device_release(&fs->lvm->dev,pos);
    return(0);
 
  err_io:
-   vmfs_lvm_release(fs->lvm,pos);
+   vmfs_device_release(&fs->lvm->dev,pos);
  err_reserve:
    vmfs_heartbeat_release(fs);
    return(-1);

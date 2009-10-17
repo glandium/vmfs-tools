@@ -88,25 +88,27 @@ static ssize_t vmfs_lvm_write(const vmfs_device_t *dev,off_t pos,
 }
 
 /* Reserve the underlying volume given a LVM position */
-int vmfs_lvm_reserve(const vmfs_lvm_t *lvm,off_t pos)
+static int vmfs_lvm_reserve(const vmfs_device_t *dev,off_t pos)
 {
+   vmfs_lvm_t *lvm = (vmfs_lvm_t *)dev;
    vmfs_volume_t *extent = vmfs_lvm_get_extent_from_offset(lvm,pos);
 
    if (!extent)
       return(-1);
 
-   return(vmfs_device_reserve(&extent->dev));
+   return(vmfs_device_reserve(&extent->dev, 0));
 }
 
 /* Release the underlying volume given a LVM position */
-int vmfs_lvm_release(const vmfs_lvm_t *lvm,off_t pos)
+static int vmfs_lvm_release(const vmfs_device_t *dev,off_t pos)
 {
+   vmfs_lvm_t *lvm = (vmfs_lvm_t *)dev;
    vmfs_volume_t *extent = vmfs_lvm_get_extent_from_offset(lvm,pos);
 
    if (!extent)
       return(-1);
 
-   return(vmfs_device_release(&extent->dev));
+   return(vmfs_device_release(&extent->dev, 0));
 }
 
 /* Show lvm information */
@@ -182,6 +184,8 @@ int vmfs_lvm_open(vmfs_lvm_t *lvm)
 
    lvm->dev.read = vmfs_lvm_read;
    lvm->dev.write = vmfs_lvm_write;
+   lvm->dev.reserve = vmfs_lvm_reserve;
+   lvm->dev.release = vmfs_lvm_release;
    return(0);
 }
 

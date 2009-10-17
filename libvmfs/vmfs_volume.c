@@ -51,14 +51,14 @@ static ssize_t vmfs_vol_write(const vmfs_device_t *dev,off_t pos,
 }
 
 /* Volume reservation */
-static int vmfs_vol_reserve(const vmfs_device_t *dev)
+static int vmfs_vol_reserve(const vmfs_device_t *dev, off_t pos)
 {
    vmfs_volume_t *vol = (vmfs_volume_t *) dev;
    return(scsi_reserve(vol->fd));
 }
 
 /* Volume release */
-static int vmfs_vol_release(const vmfs_device_t *dev)
+static int vmfs_vol_release(const vmfs_device_t *dev, off_t pos)
 {
    vmfs_volume_t *vol = (vmfs_volume_t *) dev;
    return(scsi_release(vol->fd));

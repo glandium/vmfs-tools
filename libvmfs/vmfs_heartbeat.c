@@ -112,7 +112,7 @@ int vmfs_heartbeat_lock(vmfs_fs_t *fs,u_int id,vmfs_heartbeat_t *hb)
 
    pos = VMFS_HB_BASE + (id * VMFS_HB_SIZE);
    
-   if (vmfs_lvm_reserve(fs->lvm,pos) == -1) {
+   if (vmfs_device_reserve(&fs->lvm->dev,pos) == -1) {
       fprintf(stderr,"VMFS: unable to reserve volume.\n");
       return(-1);
    }
@@ -141,7 +141,7 @@ int vmfs_heartbeat_lock(vmfs_fs_t *fs,u_int id,vmfs_heartbeat_t *hb)
 
    res = 0;
  done:
-   vmfs_lvm_release(fs->lvm,pos);
+   vmfs_device_release(&fs->lvm->dev,pos);
    return(res);
 }
 
