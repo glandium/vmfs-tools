@@ -179,7 +179,7 @@ static void vmfs_lvm_close(vmfs_device_t *dev)
    if (!lvm)
       return;
    while(lvm->loaded_extents--)
-      vmfs_vol_close(lvm->extents[lvm->loaded_extents]);
+      vmfs_device_close(&lvm->extents[lvm->loaded_extents]->dev);
 
    free(lvm);
 }

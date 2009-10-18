@@ -137,7 +137,4 @@ void vmfs_vol_show(const vmfs_volume_t *vol);
 /* Open a VMFS volume */
 vmfs_volume_t *vmfs_vol_open(const char *filename,vmfs_flags_t flags);
 
-/* Close a VMFS volume */
-void vmfs_vol_close(vmfs_volume_t *vol);
-
 #endif

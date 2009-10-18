@@ -163,6 +163,18 @@ void vmfs_vol_show(const vmfs_volume_t *vol)
    printf("\n");
 }
 
+/* Close a VMFS volume */
+static void vmfs_vol_close(vmfs_device_t *dev)
+{
+   vmfs_volume_t *vol = (vmfs_volume_t *) dev;
+   if (!vol)
+      return;
+   close(vol->fd);
+   free(vol->filename);
+   free(vol->vol_info.name);
+   free(vol);
+}
+
 /* Open a VMFS volume */
 vmfs_volume_t *vmfs_vol_open(const char *filename,vmfs_flags_t flags)
 {
@@ -234,6 +246,7 @@ vmfs_volume_t *vmfs_vol_open(const char *filename,vmfs_flags_t flags)
    vol->dev.read = vmfs_vol_read;
    if (vol->flags.read_write)
       vol->dev.write = vmfs_vol_write;
+   vol->dev.close = vmfs_vol_close;
 
    return vol;
 
@@ -242,15 +255,4 @@ vmfs_volume_t *vmfs_vol_open(const char *filename,vmfs_flags_t flags)
  err_filename:
    free(vol);
    return NULL;
-}
-
-/* Close a VMFS volume */
-void vmfs_vol_close(vmfs_volume_t *vol)
-{
-   if (!vol)
-      return;
-   close(vol->fd);
-   free(vol->filename);
-   free(vol->vol_info.name);
-   free(vol);
 }
