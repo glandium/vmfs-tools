@@ -77,7 +77,7 @@ int vmfs_heartbeat_show_active(const vmfs_fs_t *fs)
    int count = 0;
 
    while(pos < VMFS_HB_SIZE * VMFS_HB_NUM) {
-      res = vmfs_device_read(&fs->lvm->dev,VMFS_HB_BASE+pos,buf,buf_len);
+      res = vmfs_device_read(fs->dev,VMFS_HB_BASE+pos,buf,buf_len);
 
       if (res != buf_len) {
          fprintf(stderr,"VMFS: unable to read heartbeat info.\n");
@@ -112,12 +112,12 @@ int vmfs_heartbeat_lock(vmfs_fs_t *fs,u_int id,vmfs_heartbeat_t *hb)
 
    pos = VMFS_HB_BASE + (id * VMFS_HB_SIZE);
    
-   if (vmfs_device_reserve(&fs->lvm->dev,pos) == -1) {
+   if (vmfs_device_reserve(fs->dev,pos) == -1) {
       fprintf(stderr,"VMFS: unable to reserve volume.\n");
       return(-1);
    }
 
-   if (vmfs_device_read(&fs->lvm->dev,pos,buf,buf_len) != buf_len) {
+   if (vmfs_device_read(fs->dev,pos,buf,buf_len) != buf_len) {
       fprintf(stderr,"VMFS: unable to read heartbeat info.\n");
       goto done;
    }
@@ -133,7 +133,7 @@ int vmfs_heartbeat_lock(vmfs_fs_t *fs,u_int id,vmfs_heartbeat_t *hb)
    vmfs_host_get_uuid(hb->uuid);
    vmfs_heartbeat_write(hb,buf);
 
-   if (vmfs_device_write(&fs->lvm->dev,pos,buf,buf_len) != buf_len) {
+   if (vmfs_device_write(fs->dev,pos,buf,buf_len) != buf_len) {
       fprintf(stderr,"VMFS: unable to write heartbeat info.\n");
       hb->magic = VMFS_HB_MAGIC_OFF;
       goto done;
@@ -141,7 +141,7 @@ int vmfs_heartbeat_lock(vmfs_fs_t *fs,u_int id,vmfs_heartbeat_t *hb)
 
    res = 0;
  done:
-   vmfs_device_release(&fs->lvm->dev,pos);
+   vmfs_device_release(fs->dev,pos);
    return(res);
 }
 
@@ -158,7 +158,7 @@ int vmfs_heartbeat_unlock(vmfs_fs_t *fs,vmfs_heartbeat_t *hb)
    uuid_clear(hb->uuid);
    vmfs_heartbeat_write(hb,buf);
 
-   return((vmfs_device_write(&fs->lvm->dev,hb->pos,buf,buf_len) == buf_len) ? 0 : -1);
+   return((vmfs_device_write(fs->dev,hb->pos,buf,buf_len) == buf_len) ? 0 : -1);
 }
 
 /* Update an heartbeat */
@@ -172,7 +172,7 @@ int vmfs_heartbeat_update(vmfs_fs_t *fs,vmfs_heartbeat_t *hb)
    hb->uptime = vmfs_host_get_uptime();
    vmfs_heartbeat_write(hb,buf);
 
-   return((vmfs_device_write(&fs->lvm->dev,hb->pos,buf,buf_len) == buf_len) ? 0 : -1);
+   return((vmfs_device_write(fs->dev,hb->pos,buf,buf_len) == buf_len) ? 0 : -1);
 }
 
 /* Acquire an heartbeat (ID is chosen automatically) */
@@ -199,7 +199,7 @@ int vmfs_heartbeat_acquire(vmfs_fs_t *fs)
    if (!(buf = iobuffer_alloc(buf_len)))
       return(-1);
 
-   if (vmfs_device_read(&fs->lvm->dev,VMFS_HB_BASE,buf,buf_len) != buf_len)
+   if (vmfs_device_read(fs->dev,VMFS_HB_BASE,buf,buf_len) != buf_len)
       return(-1);
 
    /* 

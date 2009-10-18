@@ -78,13 +78,13 @@ int vmfs_metadata_lock(vmfs_fs_t *fs,off_t pos,u_char *buf,size_t buf_len,
       return(-1);
 
    /* Reserve volume */
-   if (vmfs_device_reserve(&fs->lvm->dev,pos) == -1) {
+   if (vmfs_device_reserve(fs->dev,pos) == -1) {
       fprintf(stderr,"VMFS: unable to reserve volume.\n");
       goto err_reserve;
    }
 
    /* Read the complete metadata for the caller */
-   if (vmfs_device_read(&fs->lvm->dev,pos,buf,buf_len) != buf_len) {
+   if (vmfs_device_read(fs->dev,pos,buf,buf_len) != buf_len) {
       fprintf(stderr,"VMFS: unable to read metadata.\n");
       goto err_io;
    }
@@ -103,18 +103,18 @@ int vmfs_metadata_lock(vmfs_fs_t *fs,off_t pos,u_char *buf,size_t buf_len,
    vmfs_metadata_hdr_write(mdh,buf);
 
    /* Rewrite the metadata header only */
-   if (vmfs_device_write(&fs->lvm->dev,pos,buf,VMFS_METADATA_HDR_SIZE)
+   if (vmfs_device_write(fs->dev,pos,buf,VMFS_METADATA_HDR_SIZE)
        != VMFS_METADATA_HDR_SIZE)
    {
       fprintf(stderr,"VMFS: unable to write metadata header.\n");
       goto err_io;
    }
 
-   vmfs_device_release(&fs->lvm->dev,pos);
+   vmfs_device_release(fs->dev,pos);
    return(0);
 
  err_io:
-   vmfs_device_release(&fs->lvm->dev,pos);
+   vmfs_device_release(fs->dev,pos);
  err_reserve:
    vmfs_heartbeat_release(fs);
    return(-1);
@@ -130,7 +130,7 @@ int vmfs_metadata_unlock(vmfs_fs_t *fs,vmfs_metadata_hdr_t *mdh)
    vmfs_metadata_hdr_write(mdh,buf);
 
    /* Rewrite the metadata header only */
-   if (vmfs_device_write(&fs->lvm->dev,mdh->pos,buf,buf_len) != buf_len)
+   if (vmfs_device_write(fs->dev,mdh->pos,buf,buf_len) != buf_len)
    {
       fprintf(stderr,"VMFS: unable to write metadata header.\n");
       return(-1);

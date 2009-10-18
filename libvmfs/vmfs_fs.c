@@ -39,7 +39,7 @@ ssize_t vmfs_fs_read(const vmfs_fs_t *fs,uint32_t blk,off_t offset,
    pos  = (uint64_t)blk * vmfs_fs_get_blocksize(fs);
    pos += offset;
 
-   return(vmfs_device_read(&fs->lvm->dev,pos,buf,len));
+   return(vmfs_device_read(fs->dev,pos,buf,len));
 }
 
 /* Write a block to the filesystem */
@@ -51,7 +51,7 @@ ssize_t vmfs_fs_write(const vmfs_fs_t *fs,uint32_t blk,off_t offset,
    pos  = (uint64_t)blk * vmfs_fs_get_blocksize(fs);
    pos += offset;
 
-   return(vmfs_device_write(&fs->lvm->dev,pos,buf,len));
+   return(vmfs_device_write(fs->dev,pos,buf,len));
 }
 
 /* Read filesystem information */
@@ -60,7 +60,7 @@ static int vmfs_fsinfo_read(vmfs_fs_t *fs)
    DECL_ALIGNED_BUFFER(buf,512);
    vmfs_fsinfo_t *fsi = &fs->fs_info;
 
-   if (vmfs_device_read(&fs->lvm->dev,VMFS_FSINFO_BASE,buf,buf_len) != buf_len)
+   if (vmfs_device_read(fs->dev,VMFS_FSINFO_BASE,buf,buf_len) != buf_len)
       return(-1);
 
    fsi->magic = read_le32(buf,VMFS_FSINFO_OFS_MAGIC);
@@ -266,7 +266,7 @@ vmfs_fs_t *vmfs_fs_open(char **paths, vmfs_flags_t flags)
       return NULL;
    }
 
-   fs->lvm = lvm;
+   fs->dev = &lvm->dev;
    fs->debug_level = flags.debug_level;
 
    /* Read FS info */
@@ -276,7 +276,7 @@ vmfs_fs_t *vmfs_fs_open(char **paths, vmfs_flags_t flags)
       return NULL;
    }
 
-   if (uuid_compare(fs->fs_info.lvm_uuid, *fs->lvm->dev.uuid)) {
+   if (uuid_compare(fs->fs_info.lvm_uuid, *fs->dev->uuid)) {
       fprintf(stderr,"VMFS: FS doesn't belong to the underlying LVM\n");
       vmfs_fs_close(fs);
       return NULL;
@@ -339,7 +339,7 @@ void vmfs_fs_close(vmfs_fs_t *fs)
 
    vmfs_fs_sync_inodes(fs);
 
-   vmfs_device_close(&fs->lvm->dev);
+   vmfs_device_close(fs->dev);
    free(fs->inodes);
    free(fs->fs_info.label);
    free(fs);

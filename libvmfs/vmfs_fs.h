@@ -88,8 +88,8 @@ struct vmfs_fs {
    /* FS information */
    vmfs_fsinfo_t fs_info;
 
-   /* Associated VMFS Volume */
-   vmfs_lvm_t *lvm;
+   /* Associated VMFS Device */
+   vmfs_device_t *dev;
 
    /* Meta-files containing file system structures */
    vmfs_bitmap_t *fbb,*fdc,*pbc,*sbc;
@@ -118,7 +118,7 @@ static inline uint64_t vmfs_fs_get_blocksize(const vmfs_fs_t *fs)
 /* Get read-write status of a FS */
 static inline bool vmfs_fs_readwrite(const vmfs_fs_t *fs)
 {
-   return(fs->lvm->flags.read_write);
+   return(fs->dev->write);
 }
 
 /* Read a block from the filesystem */

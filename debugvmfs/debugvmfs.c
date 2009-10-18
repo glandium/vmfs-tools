@@ -383,7 +383,8 @@ static int cmd_show_fs(vmfs_dir_t *base_dir,int argc,char *argv[])
 static int cmd_show_volume(vmfs_dir_t *base_dir,int argc,char *argv[])
 {
    const vmfs_fs_t *fs = vmfs_dir_get_fs(base_dir);
-   vmfs_lvm_show(fs->lvm);
+   /* Dangerous */
+   vmfs_lvm_show((vmfs_lvm_t *)fs->dev);
    return(0);
 }
 
