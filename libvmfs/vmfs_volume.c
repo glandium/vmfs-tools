@@ -247,6 +247,7 @@ vmfs_volume_t *vmfs_vol_open(const char *filename,vmfs_flags_t flags)
    if (vol->flags.read_write)
       vol->dev.write = vmfs_vol_write;
    vol->dev.close = vmfs_vol_close;
+   vol->dev.uuid = &vol->vol_info.lvm_uuid;
 
    return vol;
 

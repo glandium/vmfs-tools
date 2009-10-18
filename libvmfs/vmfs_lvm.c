@@ -200,5 +200,6 @@ int vmfs_lvm_open(vmfs_lvm_t *lvm)
    lvm->dev.reserve = vmfs_lvm_reserve;
    lvm->dev.release = vmfs_lvm_release;
    lvm->dev.close = vmfs_lvm_close;
+   lvm->dev.uuid = &lvm->lvm_info.uuid;
    return(0);
 }

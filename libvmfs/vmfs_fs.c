@@ -276,7 +276,7 @@ vmfs_fs_t *vmfs_fs_open(char **paths, vmfs_flags_t flags)
       return NULL;
    }
 
-   if (uuid_compare(fs->fs_info.lvm_uuid, fs->lvm->lvm_info.uuid)) {
+   if (uuid_compare(fs->fs_info.lvm_uuid, *fs->lvm->dev.uuid)) {
       fprintf(stderr,"VMFS: FS doesn't belong to the underlying LVM\n");
       vmfs_fs_close(fs);
       return NULL;

@@ -27,6 +27,7 @@ struct vmfs_device {
    int (*reserve)(const vmfs_device_t *dev, off_t pos);
    int (*release)(const vmfs_device_t *dev, off_t pos);
    void (*close)(vmfs_device_t *dev);
+   uuid_t *uuid;
 };
 
 static inline ssize_t vmfs_device_read(const vmfs_device_t *dev, off_t pos,
