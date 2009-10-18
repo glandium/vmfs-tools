@@ -232,10 +232,8 @@ static int vmfs_read_fdc_base(vmfs_fs_t *fs)
    return(0);
 }
 
-/* Open a filesystem */
-vmfs_fs_t *vmfs_fs_open(char **paths, vmfs_flags_t flags)
+static vmfs_device_t *vmfs_device_open(char **paths, vmfs_flags_t flags)
 {
-   vmfs_fs_t *fs;
    vmfs_lvm_t *lvm;
 
    if (!(lvm = vmfs_lvm_create(flags))) {
@@ -255,7 +253,16 @@ vmfs_fs_t *vmfs_fs_open(char **paths, vmfs_flags_t flags)
       return NULL;
    }
 
-   if (!(fs = calloc(1,sizeof(*fs))))
+   return &lvm->dev;
+}
+
+/* Open a filesystem */
+vmfs_fs_t *vmfs_fs_open(char **paths, vmfs_flags_t flags)
+{
+   vmfs_device_t *dev = vmfs_device_open(paths, flags);
+   vmfs_fs_t *fs;
+
+   if (!dev || !(fs = calloc(1,sizeof(*fs))))
       return NULL;
 
    fs->inode_hash_buckets = VMFS_INODE_HASH_BUCKETS;
@@ -266,7 +273,7 @@ vmfs_fs_t *vmfs_fs_open(char **paths, vmfs_flags_t flags)
       return NULL;
    }
 
-   fs->dev = &lvm->dev;
+   fs->dev = dev;
    fs->debug_level = flags.debug_level;
 
    /* Read FS info */
