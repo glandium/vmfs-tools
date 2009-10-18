@@ -26,7 +26,9 @@
 
 static const cmd_t empty_cmd = { 0, };
 
-static char *(*readline)(const char *prompt);
+static char *init_readline(const char *prompt);
+
+static char *(*readline)(const char *prompt) = init_readline;
 static void (*add_history)(const char *string);
 
 /* local_readline() buffer allocation increment */
@@ -147,7 +149,7 @@ void freecmd(const cmd_t *cmd)
 
 static void *dlhandle = NULL;
 
-static __attribute__((constructor)) void init_readline(void)
+static char *init_readline(const char *prompt)
 {
    if (isatty(fileno(stdin))) {
       dlhandle = dlopen("libreadline.so", RTLD_NOW);
@@ -157,11 +159,13 @@ static __attribute__((constructor)) void init_readline(void)
          readline = dlsym(dlhandle, "readline");
          add_history = dlsym(dlhandle, "add_history");
          if (readline && add_history)
-            return;
+            goto readline;
       }
    }
    readline = local_readline;
    add_history = local_add_history;
+readline:
+   return readline(prompt);
 }
 
 static __attribute__((destructor)) void close_readline(void)
