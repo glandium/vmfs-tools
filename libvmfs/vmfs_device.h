@@ -26,6 +26,7 @@ struct vmfs_device {
                     const u_char *buf, size_t len);
    int (*reserve)(const vmfs_device_t *dev, off_t pos);
    int (*release)(const vmfs_device_t *dev, off_t pos);
+   void (*close)(vmfs_device_t *dev);
 };
 
 static inline ssize_t vmfs_device_read(const vmfs_device_t *dev, off_t pos,
@@ -54,6 +55,12 @@ static inline int vmfs_device_release(const vmfs_device_t *dev, off_t pos)
    if (dev->release)
      return dev->release(dev, pos);
    return 0;
+}
+
+static inline void vmfs_device_close(vmfs_device_t *dev)
+{
+   if (dev->close)
+     dev->close(dev);
 }
 
 #endif

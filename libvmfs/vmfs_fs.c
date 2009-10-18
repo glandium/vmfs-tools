@@ -251,7 +251,7 @@ vmfs_fs_t *vmfs_fs_open(char **paths, vmfs_flags_t flags)
    }
 
    if (vmfs_lvm_open(lvm)) {
-      vmfs_lvm_close(lvm);
+      vmfs_device_close(&lvm->dev);
       return NULL;
    }
 
@@ -339,7 +339,7 @@ void vmfs_fs_close(vmfs_fs_t *fs)
 
    vmfs_fs_sync_inodes(fs);
 
-   vmfs_lvm_close(fs->lvm);
+   vmfs_device_close(&fs->lvm->dev);
    free(fs->inodes);
    free(fs->fs_info.label);
    free(fs);

@@ -172,6 +172,18 @@ int vmfs_lvm_add_extent(vmfs_lvm_t *lvm, vmfs_volume_t *vol)
    return(0);
 }
 
+/* Close an LVM */
+static void vmfs_lvm_close(vmfs_device_t *dev)
+{
+   vmfs_lvm_t *lvm = (vmfs_lvm_t *)dev;
+   if (!lvm)
+      return;
+   while(lvm->loaded_extents--)
+      vmfs_vol_close(lvm->extents[lvm->loaded_extents]);
+
+   free(lvm);
+}
+
 /* Open an LVM */
 int vmfs_lvm_open(vmfs_lvm_t *lvm)
 {
@@ -187,16 +199,6 @@ int vmfs_lvm_open(vmfs_lvm_t *lvm)
       lvm->dev.write = vmfs_lvm_write;
    lvm->dev.reserve = vmfs_lvm_reserve;
    lvm->dev.release = vmfs_lvm_release;
+   lvm->dev.close = vmfs_lvm_close;
    return(0);
-}
-
-/* Close an LVM */
-void vmfs_lvm_close(vmfs_lvm_t *lvm)
-{
-   if (!lvm)
-      return;
-   while(lvm->loaded_extents--)
-      vmfs_vol_close(lvm->extents[lvm->loaded_extents]);
-
-   free(lvm);
 }
