@@ -154,6 +154,8 @@ static char *init_readline(const char *prompt)
    if (isatty(fileno(stdin))) {
       dlhandle = dlopen("libreadline.so", RTLD_NOW);
       if (!dlhandle)
+         dlhandle = dlopen("libreadline.so.6", RTLD_NOW);
+      if (!dlhandle)
          dlhandle = dlopen("libreadline.so.5", RTLD_NOW);
       if (dlhandle) {
          readline = dlsym(dlhandle, "readline");
