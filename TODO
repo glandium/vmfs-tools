@@ -1,11 +1,7 @@
-Expected for v0.2.0:
-- Test suite
-- Allow to read VMFS even when not having all extents
-
 Expected for v0.3.0:
-- Improve test suite
+- Test suite
 - Make debugvmfs more of a VMFS debugging tool and less of a vmfs-tools testing tool
-- fsck.vmfs
+- Better fsck.vmfs
 
 Expected for v0.5.0:
 - Stable internal API
