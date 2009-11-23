@@ -962,9 +962,7 @@ int main(int argc,char *argv[])
    flags.read_write = 1;
 #endif
 
-#ifdef VMFS_ALLOW_MISSING_EXTENTS
    flags.allow_missing_extents = 1;
-#endif
 
    if (!(lvm = vmfs_lvm_create(flags))) {
       fprintf(stderr,"Unable to create LVM structure\n");
