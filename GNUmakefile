@@ -110,8 +110,9 @@ installPROGRAMS := $(filter-out %/imager,$(buildPROGRAMS:%=$(DESTDIR)$(sbindir)/
 
 $(installPROGRAMS): $(DESTDIR)$(sbindir)/%: %
 
-INSTALLED_PROGRAMS := $(patsubst %,$(DESTDIR)$(sbindir)/%,$(notdir $(BUILD_PROGRAMS)))
-$(foreach prog, $(BUILD_PROGRAMS), $(eval $(DESTDIR)$(sbindir)/$(notdir $(prog)): $(prog)))
+INSTALL_PROGRAMS := $(foreach prog,$(BUILD_PROGRAMS),$(if $(filter noinst,$($(prog)_OPTIONS)),,$(prog)))
+INSTALLED_PROGRAMS := $(patsubst %,$(DESTDIR)$(sbindir)/%,$(notdir $(INSTALL_PROGRAMS)))
+$(foreach prog, $(INSTALL_PROGRAMS), $(eval $(DESTDIR)$(sbindir)/$(notdir $(prog)): $(prog)))
 
 $(installPROGRAMS) $(INSTALLED_PROGRAMS): %: $(DESTDIR)$(sbindir)
 	install $(if $(NO_STRIP),,-s )-m 0755 $(filter-out $<,$^) $(dir $@)
