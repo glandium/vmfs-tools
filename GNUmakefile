@@ -20,6 +20,7 @@ $(1)/OBJS := $$($(1)/SRC:%.c=%.o)
 $(1)/PROGRAM := $(1)/$(1)
 $(1)/$(1): $$($(1)/OBJS) libvmfs.a
 $(1)/$(1): LDFLAGS += $$($(1)/$(1)_LDFLAGS)
+$(1)/MANSRC := $(wildcard $(1)/$(1).txt)
 
 $$(foreach obj,$$($(1)/OBJS), $$(eval $$(obj): CFLAGS += -I. $$($$(obj)_CFLAGS)))
 endef
@@ -43,9 +44,9 @@ buildPROGRAMS := $(filter-out vmfs-fuse,$(buildPROGRAMS))
 endif
 endif
 BUILD_PROGRAMS := $(foreach subdir,$(SUBDIRS),$($(subdir)/PROGRAM))
-MANSRCS := $(wildcard $(buildPROGRAMS:%=%.txt))
+MANSRCS := $(wildcard $(buildPROGRAMS:%=%.txt)) $(foreach subdir,$(SUBDIRS),$($(subdir)/MANSRC))
 MANDOCBOOK := $(MANSRCS:%.txt=%.xml)
-MANPAGES := $(foreach man,$(MANSRCS),$(shell sed '1{s/(/./;s/)//;q;}' $(man)))
+MANPAGES := $(foreach man,$(MANSRCS),$(man:%.txt=%.$(shell sed '1{s/^.*(//;s/)//;q;}' $(man))))
 
 EXTRA_DIST := LICENSE README TODO AUTHORS test.img configure
 LIB := libvmfs.a
@@ -113,7 +114,8 @@ $(DESTDIR)/%:
 	install -d -m 0755 $@
 
 installPROGRAMS := $(filter-out %/imager,$(buildPROGRAMS:%=$(DESTDIR)$(sbindir)/%))
-installMANPAGES := $(MANPAGES:%=$(DESTDIR)$(mandir)/man8/%)
+installMANPAGES := $(filter-out $(foreach subdir, $(SUBDIRS),$(subdir)/%),$(MANPAGES))
+installMANPAGES := $(installMANPAGES:%=$(DESTDIR)$(mandir)/man8/%)
 
 $(installPROGRAMS): $(DESTDIR)$(sbindir)/%: %
 
@@ -123,10 +125,15 @@ $(foreach prog, $(BUILD_PROGRAMS), $(eval $(DESTDIR)$(sbindir)/$(notdir $(prog))
 $(installPROGRAMS) $(INSTALLED_PROGRAMS): %: $(DESTDIR)$(sbindir)
 	install $(if $(NO_STRIP),,-s )-m 0755 $(filter-out $<,$^) $(dir $@)
 
-$(installMANPAGES): $(DESTDIR)$(mandir)/man8/%: % $(DESTDIR)$(mandir)/man8
-	install -m 0755 $< $(dir $@)
+$(installMANPAGES): $(DESTDIR)$(mandir)/man8/%: %
 
-install: $(installPROGRAMS) $(installMANPAGES) $(INSTALLED_PROGRAMS)
+INSTALLED_MANPAGES := $(patsubst %.txt,$(DESTDIR)$(mandir)/man8/%.8,$(notdir $(foreach subdir,$(SUBDIRS),$($(subdir)/MANSRC))))
+$(foreach man,$(foreach subdir,$(SUBDIRS),$($(subdir)/MANSRC:%.txt=%.8)), $(eval $(DESTDIR)$(mandir)/man8/$(notdir $(man)): $(man)))
+
+$(installMANPAGES) $(INSTALLED_MANPAGES): %: $(DESTDIR)$(mandir)/man8
+	install -m 0755 $(filter-out $<,$^) $(dir $@)
+
+install: $(installPROGRAMS) $(installMANPAGES) $(INSTALLED_PROGRAMS) $(INSTALLED_MANPAGES)
 
 ifeq (,$(filter dist clean,$(MAKECMDGOALS)))
 test.img: imager.c | imager
