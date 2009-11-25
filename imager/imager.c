@@ -43,10 +43,13 @@
 #include <libgen.h>
 #include <stdarg.h>
 #include <stdlib.h>
+#include <stdio.h>
 #include <unistd.h>
 #include <fcntl.h>
 #include <errno.h>
-#include "vmfs.h"
+#include <inttypes.h>
+#include <string.h>
+#include "utils.h"
 
 static void die(char *fmt, ...)
 {
