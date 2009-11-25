@@ -44,7 +44,7 @@ OBJS := $(SRC:%.c=%.o)
 PROGRAMS := imager
 buildPROGRAMS := $(PROGRAMS)
 BUILD_PROGRAMS := $(foreach subdir,$(SUBDIRS),$($(subdir)/PROGRAM))
-MANSRCS := $(wildcard $(buildPROGRAMS:%=%.txt)) $(foreach subdir,$(SUBDIRS),$($(subdir)/MANSRC))
+MANSRCS := $(foreach subdir,$(SUBDIRS),$($(subdir)/MANSRC))
 MANDOCBOOK := $(MANSRCS:%.txt=%.xml)
 MANPAGES := $(foreach man,$(MANSRCS),$(man:%.txt=%.$(shell sed '1{s/^.*(//;s/)//;q;}' $(man))))
 
@@ -107,8 +107,6 @@ $(DESTDIR)/%:
 	install -d -m 0755 $@
 
 installPROGRAMS := $(filter-out %/imager,$(buildPROGRAMS:%=$(DESTDIR)$(sbindir)/%))
-installMANPAGES := $(filter-out $(foreach subdir, $(SUBDIRS),$(subdir)/%),$(MANPAGES))
-installMANPAGES := $(installMANPAGES:%=$(DESTDIR)$(mandir)/man8/%)
 
 $(installPROGRAMS): $(DESTDIR)$(sbindir)/%: %
 
@@ -118,15 +116,13 @@ $(foreach prog, $(BUILD_PROGRAMS), $(eval $(DESTDIR)$(sbindir)/$(notdir $(prog))
 $(installPROGRAMS) $(INSTALLED_PROGRAMS): %: $(DESTDIR)$(sbindir)
 	install $(if $(NO_STRIP),,-s )-m 0755 $(filter-out $<,$^) $(dir $@)
 
-$(installMANPAGES): $(DESTDIR)$(mandir)/man8/%: %
-
 INSTALLED_MANPAGES := $(patsubst %.txt,$(DESTDIR)$(mandir)/man8/%.8,$(notdir $(foreach subdir,$(SUBDIRS),$($(subdir)/MANSRC))))
 $(foreach man,$(foreach subdir,$(SUBDIRS),$($(subdir)/MANSRC:%.txt=%.8)), $(eval $(DESTDIR)$(mandir)/man8/$(notdir $(man)): $(man)))
 
-$(installMANPAGES) $(INSTALLED_MANPAGES): %: $(DESTDIR)$(mandir)/man8
+$(INSTALLED_MANPAGES): %: $(DESTDIR)$(mandir)/man8
 	install -m 0755 $(filter-out $<,$^) $(dir $@)
 
-install: $(installPROGRAMS) $(installMANPAGES) $(INSTALLED_PROGRAMS) $(INSTALLED_MANPAGES)
+install: $(installPROGRAMS) $(INSTALLED_PROGRAMS) $(INSTALLED_MANPAGES)
 
 ifeq (,$(filter dist clean,$(MAKECMDGOALS)))
 test.img: imager.c | imager
