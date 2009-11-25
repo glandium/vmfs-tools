@@ -33,7 +33,7 @@ LDFLAGS := $(ENV_LDFLAGS) $(filter-out $(ENV_LDFLAGS),$(UUID_LDFLAGS) $(EXTRA_LD
 SRC := $(wildcard *.c) $(foreach subdir,$(SUBDIRS),$($(subdir)/SRC))
 HEADERS := $(wildcard *.h)
 OBJS := $(SRC:%.c=%.o)
-PROGRAMS := debugvmfs fsck.vmfs vmfs-fuse imager
+PROGRAMS := debugvmfs vmfs-fuse imager
 buildPROGRAMS := $(PROGRAMS)
 ifeq (,$(FUSE_LDFLAGS))
 ifneq (clean,$(MAKECMDGOALS))
@@ -63,8 +63,6 @@ debugvmfs: LDFLAGS+= $(DLOPEN_LDFLAGS)
 debugvmfs.o: CFLAGS+=-DVERSION=\"$(VERSION)\"
 
 utils.o: CFLAGS += $(if $(HAS_POSIX_MEMALIGN),,-DNO_POSIX_MEMALIGN=1)
-
-fsck.vmfs.o: CFLAGS+=-DVERSION=\"$(VERSION)\"
 
 define program_template
 $(strip $(1))_EXTRA_OBJS := $$($(strip $(1))_EXTRA_SRCS:%.c=%.o)

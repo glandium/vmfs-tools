@@ -5,6 +5,6 @@
 version
 config.cache
 debugvmfs
-fsck.vmfs
 vmfs-fuse
 imager
+fsck.vmfs/fsck.vmfs
