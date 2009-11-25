@@ -39,7 +39,7 @@ The install location for the binaries is $prefix/sbin, $prefix/share/man
 for the manual pages, where $prefix is /usr/local by default.
 
 If you wish to install to some other place, you can override $prefix with
-the command `make install prefix=/some/where'.
+the command `make -B config.cache prefix=/some/where'.
 
 Supported platforms
 -------------------

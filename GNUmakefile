@@ -25,12 +25,6 @@ MANPAGES := $(foreach man,$(MANSRCS),$(shell sed '1{s/(/./;s/)//;q;}' $(man)))
 EXTRA_DIST := LICENSE README TODO AUTHORS test.img
 LIB := libvmfs.a
 
-prefix := /usr/local
-exec_prefix := $(prefix)
-sbindir := $(exec_prefix)/sbin
-datarootdir := $(prefix)/share
-mandir := $(datarootdir)/man
-
 all: $(buildPROGRAMS) $(wildcard .gitignore) test.img
 
 ALL_MAKEFILES = $(filter-out config.cache,$(MAKEFILE_LIST)) configure.mk

@@ -1,6 +1,12 @@
 include utils.mk
 
-__VARS := $(.VARIABLES)
+__VARS := $(foreach var,$(.VARIABLES),$(if $(filter-out command line,$(origin $(var))),$(var)))
+
+prefix := /usr/local
+exec_prefix := $(prefix)
+sbindir := $(exec_prefix)/sbin
+datarootdir := $(prefix)/share
+mandir := $(datarootdir)/man
 
 # configure rules really start here
 $(call PKG_CONFIG_CHK,uuid,-I/usr/include/uuid,-luuid)
