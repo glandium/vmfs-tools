@@ -3,10 +3,10 @@ include utils.mk
 __VARS := $(foreach var,$(.VARIABLES),$(if $(filter-out command line,$(origin $(var))),$(var)))
 
 prefix := /usr/local
-exec_prefix := $(prefix)
-sbindir := $(exec_prefix)/sbin
-datarootdir := $(prefix)/share
-mandir := $(datarootdir)/man
+exec_prefix := $$(prefix)
+sbindir := $$(exec_prefix)/sbin
+datarootdir := $$(prefix)/share
+mandir := $$(datarootdir)/man
 
 # configure rules really start here
 $(call PKG_CONFIG_CHK,uuid,-I/usr/include/uuid,-luuid)
@@ -30,6 +30,6 @@ endif
 $(call LINK_CHECK,posix_memalign)
 
 # Generate cache file
-$(shell ($(foreach var,$(filter-out $(__VARS) __%,$(.VARIABLES)),echo $(var) := $($(var));)) > config.cache)
+$(shell ($(foreach var,$(filter-out $(__VARS) __%,$(.VARIABLES)),echo '$(var) := $($(var))';)) > config.cache)
 
 configure:
