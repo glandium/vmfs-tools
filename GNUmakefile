@@ -4,10 +4,12 @@ include utils.mk
 PACKAGE := vmfs-tools
 
 CC := gcc
-OPTIMFLAGS := -O2
-CFLAGS := -Wall $(OPTIMFLAGS) -g -D_FILE_OFFSET_BITS=64 $(EXTRA_CFLAGS)
+OPTIMFLAGS := $(if $(filter -O%,$(CFLAGS)),,-O2)
+ENV_CFLAGS := $(CFLAGS)
+ENV_LDFLAGS := $(LDFLAGS)
+CFLAGS := $(ENV_CFLAGS) $(filter-out $(ENV_CFLAGS),-Wall $(OPTIMFLAGS) -g -D_FILE_OFFSET_BITS=64 $(EXTRA_CFLAGS))
 CFLAGS += $(UUID_CFLAGS) $(if $(HAS_STRNDUP),,-DNO_STRNDUP=1)
-LDFLAGS := $(UUID_LDFLAGS) $(EXTRA_LDFLAGS)
+LDFLAGS := $(ENV_LDFLAGS) $(filter-out $(ENV_LDFLAGS),$(UUID_LDFLAGS) $(EXTRA_LDFLAGS))
 SRC := $(wildcard *.c)
 HEADERS := $(wildcard *.h)
 OBJS := $(SRC:%.c=%.o)
@@ -123,4 +125,4 @@ endif
 	) > $@
 
 config.cache: configure.mk
-	@$(MAKE) -s -f $^
+	@$(MAKE) -s -f $^ $(if $(ENV_CFLAGS),CFLAGS='$(ENV_CFLAGS)') $(if $(ENV_LDFLAGS),LDFLAGS='$(ENV_LDFLAGS)')
