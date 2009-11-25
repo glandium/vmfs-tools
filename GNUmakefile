@@ -15,6 +15,7 @@ __VARS := $$(.VARIABLES)
 include $(1)/manifest.mk
 $$(foreach var,$$(filter-out $$(__VARS) __%,$$(.VARIABLES)), $$(eval $(1)/$$(var) := $$($$(var))))
 $(1)/SRC := $(wildcard $(1)/*.c)
+$(1)/HEADERS := $(wildcard $(1)/*.h)
 $(1)/OBJS := $$($(1)/SRC:%.c=%.o)
 $(1)/PROGRAM := $(1)/$(1)
 $(1)/$(1): $$($(1)/OBJS) libvmfs.a
@@ -32,7 +33,7 @@ CFLAGS := $(ENV_CFLAGS) $(filter-out $(ENV_CFLAGS),-Wall $(OPTIMFLAGS) -g -D_FIL
 CFLAGS += $(UUID_CFLAGS) $(if $(HAS_STRNDUP),,-DNO_STRNDUP=1)
 LDFLAGS := $(ENV_LDFLAGS) $(filter-out $(ENV_LDFLAGS),$(UUID_LDFLAGS) $(EXTRA_LDFLAGS))
 SRC := $(wildcard *.c) $(foreach subdir,$(SUBDIRS),$($(subdir)/SRC))
-HEADERS := $(wildcard *.h)
+HEADERS := $(wildcard *.h) $(foreach subdir,$(SUBDIRS),$($(subdir)/HEADERS))
 OBJS := $(SRC:%.c=%.o)
 PROGRAMS := debugvmfs vmfs-fuse imager
 buildPROGRAMS := $(PROGRAMS)
