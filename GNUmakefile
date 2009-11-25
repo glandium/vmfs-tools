@@ -41,7 +41,6 @@ LDFLAGS := $(ENV_LDFLAGS) $(filter-out $(ENV_LDFLAGS),$(UUID_LDFLAGS) $(EXTRA_LD
 SRC := $(wildcard *.c) $(foreach subdir,$(SUBDIRS),$($(subdir)/SRC))
 HEADERS := $(wildcard *.h) $(foreach subdir,$(SUBDIRS),$($(subdir)/HEADERS))
 OBJS := $(SRC:%.c=%.o)
-buildPROGRAMS := $(PROGRAMS)
 BUILD_PROGRAMS := $(foreach subdir,$(SUBDIRS),$($(subdir)/PROGRAM))
 MANSRCS := $(foreach subdir,$(SUBDIRS),$($(subdir)/MANSRC))
 MANDOCBOOK := $(MANSRCS:%.txt=%.xml)
@@ -50,7 +49,7 @@ MANPAGES := $(foreach man,$(MANSRCS),$(man:%.txt=%.$(shell sed '1{s/^.*(//;s/)//
 EXTRA_DIST := LICENSE README TODO AUTHORS test.img configure
 LIB := libvmfs.a
 
-all: $(buildPROGRAMS) $(BUILD_PROGRAMS) $(wildcard .gitignore) test.img
+all: $(BUILD_PROGRAMS) $(wildcard .gitignore) test.img
 
 ALL_MAKEFILES = $(filter-out config.cache,$(MAKEFILE_LIST)) configure.mk
 
@@ -59,23 +58,16 @@ version: $(filter-out version, $(ALL_MAKEFILES)) $(SRC) $(HEADERS) $(wildcard .g
 
 utils.o: CFLAGS += $(if $(HAS_POSIX_MEMALIGN),,-DNO_POSIX_MEMALIGN=1)
 
-define program_template
-$(strip $(1))_EXTRA_OBJS := $$($(strip $(1))_EXTRA_SRCS:%.c=%.o)
-LIBVMFS_EXCLUDE_OBJS += $(1).o $$($(strip $(1))_EXTRA_OBJS)
-$(1): $(1).o $$($(strip $(1))_EXTRA_OBJS) $(LIB)
-endef
-$(foreach program, $(PROGRAMS), $(eval $(call program_template,$(program))))
-
 $(LIB): $(filter-out $(LIBVMFS_EXCLUDE_OBJS) $(foreach subdir,$(SUBDIRS),$($(subdir)/OBJS)),$(OBJS))
 	ar -r $@ $^
 	ranlib $@
 
 $(OBJS): %.o: %.c $(HEADERS)
 
-$(buildPROGRAMS) $(BUILD_PROGRAMS):
+$(BUILD_PROGRAMS):
 	$(CC) -o $@ $^ $(LDFLAGS)
 
-clean: CLEAN := $(wildcard $(LIB) $(BUILD_PROGRAMS) $(PROGRAMS) $(OBJS) $(PACKAGE)-*.tar.gz $(MANPAGES) $(MANDOCBOOK))
+clean: CLEAN := $(wildcard $(LIB) $(BUILD_PROGRAMS) $(OBJS) $(PACKAGE)-*.tar.gz $(MANPAGES) $(MANDOCBOOK))
 clean:
 	$(if $(CLEAN),rm $(CLEAN))
 
@@ -105,15 +97,11 @@ endif
 $(DESTDIR)/%:
 	install -d -m 0755 $@
 
-installPROGRAMS := $(filter-out %/imager,$(buildPROGRAMS:%=$(DESTDIR)$(sbindir)/%))
-
-$(installPROGRAMS): $(DESTDIR)$(sbindir)/%: %
-
 INSTALL_PROGRAMS := $(foreach prog,$(BUILD_PROGRAMS),$(if $(filter noinst,$($(prog)_OPTIONS)),,$(prog)))
 INSTALLED_PROGRAMS := $(patsubst %,$(DESTDIR)$(sbindir)/%,$(notdir $(INSTALL_PROGRAMS)))
 $(foreach prog, $(INSTALL_PROGRAMS), $(eval $(DESTDIR)$(sbindir)/$(notdir $(prog)): $(prog)))
 
-$(installPROGRAMS) $(INSTALLED_PROGRAMS): %: $(DESTDIR)$(sbindir)
+$(INSTALLED_PROGRAMS): %: $(DESTDIR)$(sbindir)
 	install $(if $(NO_STRIP),,-s )-m 0755 $(filter-out $<,$^) $(dir $@)
 
 INSTALLED_MANPAGES := $(patsubst %.txt,$(DESTDIR)$(mandir)/man8/%.8,$(notdir $(foreach subdir,$(SUBDIRS),$($(subdir)/MANSRC))))
@@ -122,7 +110,7 @@ $(foreach man,$(foreach subdir,$(SUBDIRS),$($(subdir)/MANSRC:%.txt=%.8)), $(eval
 $(INSTALLED_MANPAGES): %: $(DESTDIR)$(mandir)/man8
 	install -m 0755 $(filter-out $<,$^) $(dir $@)
 
-install: $(installPROGRAMS) $(INSTALLED_PROGRAMS) $(INSTALLED_MANPAGES)
+install: $(INSTALLED_PROGRAMS) $(INSTALLED_MANPAGES)
 
 ifeq (,$(filter dist clean,$(MAKECMDGOALS)))
 test.img: imager/imager.c | imager/imager
@@ -140,7 +128,7 @@ endif
 	 echo "*.8"; \
 	 echo "version"; \
 	 echo "config.cache"; \
-	 $(foreach program, $(PROGRAMS) $(BUILD_PROGRAMS),echo $(program);) \
+	 $(foreach program, $(BUILD_PROGRAMS),echo $(program);) \
 	) > $@
 
 config.cache: configure.mk
