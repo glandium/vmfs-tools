@@ -1,7 +1,5 @@
-# Do dependency by hand so that we can use tricks to get the variables
-# set from the configure rules.
-ifeq (,$(filter dist clean,$(MAKECMDGOALS)))
-ifneq (,$(shell test config.cache -nt configure.mk || echo no))
+include utils.mk
+
 __VARS := $(.VARIABLES)
 
 # configure rules really start here
@@ -27,7 +25,5 @@ $(call LINK_CHECK,posix_memalign)
 
 # Generate cache file
 $(shell ($(foreach var,$(filter-out $(__VARS) __%,$(.VARIABLES)),echo $(var) := $($(var));)) > config.cache)
-else
-include config.cache
-endif
-endif
+
+configure:

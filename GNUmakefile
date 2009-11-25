@@ -1,5 +1,5 @@
+-include config.cache
 include utils.mk
-include configure.mk
 
 PACKAGE := vmfs-tools
 
@@ -33,7 +33,7 @@ mandir := $(datarootdir)/man
 
 all: $(buildPROGRAMS) $(wildcard .gitignore) test.img
 
-ALL_MAKEFILES = $(filter-out config.cache,$(MAKEFILE_LIST))
+ALL_MAKEFILES = $(filter-out config.cache,$(MAKEFILE_LIST)) configure.mk
 
 ifneq (clean,$(MAKECMDGOALS))
 version: $(ALL_MAKEFILES) $(SRC) $(HEADERS) $(wildcard .git/logs/HEAD .git/refs/tags)
@@ -127,3 +127,6 @@ endif
 	 echo "config.cache"; \
 	 $(foreach program, $(PROGRAMS),echo $(program);) \
 	) > $@
+
+config.cache: configure.mk
+	@$(MAKE) -s -f $^
