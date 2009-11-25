@@ -28,7 +28,6 @@
 #include <sys/wait.h>
 #include <libgen.h>
 #include "vmfs.h"
-#include "readcmd.h"
 
 /* Forward declarations */
 typedef struct vmfs_dir_map vmfs_dir_map_t;
