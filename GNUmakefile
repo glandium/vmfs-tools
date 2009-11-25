@@ -18,6 +18,7 @@ $(1)/SRC := $(wildcard $(1)/*.c)
 $(1)/OBJS := $$($(1)/SRC:%.c=%.o)
 $(1)/PROGRAM := $(1)/$(1)
 $(1)/$(1): $$($(1)/OBJS) libvmfs.a
+$(1)/$(1): LDFLAGS += $$($(1)/$(1)_LDFLAGS)
 
 $$(foreach obj,$$($(1)/OBJS), $$(eval $$(obj): CFLAGS += -I. $$($$(obj)_CFLAGS)))
 endef
