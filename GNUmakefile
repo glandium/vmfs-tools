@@ -1,3 +1,6 @@
+ifneq (clean,$(MAKECMDGOALS))
+-include version
+endif
 -include config.cache
 include utils.mk
 
@@ -31,11 +34,8 @@ all: $(buildPROGRAMS) $(wildcard .gitignore) test.img
 
 ALL_MAKEFILES = $(filter-out config.cache,$(MAKEFILE_LIST)) configure.mk
 
-ifneq (clean,$(MAKECMDGOALS))
-version: $(ALL_MAKEFILES) $(SRC) $(HEADERS) $(wildcard .git/logs/HEAD .git/refs/tags)
+version: $(filter-out version, $(ALL_MAKEFILES)) $(SRC) $(HEADERS) $(wildcard .git/logs/HEAD .git/refs/tags)
 	echo VERSION := $(GEN_VERSION) > $@
--include version
-endif
 
 vmfs-fuse: LDFLAGS+=$(FUSE_LDFLAGS)
 vmfs-fuse.o: CFLAGS+=$(FUSE_CFLAGS)
