@@ -6,6 +6,23 @@ include utils.mk
 
 PACKAGE := vmfs-tools
 
+all:
+
+SUBDIRS := $(subst /,,$(dir $(wildcard */manifest.mk)))
+
+define subdir_template
+__VARS := $$(.VARIABLES)
+include $(1)/manifest.mk
+$$(foreach var,$$(filter-out $$(__VARS) __%,$$(.VARIABLES)), $$(eval $(1)/$$(var) := $$($$(var))))
+$(1)/SRC := $(wildcard $(1)/*.c)
+$(1)/OBJS := $$($(1)/SRC:%.c=%.o)
+$(1)/PROGRAM := $(1)/$(1)
+$(1)/$(1): $$($(1)/OBJS) libvmfs.a
+
+$$(foreach obj,$$($(1)/OBJS), $$(eval $$(obj): CFLAGS += -I. $$($$(obj)_CFLAGS)))
+endef
+$(foreach subdir,$(SUBDIRS), $(eval $(call subdir_template,$(subdir))))
+
 CC := gcc
 OPTIMFLAGS := $(if $(filter -O%,$(CFLAGS)),,-O2)
 ENV_CFLAGS := $(CFLAGS)
@@ -13,7 +30,7 @@ ENV_LDFLAGS := $(LDFLAGS)
 CFLAGS := $(ENV_CFLAGS) $(filter-out $(ENV_CFLAGS),-Wall $(OPTIMFLAGS) -g -D_FILE_OFFSET_BITS=64 $(EXTRA_CFLAGS))
 CFLAGS += $(UUID_CFLAGS) $(if $(HAS_STRNDUP),,-DNO_STRNDUP=1)
 LDFLAGS := $(ENV_LDFLAGS) $(filter-out $(ENV_LDFLAGS),$(UUID_LDFLAGS) $(EXTRA_LDFLAGS))
-SRC := $(wildcard *.c)
+SRC := $(wildcard *.c) $(foreach subdir,$(SUBDIRS),$($(subdir)/SRC))
 HEADERS := $(wildcard *.h)
 OBJS := $(SRC:%.c=%.o)
 PROGRAMS := debugvmfs fsck.vmfs vmfs-fuse imager
@@ -23,6 +40,7 @@ ifneq (clean,$(MAKECMDGOALS))
 buildPROGRAMS := $(filter-out vmfs-fuse,$(buildPROGRAMS))
 endif
 endif
+BUILD_PROGRAMS := $(foreach subdir,$(SUBDIRS),$($(subdir)/PROGRAM))
 MANSRCS := $(wildcard $(buildPROGRAMS:%=%.txt))
 MANDOCBOOK := $(MANSRCS:%.txt=%.xml)
 MANPAGES := $(foreach man,$(MANSRCS),$(shell sed '1{s/(/./;s/)//;q;}' $(man)))
@@ -30,7 +48,7 @@ MANPAGES := $(foreach man,$(MANSRCS),$(shell sed '1{s/(/./;s/)//;q;}' $(man)))
 EXTRA_DIST := LICENSE README TODO AUTHORS test.img configure
 LIB := libvmfs.a
 
-all: $(buildPROGRAMS) $(wildcard .gitignore) test.img
+all: $(buildPROGRAMS) $(BUILD_PROGRAMS) $(wildcard .gitignore) test.img
 
 ALL_MAKEFILES = $(filter-out config.cache,$(MAKEFILE_LIST)) configure.mk
 
@@ -55,16 +73,16 @@ $(1): $(1).o $$($(strip $(1))_EXTRA_OBJS) $(LIB)
 endef
 $(foreach program, $(PROGRAMS), $(eval $(call program_template,$(program))))
 
-$(LIB): $(filter-out $(LIBVMFS_EXCLUDE_OBJS),$(OBJS))
+$(LIB): $(filter-out $(LIBVMFS_EXCLUDE_OBJS) $(foreach subdir,$(SUBDIRS),$($(subdir)/OBJS)),$(OBJS))
 	ar -r $@ $^
 	ranlib $@
 
 $(OBJS): %.o: %.c $(HEADERS)
 
-$(buildPROGRAMS):
+$(buildPROGRAMS) $(BUILD_PROGRAMS):
 	$(CC) -o $@ $^ $(LDFLAGS)
 
-clean: CLEAN := $(wildcard $(LIB) $(PROGRAMS) $(OBJS) $(PACKAGE)-*.tar.gz $(MANPAGES) $(MANDOCBOOK))
+clean: CLEAN := $(wildcard $(LIB) $(BUILD_PROGRAMS) $(PROGRAMS) $(OBJS) $(PACKAGE)-*.tar.gz $(MANPAGES) $(MANDOCBOOK))
 clean:
 	$(if $(CLEAN),rm $(CLEAN))
 
@@ -72,8 +90,8 @@ ALL_DIST := $(SRC) $(HEADERS) $(ALL_MAKEFILES) $(MANSRCS) $(EXTRA_DIST)
 DIST_DIR := $(PACKAGE)-$(VERSION:v%=%)
 dist: $(ALL_DIST)
 	@rm -rf "$(DIST_DIR)"
-	@mkdir "$(DIST_DIR)"
-	cp -p $(ALL_DIST) $(DIST_DIR)
+	@mkdir "$(DIST_DIR)" $(foreach subdir,$(SUBDIRS),"$(DIST_DIR)/$(subdir)")
+	tar -cf - $(ALL_DIST) | tar -C "$(DIST_DIR)" -xf -
 	tar -zcf "$(DIST_DIR).tar.gz" "$(DIST_DIR)"
 	@rm -rf "$(DIST_DIR)"
 
@@ -97,13 +115,18 @@ $(DESTDIR)/%:
 installPROGRAMS := $(filter-out %/imager,$(buildPROGRAMS:%=$(DESTDIR)$(sbindir)/%))
 installMANPAGES := $(MANPAGES:%=$(DESTDIR)$(mandir)/man8/%)
 
-$(installPROGRAMS): $(DESTDIR)$(sbindir)/%: % $(DESTDIR)$(sbindir)
-	install $(if $(NO_STRIP),,-s )-m 0755 $< $(dir $@)
+$(installPROGRAMS): $(DESTDIR)$(sbindir)/%: %
+
+INSTALLED_PROGRAMS := $(patsubst %,$(DESTDIR)$(sbindir)/%,$(notdir $(BUILD_PROGRAMS)))
+$(foreach prog, $(BUILD_PROGRAMS), $(eval $(DESTDIR)$(sbindir)/$(notdir $(prog)): $(prog)))
+
+$(installPROGRAMS) $(INSTALLED_PROGRAMS): %: $(DESTDIR)$(sbindir)
+	install $(if $(NO_STRIP),,-s )-m 0755 $(filter-out $<,$^) $(dir $@)
 
 $(installMANPAGES): $(DESTDIR)$(mandir)/man8/%: % $(DESTDIR)$(mandir)/man8
 	install -m 0755 $< $(dir $@)
 
-install: $(installPROGRAMS) $(installMANPAGES)
+install: $(installPROGRAMS) $(installMANPAGES) $(INSTALLED_PROGRAMS)
 
 ifeq (,$(filter dist clean,$(MAKECMDGOALS)))
 test.img: imager.c | imager
@@ -121,7 +144,7 @@ endif
 	 echo "*.8"; \
 	 echo "version"; \
 	 echo "config.cache"; \
-	 $(foreach program, $(PROGRAMS),echo $(program);) \
+	 $(foreach program, $(PROGRAMS) $(BUILD_PROGRAMS),echo $(program);) \
 	) > $@
 
 config.cache: configure.mk
