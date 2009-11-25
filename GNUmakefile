@@ -41,7 +41,6 @@ LDFLAGS := $(ENV_LDFLAGS) $(filter-out $(ENV_LDFLAGS),$(UUID_LDFLAGS) $(EXTRA_LD
 SRC := $(wildcard *.c) $(foreach subdir,$(SUBDIRS),$($(subdir)/SRC))
 HEADERS := $(wildcard *.h) $(foreach subdir,$(SUBDIRS),$($(subdir)/HEADERS))
 OBJS := $(SRC:%.c=%.o)
-PROGRAMS := imager
 buildPROGRAMS := $(PROGRAMS)
 BUILD_PROGRAMS := $(foreach subdir,$(SUBDIRS),$($(subdir)/PROGRAM))
 MANSRCS := $(foreach subdir,$(SUBDIRS),$($(subdir)/MANSRC))
@@ -126,9 +125,9 @@ $(INSTALLED_MANPAGES): %: $(DESTDIR)$(mandir)/man8
 install: $(installPROGRAMS) $(INSTALLED_PROGRAMS) $(INSTALLED_MANPAGES)
 
 ifeq (,$(filter dist clean,$(MAKECMDGOALS)))
-test.img: imager.c | imager
-	./imager -r $@ > $@.new
-	diff $@ $@.new || ./imager -v $@.new
+test.img: imager/imager.c | imager/imager
+	./imager/imager -r $@ > $@.new
+	diff $@ $@.new || ./imager/imager -v $@.new
 	mv -f $@.new $@
 endif
 

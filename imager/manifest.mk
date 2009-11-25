@@ -1,0 +1,1 @@
+imager_OPTIONS := noinst
