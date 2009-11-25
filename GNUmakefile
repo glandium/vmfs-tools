@@ -9,6 +9,11 @@ PACKAGE := vmfs-tools
 all:
 
 SUBDIRS := $(subst /,,$(dir $(wildcard */manifest.mk)))
+ifeq (,$(FUSE_LDFLAGS))
+ifneq (clean,$(MAKECMDGOALS))
+SUBDIRS := $(filter-out vmfs-fuse,$(SUBDIRS))
+endif
+endif
 
 define subdir_template
 __VARS := $$(.VARIABLES)
@@ -36,13 +41,8 @@ LDFLAGS := $(ENV_LDFLAGS) $(filter-out $(ENV_LDFLAGS),$(UUID_LDFLAGS) $(EXTRA_LD
 SRC := $(wildcard *.c) $(foreach subdir,$(SUBDIRS),$($(subdir)/SRC))
 HEADERS := $(wildcard *.h) $(foreach subdir,$(SUBDIRS),$($(subdir)/HEADERS))
 OBJS := $(SRC:%.c=%.o)
-PROGRAMS := vmfs-fuse imager
+PROGRAMS := imager
 buildPROGRAMS := $(PROGRAMS)
-ifeq (,$(FUSE_LDFLAGS))
-ifneq (clean,$(MAKECMDGOALS))
-buildPROGRAMS := $(filter-out vmfs-fuse,$(buildPROGRAMS))
-endif
-endif
 BUILD_PROGRAMS := $(foreach subdir,$(SUBDIRS),$($(subdir)/PROGRAM))
 MANSRCS := $(wildcard $(buildPROGRAMS:%=%.txt)) $(foreach subdir,$(SUBDIRS),$($(subdir)/MANSRC))
 MANDOCBOOK := $(MANSRCS:%.txt=%.xml)
@@ -57,9 +57,6 @@ ALL_MAKEFILES = $(filter-out config.cache,$(MAKEFILE_LIST)) configure.mk
 
 version: $(filter-out version, $(ALL_MAKEFILES)) $(SRC) $(HEADERS) $(wildcard .git/logs/HEAD .git/refs/tags)
 	echo VERSION := $(GEN_VERSION) > $@
-
-vmfs-fuse: LDFLAGS+=$(FUSE_LDFLAGS)
-vmfs-fuse.o: CFLAGS+=$(FUSE_CFLAGS)
 
 utils.o: CFLAGS += $(if $(HAS_POSIX_MEMALIGN),,-DNO_POSIX_MEMALIGN=1)
 

@@ -24,7 +24,7 @@ system.
 
 AUTHORS
 -------
-include::AUTHORS[]
+include::../AUTHORS[]
 
 
 SEE ALSO
