@@ -30,6 +30,6 @@ endif
 $(call LINK_CHECK,posix_memalign)
 
 # Generate cache file
-$(shell ($(foreach var,$(filter-out $(__VARS) __%,$(.VARIABLES)),echo '$(var) := $($(var))';)) > config.cache)
+$(shell ($(foreach var,$(filter-out $(__VARS) __%,$(.VARIABLES)),echo '$(var) = $($(var))';)) > config.cache)
 
 configure:
