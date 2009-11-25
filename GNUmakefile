@@ -24,7 +24,7 @@ MANSRCS := $(wildcard $(buildPROGRAMS:%=%.txt))
 MANDOCBOOK := $(MANSRCS:%.txt=%.xml)
 MANPAGES := $(foreach man,$(MANSRCS),$(shell sed '1{s/(/./;s/)//;q;}' $(man)))
 
-EXTRA_DIST := LICENSE README TODO AUTHORS test.img
+EXTRA_DIST := LICENSE README TODO AUTHORS test.img configure
 LIB := libvmfs.a
 
 all: $(buildPROGRAMS) $(wildcard .gitignore) test.img

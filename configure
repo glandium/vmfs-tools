@@ -1,0 +1,26 @@
+#!/bin/sh
+
+if type gmake > /dev/null 2>&1; then
+	MAKE=gmake
+elif type make > /dev/null 2>&1 &&
+     make -v 2>&1 | grep GNU > /dev/null; then
+	MAKE=make
+else
+	echo "Can't find GNU make" >&2
+	exit 1
+fi
+
+MAKEOPTS=
+
+for opt; do
+	case "$opt" in
+	--prefix=* | --exec-prefix=* | --sbindir=* \
+	| --datarootdir=* | --mandir=*)
+		name=`echo "$opt" | sed 's/^--\([^=]*\)=.*$/\1/' | tr - _`
+		value=`echo "$opt" | sed 's/^--[^=]*=//'`
+		MAKEOPTS="$MAKEOPTS $name='$value'"
+		;;
+	esac
+done
+
+exec $MAKE -B config.cache ${MAKEOPTS}
