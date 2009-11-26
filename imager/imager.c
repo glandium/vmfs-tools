@@ -49,7 +49,6 @@
 #include <errno.h>
 #include <inttypes.h>
 #include <string.h>
-#include "utils.h"
 
 static void die(char *fmt, ...)
 {
@@ -216,7 +215,7 @@ static void do_extract_(void (*write_blocks)(const u_char *, size_t))
          break;
       case 0x7f:
          do_read(buf, 4);
-         num = read_le32(buf, 0);
+         num = buf[0] | buf[1] << 8 | buf[2] << 16 | buf[3] << 24;
          if (num != adler32_sum())
             die("extract: checksum mismatch\n");
          break;
