@@ -29,7 +29,8 @@
  * it is useless to try to do something more efficient.
  */
 
-static int vmfs_lvm_get_extent_from_offset(const vmfs_lvm_t *lvm,off_t pos)
+static vmfs_volume_t *vmfs_lvm_get_extent_from_offset(const vmfs_lvm_t *lvm,
+                                                      off_t pos)
 {
    int extent;
    off_t segment = pos / VMFS_LVM_SEGMENT_SIZE;
@@ -37,16 +38,16 @@ static int vmfs_lvm_get_extent_from_offset(const vmfs_lvm_t *lvm,off_t pos)
    for (extent = 0; extent < lvm->loaded_extents; extent++) {
       if ((segment >= lvm->extents[extent]->vol_info.first_segment) &&
           (segment <= lvm->extents[extent]->vol_info.last_segment))
-        return(extent);
+        return(lvm->extents[extent]);
    }
 
-   return(-1);
+   return(NULL);
 }
 
 /* Get extent size */
-static inline uint64_t vmfs_lvm_extent_size(const vmfs_lvm_t *lvm,int extent)
+static inline uint64_t vmfs_lvm_extent_size(const vmfs_volume_t *extent)
 {
-   return((uint64_t)lvm->extents[extent]->vol_info.num_segments * VMFS_LVM_SEGMENT_SIZE);
+   return((uint64_t)extent->vol_info.num_segments * VMFS_LVM_SEGMENT_SIZE);
 }
 
 typedef ssize_t (*vmfs_vol_io_func)(const vmfs_volume_t *,off_t,u_char *,size_t);
@@ -55,19 +56,19 @@ typedef ssize_t (*vmfs_vol_io_func)(const vmfs_volume_t *,off_t,u_char *,size_t)
 static inline ssize_t vmfs_lvm_io(const vmfs_lvm_t *lvm,off_t pos,u_char *buf,
                                   size_t len,vmfs_vol_io_func func)
 {
-   int extent = vmfs_lvm_get_extent_from_offset(lvm,pos);
+   vmfs_volume_t *extent = vmfs_lvm_get_extent_from_offset(lvm,pos);
 
-   if (extent < 0)
+   if (!extent)
       return(-1);
 
-   pos -= (uint64_t)lvm->extents[extent]->vol_info.first_segment * VMFS_LVM_SEGMENT_SIZE;
-   if ((pos + len) > vmfs_lvm_extent_size(lvm,extent)) {
+   pos -= (uint64_t)extent->vol_info.first_segment * VMFS_LVM_SEGMENT_SIZE;
+   if ((pos + len) > vmfs_lvm_extent_size(extent)) {
       /* TODO: Handle this case */
       fprintf(stderr,"VMFS: i/o spanned over several extents is unsupported\n");
       return(-1);
    }
 
-   return(func(lvm->extents[extent],pos,buf,len));
+   return(func(extent,pos,buf,len));
 }
 
 /* Read a raw block of data on logical volume */
@@ -85,23 +86,23 @@ ssize_t vmfs_lvm_write(const vmfs_lvm_t *lvm,off_t pos,const u_char *buf,size_t 
 /* Reserve the underlying volume given a LVM position */
 int vmfs_lvm_reserve(const vmfs_lvm_t *lvm,off_t pos)
 {
-   int extent = vmfs_lvm_get_extent_from_offset(lvm,pos);
+   vmfs_volume_t *extent = vmfs_lvm_get_extent_from_offset(lvm,pos);
 
-   if (extent < 0)
+   if (!extent)
       return(-1);
 
-   return(vmfs_vol_reserve(lvm->extents[extent]));
+   return(vmfs_vol_reserve(extent));
 }
 
 /* Release the underlying volume given a LVM position */
 int vmfs_lvm_release(const vmfs_lvm_t *lvm,off_t pos)
 {
-   int extent = vmfs_lvm_get_extent_from_offset(lvm,pos);
+   vmfs_volume_t *extent = vmfs_lvm_get_extent_from_offset(lvm,pos);
 
-   if (extent < 0)
+   if (!extent)
       return(-1);
 
-   return(vmfs_vol_release(lvm->extents[extent]));
+   return(vmfs_vol_release(extent));
 }
 
 /* Show lvm information */
