@@ -24,7 +24,7 @@ $(1)/HEADERS := $(wildcard $(1)/*.h)
 $(1)/OBJS := $$($(1)/SRC:%.c=%.o)
 ifeq (,$(filter lib%,$(1)))
 $(1)/TARGET := $(1)/$(1)
-$(1)/$(1): $$($(1)/OBJS) libvmfs.a
+$(1)/$(1): $$($(1)/OBJS) libvmfs/libvmfs.a
 $(1)/MANSRC := $(wildcard $(1)/$(1).txt)
 else
 $(1)/TARGET := $(1)/$(1).a
@@ -32,7 +32,7 @@ $(1)/$(1).a: $$($(1)/OBJS)
 endif
 $$($(1)/TARGET): LDFLAGS += $$($$($(1)/TARGET)_LDFLAGS)
 
-$$(foreach obj,$$($(1)/OBJS), $$(eval $$(obj): CFLAGS += -I. $$($$(obj)_CFLAGS)))
+$$(foreach obj,$$($(1)/OBJS), $$(eval $$(obj): CFLAGS += -Ilibvmfs $$($$(obj)_CFLAGS)))
 endef
 $(foreach subdir,$(SUBDIRS), $(eval $(call subdir_template,$(subdir))))
 
@@ -53,7 +53,6 @@ MANDOCBOOK := $(MANSRCS:%.txt=%.xml)
 MANPAGES := $(foreach man,$(MANSRCS),$(man:%.txt=%.$(shell sed '1{s/^.*(//;s/)//;q;}' $(man))))
 
 EXTRA_DIST := LICENSE README TODO AUTHORS test.img configure
-LIB := libvmfs.a
 
 all: $(BUILD_PROGRAMS) $(wildcard .gitignore) test.img
 
@@ -62,10 +61,7 @@ ALL_MAKEFILES = $(filter-out config.cache,$(MAKEFILE_LIST)) configure.mk
 version: $(filter-out version, $(ALL_MAKEFILES)) $(SRC) $(HEADERS) $(wildcard .git/logs/HEAD .git/refs/tags)
 	echo VERSION := $(GEN_VERSION) > $@
 
-utils.o: CFLAGS += $(if $(HAS_POSIX_MEMALIGN),,-DNO_POSIX_MEMALIGN=1)
-
-$(LIB): $(filter-out $(LIBVMFS_EXCLUDE_OBJS) $(foreach subdir,$(SUBDIRS),$($(subdir)/OBJS)),$(OBJS))
-$(BUILD_LIBS) $(LIB):
+$(BUILD_LIBS):
 	ar -r $@ $^
 	ranlib $@
 
