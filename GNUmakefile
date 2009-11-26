@@ -16,9 +16,10 @@ endif
 endif
 
 define subdir_variables
-__VARS := $$(.VARIABLES)
+__VARS := $$(filter-out $$(__NEW_VARS),$$(.VARIABLES))
 include $(1)/manifest.mk
-$$(foreach var,$$(filter-out $$(__VARS) __%,$$(.VARIABLES)), $$(eval $(1)/$$(var) := $$($$(var))))
+__NEW_VARS := $$(filter-out $$(__VARS) __VARS,$$(.VARIABLES))
+$$(foreach var,$$(__NEW_VARS), $$(if $$($$(var)),$$(eval $(1)/$$(var) := $$($$(var)))$$(eval $$(var) := )))
 $(1)/SRC := $(wildcard $(1)/*.c)
 $(1)/HEADERS := $(wildcard $(1)/*.h)
 $(1)/OBJS := $$($(1)/SRC:%.c=%.o)
