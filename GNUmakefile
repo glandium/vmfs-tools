@@ -22,10 +22,15 @@ $$(foreach var,$$(filter-out $$(__VARS) __%,$$(.VARIABLES)), $$(eval $(1)/$$(var
 $(1)/SRC := $(wildcard $(1)/*.c)
 $(1)/HEADERS := $(wildcard $(1)/*.h)
 $(1)/OBJS := $$($(1)/SRC:%.c=%.o)
-$(1)/PROGRAM := $(1)/$(1)
+ifeq (,$(filter lib%,$(1)))
+$(1)/TARGET := $(1)/$(1)
 $(1)/$(1): $$($(1)/OBJS) libvmfs.a
-$(1)/$(1): LDFLAGS += $$($(1)/$(1)_LDFLAGS)
 $(1)/MANSRC := $(wildcard $(1)/$(1).txt)
+else
+$(1)/TARGET := $(1)/$(1).a
+$(1)/$(1).a: $$($(1)/OBJS)
+endif
+$$($(1)/TARGET): LDFLAGS += $$($$($(1)/TARGET)_LDFLAGS)
 
 $$(foreach obj,$$($(1)/OBJS), $$(eval $$(obj): CFLAGS += -I. $$($$(obj)_CFLAGS)))
 endef
@@ -41,7 +46,8 @@ LDFLAGS := $(ENV_LDFLAGS) $(filter-out $(ENV_LDFLAGS),$(UUID_LDFLAGS) $(EXTRA_LD
 SRC := $(wildcard *.c) $(foreach subdir,$(SUBDIRS),$($(subdir)/SRC))
 HEADERS := $(wildcard *.h) $(foreach subdir,$(SUBDIRS),$($(subdir)/HEADERS))
 OBJS := $(SRC:%.c=%.o)
-BUILD_PROGRAMS := $(foreach subdir,$(SUBDIRS),$($(subdir)/PROGRAM))
+BUILD_PROGRAMS := $(foreach subdir,$(filter-out lib%,$(SUBDIRS)),$($(subdir)/TARGET))
+BUILD_LIBS := $(foreach subdir,$(filter lib%,$(SUBDIRS)),$($(subdir)/TARGET))
 MANSRCS := $(foreach subdir,$(SUBDIRS),$($(subdir)/MANSRC))
 MANDOCBOOK := $(MANSRCS:%.txt=%.xml)
 MANPAGES := $(foreach man,$(MANSRCS),$(man:%.txt=%.$(shell sed '1{s/^.*(//;s/)//;q;}' $(man))))
@@ -59,6 +65,7 @@ version: $(filter-out version, $(ALL_MAKEFILES)) $(SRC) $(HEADERS) $(wildcard .g
 utils.o: CFLAGS += $(if $(HAS_POSIX_MEMALIGN),,-DNO_POSIX_MEMALIGN=1)
 
 $(LIB): $(filter-out $(LIBVMFS_EXCLUDE_OBJS) $(foreach subdir,$(SUBDIRS),$($(subdir)/OBJS)),$(OBJS))
+$(BUILD_LIBS) $(LIB):
 	ar -r $@ $^
 	ranlib $@
 
