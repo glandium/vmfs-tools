@@ -1,3 +1,3 @@
-debugvmfs_LDFLAGS := $(DLOPEN_LDFLAGS)
+LDFLAGS := $(DLOPEN_LDFLAGS)
 debugvmfs.o_CFLAGS := -DVERSION=\"$(VERSION)\"
 REQUIRES := libvmfs

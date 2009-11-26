@@ -15,6 +15,12 @@ SUBDIRS := $(filter-out vmfs-fuse,$(SUBDIRS))
 endif
 endif
 
+ENV_CFLAGS := $(CFLAGS)
+ENV_LDFLAGS := $(LDFLAGS)
+CFLAGS :=
+LDFLAGS :=
+__NEW_VARS := CFLAGS LDFLAGS
+
 define subdir_variables
 __VARS := $$(filter-out $$(__NEW_VARS),$$(.VARIABLES))
 include $(1)/manifest.mk
@@ -28,25 +34,23 @@ $(1)/TARGET := $(1)/$(1)
 $(1)/MANSRC := $(wildcard $(1)/$(1).txt)
 else
 $(1)/TARGET := $(1)/$(1).a
-$(1)/CFLAGS := $$(foreach require,$$($(1)/REQUIRES),$$($$(require)/CFLAGS))
-$(1)/LDFLAGS := $$(foreach require,$$($(1)/REQUIRES),$$($$(require)/LDFLAGS))
+$(1)/CFLAGS += $$(foreach require,$$($(1)/REQUIRES),$$($$(require)/CFLAGS))
+$(1)/LDFLAGS += $$(foreach require,$$($(1)/REQUIRES),$$($$(require)/LDFLAGS))
 endif
 $(1)/CFLAGS += -I$(1)
 endef
 
 define subdir_rules
-$$($(1)/TARGET): LDFLAGS += $($($(1)/TARGET)_LDFLAGS) $$(foreach require,$$($(1)/REQUIRES),$$($$(require)/LDFLAGS))
+$$($(1)/TARGET): LDFLAGS += $$($(1)/LDFLAGS) $$(foreach require,$$($(1)/REQUIRES),$$($$(require)/LDFLAGS))
 $$($(1)/TARGET): $$($(1)/OBJS) $$(foreach require,$$($(1)/REQUIRES),$$($$(require)/TARGET))
 
-$$(foreach obj,$$($(1)/OBJS), $$(eval $$(obj): CFLAGS += $$($$(obj)_CFLAGS) $$(foreach require,$$($(1)/REQUIRES),$$($$(require)/CFLAGS))))
+$$(foreach obj,$$($(1)/OBJS), $$(eval $$(obj): CFLAGS += $$($(1)/CFLAGS) $$($$(obj)_CFLAGS) $$(foreach require,$$($(1)/REQUIRES),$$($$(require)/CFLAGS))))
 endef
 $(foreach subdir,$(SUBDIRS), $(eval $(call subdir_variables,$(subdir))))
 $(foreach subdir,$(SUBDIRS), $(eval $(call subdir_rules,$(subdir))))
 
 CC := gcc
 OPTIMFLAGS := $(if $(filter -O%,$(CFLAGS)),,-O2)
-ENV_CFLAGS := $(CFLAGS)
-ENV_LDFLAGS := $(LDFLAGS)
 CFLAGS := $(ENV_CFLAGS) $(filter-out $(ENV_CFLAGS),-Wall $(OPTIMFLAGS) -g -D_FILE_OFFSET_BITS=64 $(EXTRA_CFLAGS))
 CFLAGS += $(if $(HAS_STRNDUP),,-DNO_STRNDUP=1)
 LDFLAGS := $(ENV_LDFLAGS) $(filter-out $(ENV_LDFLAGS),$(EXTRA_LDFLAGS))
