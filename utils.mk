@@ -29,20 +29,19 @@ UC = $(strip $(eval __uc := $1) \
 
 #Usage: $(call PKG_CONFIG_CHK,name,cflags,ldflags)
 # cflags and ldflags used in case pkg-config fails.
-# Sets NAME_LDFLAGS and NAME_CFLAGS
+# Sets name/LDFLAGS and name/CFLAGS
 define _PKG_CONFIG_CHK
 $$(call PATH_LOOKUP,pkg-config)
 $$(call checking,$(1))
-__name := $(call UC,$(1))
-$$(__name)_LDFLAGS := $$(if $$(PKG_CONFIG),$$(strip $$(shell $$(PKG_CONFIG) --libs $(1) 2> /dev/null || echo __)),__)
-$$(__name)_CFLAGS := $$(if $$(PKG_CONFIG),$$(strip $$(shell $$(PKG_CONFIG) --cflags $(1) 2> /dev/null || echo __)),__)
-ifeq (__,$$($$(__name)_LDFLAGS))
-$$(__name)_LDFLAGS := $(3)
+$(1)/LDFLAGS := $$(if $$(PKG_CONFIG),$$(strip $$(shell $$(PKG_CONFIG) --libs $(1) 2> /dev/null || echo __)),__)
+$(1)/CFLAGS := $$(if $$(PKG_CONFIG),$$(strip $$(shell $$(PKG_CONFIG) --cflags $(1) 2> /dev/null || echo __)),__)
+ifeq (__,$$($(1)/LDFLAGS))
+$(1)/LDFLAGS := $(3)
 endif
-ifeq (__,$$($$(__name)_CFLAGS))
-$$(__name)_CFLAGS := $(2)
+ifeq (__,$$($(1)/CFLAGS))
+$(1)/CFLAGS := $(2)
 endif
-$$(call result,$$($$(__name)_CFLAGS)$$($$(__name)_LDFLAGS))
+$$(call result,$$($(1)/CFLAGS)$$($(2)/LDFLAGS))
 endef
 PKG_CONFIG_CHK = $(eval $(call _PKG_CONFIG_CHK,$(1),$(2),$(3)))
 

@@ -1,3 +1,3 @@
-vmfs-fuse_LDFLAGS := $(FUSE_LDFLAGS)
-vmfs-fuse.o_CFLAGS := $(FUSE_CFLAGS)
+vmfs-fuse_LDFLAGS := $(fuse/LDFLAGS)
+vmfs-fuse.o_CFLAGS := $(fuse/CFLAGS)
 vmfs-fuse_REQUIRES := libvmfs

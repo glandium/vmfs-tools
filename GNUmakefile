@@ -9,7 +9,7 @@ PACKAGE := vmfs-tools
 all:
 
 SUBDIRS := $(subst /,,$(dir $(wildcard */manifest.mk)))
-ifeq (,$(FUSE_LDFLAGS))
+ifeq (,$(fuse/LDFLAGS))
 ifneq (clean,$(MAKECMDGOALS))
 SUBDIRS := $(filter-out vmfs-fuse,$(SUBDIRS))
 endif
@@ -45,8 +45,8 @@ OPTIMFLAGS := $(if $(filter -O%,$(CFLAGS)),,-O2)
 ENV_CFLAGS := $(CFLAGS)
 ENV_LDFLAGS := $(LDFLAGS)
 CFLAGS := $(ENV_CFLAGS) $(filter-out $(ENV_CFLAGS),-Wall $(OPTIMFLAGS) -g -D_FILE_OFFSET_BITS=64 $(EXTRA_CFLAGS))
-CFLAGS += $(UUID_CFLAGS) $(if $(HAS_STRNDUP),,-DNO_STRNDUP=1)
-LDFLAGS := $(ENV_LDFLAGS) $(filter-out $(ENV_LDFLAGS),$(UUID_LDFLAGS) $(EXTRA_LDFLAGS))
+CFLAGS += $(uuid/CFLAGS) $(if $(HAS_STRNDUP),,-DNO_STRNDUP=1)
+LDFLAGS := $(ENV_LDFLAGS) $(filter-out $(ENV_LDFLAGS),$(uuid/LDFLAGS) $(EXTRA_LDFLAGS))
 SRC := $(wildcard *.c) $(foreach subdir,$(SUBDIRS),$($(subdir)/SRC))
 HEADERS := $(wildcard *.h) $(foreach subdir,$(SUBDIRS),$($(subdir)/HEADERS))
 OBJS := $(SRC:%.c=%.o)
