@@ -56,7 +56,7 @@ endef
 $(foreach subdir,$(strip $(call order_by_requires,$(SUBDIRS))),$(eval $(call subdir_rules,$(subdir))))
 
 CC := gcc
-OPTIMFLAGS := $(if $(filter -O%,$(CFLAGS)),,-O2)
+OPTIMFLAGS := $(if $(filter -O%,$(ENV_CFLAGS)),,-O2)
 CFLAGS := $(ENV_CFLAGS) $(filter-out $(ENV_CFLAGS),-Wall $(OPTIMFLAGS) -g -D_FILE_OFFSET_BITS=64 $(EXTRA_CFLAGS))
 CFLAGS += $(if $(HAS_STRNDUP),,-DNO_STRNDUP=1)
 LDFLAGS := $(ENV_LDFLAGS) $(filter-out $(ENV_LDFLAGS),$(EXTRA_LDFLAGS))
