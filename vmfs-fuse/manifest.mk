@@ -1,1 +1,1 @@
-vmfs-fuse_REQUIRES := libvmfs fuse
+REQUIRES := libvmfs fuse
