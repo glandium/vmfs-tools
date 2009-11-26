@@ -27,12 +27,14 @@ $(1)/TARGET := $(1)/$(1)
 $(1)/MANSRC := $(wildcard $(1)/$(1).txt)
 else
 $(1)/TARGET := $(1)/$(1).a
+$(1)/CFLAGS := $$(foreach require,$$($$($(1)/TARGET)_REQUIRES),$$($$(require)/CFLAGS))
+$(1)/LDFLAGS := $$(foreach require,$$($$($(1)/TARGET)_REQUIRES),$$($$(require)/LDFLAGS))
 endif
-$(1)/CFLAGS := -I$(1)
+$(1)/CFLAGS += -I$(1)
 endef
 
 define subdir_rules
-$$($(1)/TARGET): LDFLAGS += $($($(1)/TARGET)_LDFLAGS)
+$$($(1)/TARGET): LDFLAGS += $($($(1)/TARGET)_LDFLAGS) $$(foreach require,$$($$($(1)/TARGET)_REQUIRES),$$($$(require)/LDFLAGS))
 $$($(1)/TARGET): $$($(1)/OBJS) $$(foreach require,$$($$($(1)/TARGET)_REQUIRES),$$($$(require)/TARGET))
 
 $$(foreach obj,$$($(1)/OBJS), $$(eval $$(obj): CFLAGS += $$($$(obj)_CFLAGS) $$(foreach require,$$($$($(1)/TARGET)_REQUIRES),$$($$(require)/CFLAGS))))
