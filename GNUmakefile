@@ -34,20 +34,26 @@ $(1)/TARGET := $(1)/$(1)
 $(1)/MANSRC := $(wildcard $(1)/$(1).txt)
 else
 $(1)/TARGET := $(1)/$(1).a
-$(1)/CFLAGS += $$(foreach require,$$($(1)/REQUIRES),$$($$(require)/CFLAGS))
-$(1)/LDFLAGS += $$(foreach require,$$($(1)/REQUIRES),$$($$(require)/LDFLAGS))
 endif
 $(1)/CFLAGS += -I$(1)
 endef
+$(foreach subdir,$(SUBDIRS), $(eval $(call subdir_variables,$(subdir))))
+
+define order_by_requires
+$(eval __result := $(foreach subdir,$(1),$(if $(filter $(1),$($(subdir)/REQUIRES)),,$(subdir))))
+$(eval __tmp := $(filter-out $(__result),$(1)))
+$(if $(filter-out $(__tmp),$(1)),,$(error Dependency loop between subdirectories))
+$(if $(__tmp),$(call order_by_requires,$(__tmp),$(2) $(__result)),$(2) $(__result))
+endef
 
 define subdir_rules
-$$($(1)/TARGET): LDFLAGS += $$($(1)/LDFLAGS) $$(foreach require,$$($(1)/REQUIRES),$$($$(require)/LDFLAGS))
+$(1)/CFLAGS += $$(foreach require,$$($(1)/REQUIRES),$$($$(require)/CFLAGS))
+$(1)/LDFLAGS += $$(foreach require,$$($(1)/REQUIRES),$$($$(require)/LDFLAGS))
+$$($(1)/TARGET): LDFLAGS += $$($(1)/LDFLAGS)
 $$($(1)/TARGET): $$($(1)/OBJS) $$(foreach require,$$($(1)/REQUIRES),$$($$(require)/TARGET))
-
-$$(foreach obj,$$($(1)/OBJS), $$(eval $$(obj): CFLAGS += $$($(1)/CFLAGS) $$($$(obj)_CFLAGS) $$(foreach require,$$($(1)/REQUIRES),$$($$(require)/CFLAGS))))
+$$(foreach obj,$$($(1)/OBJS), $$(eval $$(obj): CFLAGS += $$($(1)/CFLAGS) $$($$(obj)_CFLAGS)))
 endef
-$(foreach subdir,$(SUBDIRS), $(eval $(call subdir_variables,$(subdir))))
-$(foreach subdir,$(SUBDIRS), $(eval $(call subdir_rules,$(subdir))))
+$(foreach subdir,$(strip $(call order_by_requires,$(SUBDIRS))),$(eval $(call subdir_rules,$(subdir))))
 
 CC := gcc
 OPTIMFLAGS := $(if $(filter -O%,$(CFLAGS)),,-O2)
