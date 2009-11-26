@@ -15,7 +15,7 @@ SUBDIRS := $(filter-out vmfs-fuse,$(SUBDIRS))
 endif
 endif
 
-define subdir_template
+define subdir_variables
 __VARS := $$(.VARIABLES)
 include $(1)/manifest.mk
 $$(foreach var,$$(filter-out $$(__VARS) __%,$$(.VARIABLES)), $$(eval $(1)/$$(var) := $$($$(var))))
@@ -24,17 +24,21 @@ $(1)/HEADERS := $(wildcard $(1)/*.h)
 $(1)/OBJS := $$($(1)/SRC:%.c=%.o)
 ifeq (,$(filter lib%,$(1)))
 $(1)/TARGET := $(1)/$(1)
-$(1)/$(1): $$($(1)/OBJS) libvmfs/libvmfs.a
 $(1)/MANSRC := $(wildcard $(1)/$(1).txt)
 else
 $(1)/TARGET := $(1)/$(1).a
-$(1)/$(1).a: $$($(1)/OBJS)
 endif
-$$($(1)/TARGET): LDFLAGS += $$($$($(1)/TARGET)_LDFLAGS)
-
-$$(foreach obj,$$($(1)/OBJS), $$(eval $$(obj): CFLAGS += -Ilibvmfs $$($$(obj)_CFLAGS)))
+$(1)/CFLAGS := -I$(1)
 endef
-$(foreach subdir,$(SUBDIRS), $(eval $(call subdir_template,$(subdir))))
+
+define subdir_rules
+$$($(1)/TARGET): LDFLAGS += $($($(1)/TARGET)_LDFLAGS)
+$$($(1)/TARGET): $$($(1)/OBJS) $$(foreach require,$$($$($(1)/TARGET)_REQUIRES),$$($$(require)/TARGET))
+
+$$(foreach obj,$$($(1)/OBJS), $$(eval $$(obj): CFLAGS += $$($$(obj)_CFLAGS) $$(foreach require,$$($$($(1)/TARGET)_REQUIRES),$$($$(require)/CFLAGS))))
+endef
+$(foreach subdir,$(SUBDIRS), $(eval $(call subdir_variables,$(subdir))))
+$(foreach subdir,$(SUBDIRS), $(eval $(call subdir_rules,$(subdir))))
 
 CC := gcc
 OPTIMFLAGS := $(if $(filter -O%,$(CFLAGS)),,-O2)
