@@ -1,4 +1,4 @@
-ifneq (clean,$(MAKECMDGOALS))
+ifeq (,$(filter clean distclean,$(MAKECMDGOALS)))
 -include version
 -include config.cache
 endif
@@ -10,7 +10,7 @@ all:
 
 SUBDIRS := $(subst /,,$(dir $(wildcard */manifest.mk)))
 ifeq (,$(fuse/LDFLAGS))
-ifneq (clean,$(MAKECMDGOALS))
+ifeq (,$(filter clean distclean,$(MAKECMDGOALS)))
 SUBDIRS := $(filter-out vmfs-fuse,$(SUBDIRS))
 endif
 endif
@@ -87,9 +87,10 @@ $(OBJS): %.o: %.c $(HEADERS)
 $(BUILD_PROGRAMS):
 	$(CC) -o $@ $^ $(LDFLAGS)
 
-clean: CLEAN := $(wildcard $(BUILD_LIBS) $(BUILD_PROGRAMS) $(OBJS) $(PACKAGE)-*.tar.gz $(MANPAGES) $(MANDOCBOOK))
-clean:
-	$(if $(CLEAN),rm $(CLEAN))
+clean distclean: CLEAN := $(wildcard $(BUILD_LIBS) $(BUILD_PROGRAMS) $(OBJS) $(PACKAGE)-*.tar.gz $(MANPAGES) $(MANDOCBOOK))
+distclean: CLEAN += $(wildcard config.cache)
+clean distclean:
+	$(if $(strip $(CLEAN)),rm $(strip $(CLEAN)))
 
 ALL_DIST := $(SRC) $(HEADERS) $(ALL_MAKEFILES) $(MANSRCS) $(EXTRA_DIST)
 DIST_DIR := $(PACKAGE)-$(VERSION:v%=%)
@@ -132,14 +133,14 @@ $(INSTALLED_MANPAGES): %: $(DESTDIR)$(mandir)/man8
 
 install: $(INSTALLED_PROGRAMS) $(INSTALLED_MANPAGES)
 
-ifeq (,$(filter dist clean,$(MAKECMDGOALS)))
+ifeq (,$(filter dist clean distclean,$(MAKECMDGOALS)))
 test.img: imager/imager.c | imager/imager
 	./imager/imager -r $@ > $@.new
 	diff $@ $@.new || ./imager/imager -v $@.new
 	mv -f $@.new $@
 endif
 
-.PHONY: all clean dist install doc
+.PHONY: all clean distclean dist install doc
 
 .gitignore: $(ALL_MAKEFILES)
 	(echo "*.tar.gz"; \
