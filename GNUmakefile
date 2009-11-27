@@ -1,7 +1,7 @@
 ifneq (clean,$(MAKECMDGOALS))
 -include version
-endif
 -include config.cache
+endif
 include utils.mk
 
 PACKAGE := vmfs-tools
