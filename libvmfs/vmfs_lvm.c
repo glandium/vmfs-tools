@@ -147,6 +147,8 @@ vmfs_lvm_t *vmfs_lvm_create(vmfs_flags_t flags)
 /* Add an extent to the LVM */
 int vmfs_lvm_add_extent(vmfs_lvm_t *lvm, vmfs_volume_t *vol)
 {
+   uint32_t i;
+
    if (!vol)
       return(-1);
 
@@ -166,7 +168,17 @@ int vmfs_lvm_add_extent(vmfs_lvm_t *lvm, vmfs_volume_t *vol)
       return(-1);
    }
 
-   lvm->extents[lvm->loaded_extents++] = vol;
+   for (i = 0;
+        (i < lvm->loaded_extents) &&
+           (vol->vol_info.first_segment > lvm->extents[i]->vol_info.first_segment);
+        i++);
+
+   if (lvm->loaded_extents)
+      memmove(&lvm->extents[i + 1], &lvm->extents[i],
+              (lvm->loaded_extents - i) * sizeof(vmfs_volume_t *));
+   lvm->extents[i] = vol;
+   lvm->loaded_extents++;
+
    return(0);
 }
 
