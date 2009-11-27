@@ -259,8 +259,12 @@ static vmfs_device_t *vmfs_device_open(char **paths, vmfs_flags_t flags)
 /* Open a filesystem */
 vmfs_fs_t *vmfs_fs_open(char **paths, vmfs_flags_t flags)
 {
-   vmfs_device_t *dev = vmfs_device_open(paths, flags);
+   vmfs_device_t *dev;
    vmfs_fs_t *fs;
+
+   vmfs_host_init();
+
+   dev = vmfs_device_open(paths, flags);
 
    if (!dev || !(fs = calloc(1,sizeof(*fs))))
       return NULL;

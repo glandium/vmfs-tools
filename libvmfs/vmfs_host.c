@@ -30,8 +30,12 @@ static struct timeval host_tv_start;
 /* Initialize host info (UUID,uptime,...) */
 int vmfs_host_init(void)
 {
-   uuid_generate_time(host_uuid);
-   gettimeofday(&host_tv_start,NULL);
+   static bool initialized = 0;
+   if (! initialized) {
+      uuid_generate_time(host_uuid);
+      gettimeofday(&host_tv_start,NULL);
+      initialized = 1;
+   }
    return(0);
 }
 

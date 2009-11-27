@@ -954,8 +954,6 @@ int main(int argc,char *argv[])
       return(0);
    }
 
-   vmfs_host_init();
-
    flags.packed = 0;
 
 #ifdef VMFS_WRITE

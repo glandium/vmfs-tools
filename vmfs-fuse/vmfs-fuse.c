@@ -480,8 +480,6 @@ int main(int argc, char *argv[])
    vmfs_flags_t flags;
    int err = -1;
 
-   vmfs_host_init();
-
    flags.packed = 0;
 
 #ifdef VMFS_WRITE
