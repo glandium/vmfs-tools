@@ -22,8 +22,6 @@
 #include <stdlib.h>
 #include "vmfs.h"
 
-#define VMFS_LVM_SEGMENT_SIZE (256 * 1024 * 1024)
-
 /* 
  * Until we uncover the details of the segment descriptors format,
  * it is useless to try to do something more efficient.

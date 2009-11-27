@@ -20,6 +20,8 @@
 
 #define VMFS_LVM_MAX_EXTENTS 32
 
+#define VMFS_LVM_SEGMENT_SIZE (256 * 1024 * 1024)
+
 struct vmfs_lvminfo {
    uuid_t uuid;
    uint32_t num_extents;
