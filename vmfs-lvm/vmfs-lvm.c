@@ -19,8 +19,103 @@
 #include <stdlib.h>
 #include "vmfs.h"
 
+/* Until a better API is defined */
+int vmfs_bmh_write(const vmfs_bitmap_header_t *bmh,u_char *buf);
+
 static int cmd_remove(vmfs_fs_t *fs,int argc,char *argv[])
 {
+   /* Dangerous */
+   vmfs_lvm_t *lvm = (vmfs_lvm_t *)fs->dev;
+   vmfs_volume_t *extent;
+   DECL_ALIGNED_BUFFER(buf,512);
+   vmfs_bitmap_entry_t entry;
+   uint32_t i, blocks_per_segment, items_per_area,
+            items_in_last_entry, old_area_count;
+
+   fprintf(stderr, "Extents removal is experimental ! Use at your own risk !\n");
+   if (lvm->lvm_info.num_extents == 1) {
+      fprintf(stderr, "Can't remove an extent when there is only one\n");
+      return(1);
+   }
+
+   /* Get last extent */
+   extent = lvm->extents[lvm->loaded_extents - 1];
+
+   /* Check whether data blocks are used on the last extents */
+   blocks_per_segment = VMFS_LVM_SEGMENT_SIZE / vmfs_fs_get_blocksize(fs);
+   for (i = extent->vol_info.first_segment * blocks_per_segment;
+        i < extent->vol_info.last_segment * blocks_per_segment;
+        i++)
+      if (vmfs_block_get_status(fs, VMFS_BLK_FB_BUILD(i))) {
+         fprintf(stderr, "There is data on the last extent ; can't remove it\n");
+         return(1);
+      }
+
+   /* At filesystem level, only the FBB needs to be downsized */
+   fs->fbb->bmh.total_items -= extent->vol_info.num_segments * blocks_per_segment;
+   items_per_area = fs->fbb->bmh.items_per_bitmap_entry *
+                    fs->fbb->bmh.bmp_entries_per_area;
+   old_area_count = fs->fbb->bmh.area_count;
+   fs->fbb->bmh.area_count = (fs->fbb->bmh.total_items + items_per_area - 1) /
+                             items_per_area;
+
+   memset(buf, 0, buf_len);
+   vmfs_bmh_write(&fs->fbb->bmh, buf);
+   /* TODO: Error handling */
+   vmfs_file_pwrite(fs->fbb->f, buf, buf_len, 0);
+
+   /* Adjust new last entry */
+   if ((items_in_last_entry =
+        fs->fbb->bmh.total_items % fs->fbb->bmh.items_per_bitmap_entry)) {
+      vmfs_bitmap_get_entry(fs->fbb, 0, fs->fbb->bmh.total_items, &entry);
+      entry.free -= entry.total - items_in_last_entry;
+      entry.total = items_in_last_entry;
+      if (entry.ffree > entry.total)
+         entry.ffree = 0;
+      /* Adjust bitmap in last entry */
+      if (items_in_last_entry % 8)
+         entry.bitmap[items_in_last_entry / 8] &=
+            0xff << (8 - (items_in_last_entry % 8));
+      memset(&entry.bitmap[(items_in_last_entry + 7) / 8], 0,
+         (fs->fbb->bmh.items_per_bitmap_entry - items_in_last_entry - 7) / 8);
+      vmfs_bme_update(fs, &entry);
+   }
+   /* Truncate the fbb file depending on the new area count */
+   if (old_area_count != fs->fbb->bmh.area_count)
+      vmfs_file_truncate(fs->fbb->f, fs->fbb->bmh.hdr_size +
+                            fs->fbb->bmh.area_count * fs->fbb->bmh.area_size);
+   /* Adjust entries after the new last one */
+   for (i = fs->fbb->bmh.total_items + (items_in_last_entry ?
+           (fs->fbb->bmh.items_per_bitmap_entry - items_in_last_entry) : 0);
+        i < fs->fbb->bmh.area_count * items_per_area;
+        i += fs->fbb->bmh.items_per_bitmap_entry) {
+      uint64_t pos;
+      vmfs_bitmap_get_entry(fs->fbb, 0, i, &entry);
+      pos = entry.mdh.pos;
+      memset(&entry, 0, sizeof(entry));
+      vmfs_device_write(fs->dev, pos, (u_char *)&entry, sizeof(entry));
+   }
+
+   /* At LVM level, all extents need to have the LVM information updated */
+   for (i = 0; i < lvm->loaded_extents - 1; i++) {
+      lvm->extents[i]->vol_info.blocks -= extent->vol_info.num_segments + 1;
+      lvm->extents[i]->vol_info.num_extents--;
+      lvm->extents[i]->vol_info.lvm_size =
+         (lvm->extents[i]->vol_info.blocks -
+            lvm->extents[i]->vol_info.num_extents) * VMFS_LVM_SEGMENT_SIZE;
+
+      /* Until there is an API for that, do it by hand */
+      m_pread(lvm->extents[i]->fd,buf,buf_len,
+              lvm->extents[i]->vmfs_base + VMFS_LVMINFO_OFFSET);
+      write_le32(buf, VMFS_LVMINFO_OFS_SIZE - VMFS_LVMINFO_OFFSET,
+         lvm->extents[i]->vol_info.lvm_size);
+      write_le32(buf, VMFS_LVMINFO_OFS_BLKS - VMFS_LVMINFO_OFFSET,
+         lvm->extents[i]->vol_info.blocks);
+      write_le32(buf, VMFS_LVMINFO_OFS_NUM_EXTENTS - VMFS_LVMINFO_OFFSET,
+         lvm->extents[i]->vol_info.num_extents);
+      m_pwrite(lvm->extents[i]->fd,buf,buf_len,
+               lvm->extents[i]->vmfs_base + VMFS_LVMINFO_OFFSET);
+   }
    return(0);
 }
 
