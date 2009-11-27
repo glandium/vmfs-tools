@@ -87,7 +87,7 @@ $(OBJS): %.o: %.c $(HEADERS)
 $(BUILD_PROGRAMS):
 	$(CC) -o $@ $^ $(LDFLAGS)
 
-clean: CLEAN := $(wildcard $(LIB) $(BUILD_PROGRAMS) $(OBJS) $(PACKAGE)-*.tar.gz $(MANPAGES) $(MANDOCBOOK))
+clean: CLEAN := $(wildcard $(BUILD_LIBS) $(BUILD_PROGRAMS) $(OBJS) $(PACKAGE)-*.tar.gz $(MANPAGES) $(MANDOCBOOK))
 clean:
 	$(if $(CLEAN),rm $(CLEAN))
 
