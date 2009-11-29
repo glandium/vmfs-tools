@@ -105,6 +105,10 @@ Outputs raw content for the bitmap item corresponding to the given block_id.
 *show_bitmap_entry* 'block_id'::
 Outputs content of the bitmap entry containing the specified block_id.
 
+*show*::
+Display value(s) of the given variable. See the *VARIABLES* section for more
+details.
+
 *shell*::
 Starts an interactive session. All of the above commands can be executed from
 within the interactive session.
@@ -133,6 +137,41 @@ Examples:
 ** cat /.fdc.sf | hexdump -C
 ** cat /.fdc.sf | hexdump -C > /tmp/fdc.hex
 ** cat /.fdc.sf | hexdump -C | less
+
+
+VARIABLES
+---------
+
+Variables in debugvmfs represent structures on the filesystem. The currently
+supported top-level variables are the following:
+
+- *fbb*
+
+- *fdc*
+
+- *pbc*
+
+- *sbc*
+
+The *fbb*, *fdc*, *pbc* and *sbc* variables are bitmaps. Running them through
+the *show* command will display all the bitmaps header fields. Each of these
+fields can also be displayed individually:
+
+- 'bitmap'.*items_per_bitmap_entry*
+
+- 'bitmap'.*bmp_entries_per_area*
+
+- 'bitmap'.*hdr_size*
+
+- 'bitmap'.*data_size*
+
+- 'bitmap'.*area_size*
+
+- 'bitmap'.*area_count*
+
+- 'bitmap'.*total_items*
+
+e.g. to display the data size of the fdc bitmap, type *show fdc.data_size*.
 
 
 AUTHORS
