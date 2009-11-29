@@ -168,24 +168,6 @@ static int vmfs_open_all_meta_files(vmfs_fs_t *fs)
    return(0);
 }
 
-/* Dump volume bitmaps */
-int vmfs_fs_dump_bitmaps(const vmfs_fs_t *fs)
-{
-   printf("FBB bitmap:\n");
-   vmfs_bmh_show(&fs->fbb->bmh);
-
-   printf("\nFDC bitmap:\n");
-   vmfs_bmh_show(&fs->fdc->bmh);
-
-   printf("\nPBC bitmap:\n");
-   vmfs_bmh_show(&fs->pbc->bmh);
-
-   printf("\nSBC bitmap:\n");
-   vmfs_bmh_show(&fs->sbc->bmh);
-
-   return(0);
-}
-
 /* Read FDC base information */
 static int vmfs_read_fdc_base(vmfs_fs_t *fs)
 {
@@ -216,18 +198,9 @@ static int vmfs_read_fdc_base(vmfs_fs_t *fs)
 
    fs->fdc = vmfs_bitmap_open_from_inode(&inode);
 
-   if (fs->debug_level > 0) {
-      printf("FDC bitmap:\n");
-      vmfs_bmh_show(&fs->fdc->bmh);
-   }
-
    /* Read the meta files */
    if (vmfs_open_all_meta_files(fs) == -1)
       return(-1);
-
-   /* Dump bitmap info */
-   if (fs->debug_level > 0)
-      vmfs_fs_dump_bitmaps(fs);
 
    return(0);
 }

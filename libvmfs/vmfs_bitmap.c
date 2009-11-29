@@ -54,22 +54,6 @@ int vmfs_bmh_write(const vmfs_bitmap_header_t *bmh,u_char *buf)
    return(0);
 }
 
-/* Show bitmap header information */
-void vmfs_bmh_show(const vmfs_bitmap_header_t *bmh)
-{
-   printf("  - Items per bitmap entry: %d (0x%x)\n",
-          bmh->items_per_bitmap_entry,bmh->items_per_bitmap_entry);
-
-   printf("  - Bitmap entries per area: %d (0x%x)\n",
-          bmh->bmp_entries_per_area,bmh->bmp_entries_per_area);
-
-   printf("  - Header size: %d (0x%x)\n",bmh->hdr_size,bmh->hdr_size);
-   printf("  - Data size: %d (0x%x)\n",bmh->data_size,bmh->data_size);
-   printf("  - Area size: %d (0x%x)\n",bmh->area_size,bmh->area_size);
-   printf("  - Area count: %d (0x%x)\n",bmh->area_count,bmh->area_count);
-   printf("  - Total items: %d (0x%x)\n",bmh->total_items,bmh->total_items);
-}
-
 /* Read a bitmap entry */
 int vmfs_bme_read(vmfs_bitmap_entry_t *bme,const u_char *buf,int copy_bitmap)
 {
