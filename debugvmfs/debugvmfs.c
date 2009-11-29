@@ -387,13 +387,6 @@ static int cmd_show_volume(vmfs_dir_t *base_dir,int argc,char *argv[])
    return(0);
 }
 
-/* Show volume bitmaps */
-static int cmd_show_vol_bitmaps(vmfs_dir_t *base_dir,int argc,char *argv[])
-{
-   const vmfs_fs_t *fs = vmfs_dir_get_fs(base_dir);
-   return(vmfs_fs_dump_bitmaps(fs));
-}
-
 /* Check volume bitmaps */
 static int cmd_check_vol_bitmaps(vmfs_dir_t *base_dir,int argc,char *argv[])
 {
@@ -791,7 +784,6 @@ struct cmd cmd_array[] = {
    { "check_file_blocks", "Check file blocks", cmd_check_file_blocks },
    { "show_fs", "Show file system info", cmd_show_fs },
    { "show_volume", "Show volume general info", cmd_show_volume },
-   { "show_vol_bitmaps", "Show volume bitmaps", cmd_show_vol_bitmaps },
    { "check_vol_bitmaps", "Check volume bitmaps", cmd_check_vol_bitmaps },
    { "show_bitmaps_usage", "Show bitmaps usage statistics", 
      cmd_show_bitmaps_usage },

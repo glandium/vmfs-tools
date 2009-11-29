@@ -59,9 +59,6 @@ Outputs information about the file system.
 *show_volume*::
 Outputs information about the physical and logical volumes.
 
-*show_vol_bitmaps*::
-Outputs information about the volume bitmaps.
-
 *check_vol_bitmaps*::
 Checks volume bitmaps consistency.
 
