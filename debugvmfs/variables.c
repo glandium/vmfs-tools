@@ -18,33 +18,65 @@
 #include <string.h>
 #include "vmfs.h"
 
+enum var_format {
+   NONE,
+   UINT,
+};
+
 struct var_struct {
    const char *member_name;
    const char *description;
    unsigned short offset;
+   unsigned short length;
+   enum var_format format;
 };
 
-#define MEMBER(type, name, desc) { # name, desc, offsetof(type, name) }
+#define MEMBER(type, name, desc, format) \
+   { # name, desc, offsetof(type, name), \
+     sizeof(((type *)0)->name), format }
 
 struct var_struct vmfs_bitmap[] = {
    MEMBER(vmfs_bitmap_header_t, items_per_bitmap_entry,
-          "Item per bitmap entry"),
+          "Item per bitmap entry", UINT),
    MEMBER(vmfs_bitmap_header_t, bmp_entries_per_area,
-          "Bitmap entries per area"),
-   MEMBER(vmfs_bitmap_header_t, hdr_size, "Header size"),
-   MEMBER(vmfs_bitmap_header_t, data_size, "Data size"),
-   MEMBER(vmfs_bitmap_header_t, area_size, "Area size"),
-   MEMBER(vmfs_bitmap_header_t, area_count, "Area count"),
-   MEMBER(vmfs_bitmap_header_t, total_items, "Total items"),
+          "Bitmap entries per area", UINT),
+   MEMBER(vmfs_bitmap_header_t, hdr_size, "Header size", UINT),
+   MEMBER(vmfs_bitmap_header_t, data_size, "Data size", UINT),
+   MEMBER(vmfs_bitmap_header_t, area_size, "Area size", UINT),
+   MEMBER(vmfs_bitmap_header_t, area_count, "Area count", UINT),
+   MEMBER(vmfs_bitmap_header_t, total_items, "Total items", UINT),
    { NULL, }
 };
+
+static char *var_value(char *buf, char *struct_buf, struct var_struct *member)
+{
+   switch(member->format) {
+   case UINT:
+      switch (member->length) {
+      case 4:
+         sprintf(buf, "%" PRIu32, *((uint32_t *)&struct_buf[member->offset]));
+         return buf;
+      case 8:
+         sprintf(buf, "%" PRIu64, *((uint64_t *)&struct_buf[member->offset]));
+         return buf;
+      default:
+         goto unknown;
+      }
+   default:
+      goto unknown;
+   }
+unknown:
+   strcpy(buf, "Don't know how to display");
+   return buf;
+}
 
 int vmfs_show_variable(const vmfs_fs_t *fs, const char *name)
 {
    char split_name[256];
+   char buf[256];
    char *current, *next;
    struct var_struct *member = NULL;
-   char *buf = NULL;
+   char *struct_buf = NULL;
 
    strncpy(split_name, name, 255);
    split_name[255] = 0;
@@ -58,26 +90,26 @@ int vmfs_show_variable(const vmfs_fs_t *fs, const char *name)
          return(1);
       if (current == split_name) {
          if (!strcmp(current, "fbb"))
-            buf = (char *)&fs->fbb->bmh;
+            struct_buf = (char *)&fs->fbb->bmh;
          else if (!strcmp(current, "fdc"))
-            buf = (char *)&fs->fdc->bmh;
+            struct_buf = (char *)&fs->fdc->bmh;
          else if (!strcmp(current, "pbc"))
-            buf = (char *)&fs->pbc->bmh;
+            struct_buf = (char *)&fs->pbc->bmh;
          else if (!strcmp(current, "sbc"))
-            buf = (char *)&fs->sbc->bmh;
+            struct_buf = (char *)&fs->sbc->bmh;
          else
             return(1);
          member = vmfs_bitmap;
          if (!next)
             for(; member->member_name; member++)
-               printf("%s: %d\n", member->description,
-                                  *((uint32_t *)&buf[member->offset]));
+               printf("%s: %s\n", member->description,
+                                  var_value(buf, struct_buf, member));
       } else {
          while(member->member_name && strcmp(member->member_name, current))
             member++;
          if (member->member_name)
-            printf("%s: %d\n", member->description,
-                               *((uint32_t *)&buf[member->offset]));
+            printf("%s: %s\n", member->description,
+                               var_value(buf, struct_buf, member));
       }
    }
    return(0);
