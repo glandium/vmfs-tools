@@ -21,6 +21,7 @@
 enum var_format {
    NONE,
    UINT,
+   SIZE, /* Human readable size */
    STRING,
    UUID,
    DATE,
@@ -44,9 +45,9 @@ struct var_struct vmfs_bitmap[] = {
           "Item per bitmap entry", UINT),
    MEMBER(vmfs_bitmap_header_t, bmp_entries_per_area,
           "Bitmap entries per area", UINT),
-   MEMBER(vmfs_bitmap_header_t, hdr_size, "Header size", UINT),
-   MEMBER(vmfs_bitmap_header_t, data_size, "Data size", UINT),
-   MEMBER(vmfs_bitmap_header_t, area_size, "Area size", UINT),
+   MEMBER(vmfs_bitmap_header_t, hdr_size, "Header size", SIZE),
+   MEMBER(vmfs_bitmap_header_t, data_size, "Data size", SIZE),
+   MEMBER(vmfs_bitmap_header_t, area_size, "Area size", SIZE),
    MEMBER(vmfs_bitmap_header_t, area_count, "Area count", UINT),
    MEMBER(vmfs_bitmap_header_t, total_items, "Total items", UINT),
    { NULL, }
@@ -59,16 +60,16 @@ struct var_struct vmfs_fs[] = {
    MEMBER(vmfs_fsinfo_t, mode, "Mode", FS_MODE),
    MEMBER(vmfs_fsinfo_t, uuid, "UUID", UUID),
    MEMBER(vmfs_fsinfo_t, ctime, "Creation time", DATE),
-   MEMBER(vmfs_fsinfo_t, block_size, "Block size", UINT),
-   MEMBER(vmfs_fsinfo_t, subblock_size, "Subblock size", UINT),
-   MEMBER(vmfs_fsinfo_t, fdc_header_size, "FDC Header size", UINT),
+   MEMBER(vmfs_fsinfo_t, block_size, "Block size", SIZE),
+   MEMBER(vmfs_fsinfo_t, subblock_size, "Subblock size", SIZE),
+   MEMBER(vmfs_fsinfo_t, fdc_header_size, "FDC Header size", SIZE),
    MEMBER(vmfs_fsinfo_t, fdc_bitmap_count, "FDC Bitmap count", UINT),
    { NULL, }
 };
 
 struct var_struct vmfs_lvm[] = {
    MEMBER(vmfs_lvminfo_t, uuid, "UUID", UUID),
-   MEMBER(vmfs_lvminfo_t, size, "Size", UINT),
+   MEMBER(vmfs_lvminfo_t, size, "Size", SIZE),
    MEMBER(vmfs_lvminfo_t, blocks, "Blocks", UINT),
    MEMBER(vmfs_lvminfo_t, num_extents, "Num. Extents", UINT),
    { NULL, }
@@ -92,6 +93,27 @@ static char *vmfs_fs_mode_to_str(uint32_t mode)
    return NULL;
 }
 
+static const char * const units[] = {
+   "",
+   " KiB",
+   " MiB",
+   " GiB",
+   " TiB",
+};
+
+static char *human_readable_size(char *buf, uint64_t size)
+{
+   int scale = 0;
+   for (scale = 0; (size >> scale) >= 1024; scale += 10);
+
+   if (size & ((1 << scale) - 1))
+      sprintf(buf, "%.2f%s", (float) size / (1 << scale), units[scale / 10]);
+   else
+      sprintf(buf, "%"PRIu64"%s", size >> scale, units[scale / 10]);
+
+   return buf;
+}
+
 static char *var_value(char *buf, char *struct_buf, struct var_struct *member)
 {
    switch(member->format) {
@@ -103,6 +125,17 @@ static char *var_value(char *buf, char *struct_buf, struct var_struct *member)
       case 8:
          sprintf(buf, "%" PRIu64, *((uint64_t *)&struct_buf[member->offset]));
          return buf;
+      default:
+         goto unknown;
+      }
+   case SIZE:
+      switch (member->length) {
+      case 4:
+         return human_readable_size(buf,
+                                  *((uint32_t *)&struct_buf[member->offset]));
+      case 8:
+         return human_readable_size(buf,
+                                  *((uint64_t *)&struct_buf[member->offset]));
       default:
          goto unknown;
       }
