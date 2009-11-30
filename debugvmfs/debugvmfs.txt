@@ -53,9 +53,6 @@ Get file block corresponding to position in the specified file.
 *check_file_blocks* 'file'::
 Check that all blocks used by a file are correctly allocated.
 
-*show_fs*::
-Outputs information about the file system.
-
 *show_volume*::
 Outputs information about the physical and logical volumes.
 
