@@ -70,6 +70,18 @@ unknown:
    return buf;
 }
 
+static int longest_member_desc(struct var_struct *member)
+{
+   struct var_struct *m;
+   int len = 0, curlen;
+   for (m = member; m->member_name; m++) {
+      curlen = strlen(m->description);
+      if (curlen > len)
+         len = curlen;
+   }
+   return len;
+}
+
 int vmfs_show_variable(const vmfs_fs_t *fs, const char *name)
 {
    char split_name[256];
@@ -100,10 +112,13 @@ int vmfs_show_variable(const vmfs_fs_t *fs, const char *name)
          else
             return(1);
          member = vmfs_bitmap;
-         if (!next)
-            for(; member->member_name; member++)
-               printf("%s: %s\n", member->description,
-                                  var_value(buf, struct_buf, member));
+         if (!next) {
+            char format[16];
+            sprintf(format, "%%%ds: %%s\n", longest_member_desc(member));
+            for (; member->member_name; member++)
+               printf(format, member->description,
+                              var_value(buf, struct_buf, member));
+         }
       } else {
          while(member->member_name && strcmp(member->member_name, current))
             member++;
