@@ -21,6 +21,10 @@
 enum var_format {
    NONE,
    UINT,
+   STRING,
+   UUID,
+   DATE,
+   FS_MODE,
 };
 
 struct var_struct {
@@ -48,6 +52,38 @@ struct var_struct vmfs_bitmap[] = {
    { NULL, }
 };
 
+struct var_struct vmfs_fs[] = {
+   MEMBER(vmfs_fsinfo_t, vol_version, "Volume Version", UINT),
+   MEMBER(vmfs_fsinfo_t, version, "Version", UINT),
+   MEMBER(vmfs_fsinfo_t, label, "Label", STRING),
+   MEMBER(vmfs_fsinfo_t, mode, "Mode", FS_MODE),
+   MEMBER(vmfs_fsinfo_t, uuid, "UUID", UUID),
+   MEMBER(vmfs_fsinfo_t, ctime, "Creation time", DATE),
+   MEMBER(vmfs_fsinfo_t, block_size, "Block size", UINT),
+   MEMBER(vmfs_fsinfo_t, subblock_size, "Subblock size", UINT),
+   MEMBER(vmfs_fsinfo_t, fdc_header_size, "FDC Header size", UINT),
+   MEMBER(vmfs_fsinfo_t, fdc_bitmap_count, "FDC Bitmap count", UINT),
+   { NULL, }
+};
+
+/* Get string corresponding to specified mode */
+static char *vmfs_fs_mode_to_str(uint32_t mode)
+{
+   /* only two lower bits seem to be significant */
+   switch(mode & 0x03) {
+      case 0x00:
+         return "private";
+      case 0x01:
+      case 0x03:
+         return "shared";
+      case 0x02:
+         return "public";
+   }
+
+   /* should not happen */
+   return NULL;
+}
+
 static char *var_value(char *buf, char *struct_buf, struct var_struct *member)
 {
    switch(member->format) {
@@ -62,6 +98,18 @@ static char *var_value(char *buf, char *struct_buf, struct var_struct *member)
       default:
          goto unknown;
       }
+   case STRING:
+      strcpy(buf, *((char **)&struct_buf[member->offset]));
+      return buf;
+   case UUID:
+      return m_uuid_to_str((u_char *)&struct_buf[member->offset],buf);
+   case DATE:
+      return m_ctime((time_t *)(uint32_t *)&struct_buf[member->offset],
+                     buf, 256);
+   case FS_MODE:
+      sprintf(buf, "%s",
+              vmfs_fs_mode_to_str(*((uint32_t *)&struct_buf[member->offset])));
+      return buf;
    default:
       goto unknown;
    }
@@ -101,17 +149,23 @@ int vmfs_show_variable(const vmfs_fs_t *fs, const char *name)
       if (*current == 0)
          return(1);
       if (current == split_name) {
-         if (!strcmp(current, "fbb"))
+         if (!strcmp(current, "fbb")) {
             struct_buf = (char *)&fs->fbb->bmh;
-         else if (!strcmp(current, "fdc"))
+            member = vmfs_bitmap;
+         } else if (!strcmp(current, "fdc")) {
             struct_buf = (char *)&fs->fdc->bmh;
-         else if (!strcmp(current, "pbc"))
+            member = vmfs_bitmap;
+         } else if (!strcmp(current, "pbc")) {
             struct_buf = (char *)&fs->pbc->bmh;
-         else if (!strcmp(current, "sbc"))
+            member = vmfs_bitmap;
+         } else if (!strcmp(current, "sbc")) {
             struct_buf = (char *)&fs->sbc->bmh;
-         else
+            member = vmfs_bitmap;
+         } else if (!strcmp(current, "fs")) {
+            struct_buf = (char *)&fs->fs_info;
+            member = vmfs_fs;
+         } else
             return(1);
-         member = vmfs_bitmap;
          if (!next) {
             char format[16];
             sprintf(format, "%%%ds: %%s\n", longest_member_desc(member));

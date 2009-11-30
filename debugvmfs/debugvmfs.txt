@@ -150,6 +150,8 @@ supported top-level variables are the following:
 
 - *sbc*
 
+- *fs*
+
 The *fbb*, *fdc*, *pbc* and *sbc* variables are bitmaps. Running them through
 the *show* command will display all the bitmaps header fields. Each of these
 fields can also be displayed individually:
@@ -169,6 +171,29 @@ fields can also be displayed individually:
 - 'bitmap'.*total_items*
 
 e.g. to display the data size of the fdc bitmap, type *show fdc.data_size*.
+
+The *fs* variable contains low-level information about the filesystem. The
+available fields are:
+
+- *fs*.*vol_version*
+
+- *fs*.*version*
+
+- *fs*.*label*
+
+- *fs*.*mode*
+
+- *fs*.*uuid*
+
+- *fs*.*ctime*
+
+- *fs*.*block_size*
+
+- *fs*.*subblock_size*
+
+- *fs*.*fdc_header_size*
+
+- *fs*.*fdc_bitmap_count*
 
 
 AUTHORS
