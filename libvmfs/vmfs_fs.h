@@ -129,9 +129,6 @@ ssize_t vmfs_fs_read(const vmfs_fs_t *fs,uint32_t blk,off_t offset,
 ssize_t vmfs_fs_write(const vmfs_fs_t *fs,uint32_t blk,off_t offset,
                       const u_char *buf,size_t len);
 
-/* Dump volume bitmaps */
-int vmfs_fs_dump_bitmaps(const vmfs_fs_t *vol);
-
 /* Create a FS structure */
 vmfs_fs_t *vmfs_fs_create(vmfs_lvm_t *lvm);
 

@@ -76,9 +76,6 @@ struct vmfs_bitmap {
 typedef void (*vmfs_bitmap_foreach_cbk_t)(vmfs_bitmap_t *b,uint32_t addr,
                                           void *opt_arg);
 
-/* Show bitmap information */
-void vmfs_bmh_show(const vmfs_bitmap_header_t *bmh);
-
 /* Read a bitmap entry */
 int vmfs_bme_read(vmfs_bitmap_entry_t *bme,const u_char *buf,int copy_bitmap);
 
