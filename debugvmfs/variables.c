@@ -66,6 +66,14 @@ struct var_struct vmfs_fs[] = {
    { NULL, }
 };
 
+struct var_struct vmfs_lvm[] = {
+   MEMBER(vmfs_lvminfo_t, uuid, "UUID", UUID),
+   MEMBER(vmfs_lvminfo_t, size, "Size", UINT),
+   MEMBER(vmfs_lvminfo_t, blocks, "Blocks", UINT),
+   MEMBER(vmfs_lvminfo_t, num_extents, "Num. Extents", UINT),
+   { NULL, }
+};
+
 /* Get string corresponding to specified mode */
 static char *vmfs_fs_mode_to_str(uint32_t mode)
 {
@@ -164,6 +172,9 @@ int vmfs_show_variable(const vmfs_fs_t *fs, const char *name)
          } else if (!strcmp(current, "fs")) {
             struct_buf = (char *)&fs->fs_info;
             member = vmfs_fs;
+         } else if (!strcmp(current, "lvm")) {
+            struct_buf = (char *)&fs->lvm->lvm_info;
+            member = vmfs_lvm;
          } else
             return(1);
          if (!next) {
