@@ -75,8 +75,13 @@ all: $(BUILD_PROGRAMS) $(wildcard .gitignore) test.img
 
 ALL_MAKEFILES = $(filter-out config.cache,$(MAKEFILE_LIST)) configure.mk
 
+version: VERSION := $(GEN_VERSION)
 version: $(filter-out version, $(ALL_MAKEFILES)) $(SRC) $(HEADERS) $(wildcard .git/logs/HEAD .git/refs/tags)
-	echo VERSION := $(GEN_VERSION) > $@
+	echo "#if 1" > $@
+	echo "#define VERSION \"$(VERSION)\"" >> $@
+	echo "#else" >> $@
+	echo VERSION := $(VERSION) >> $@
+	echo "#endif" >> $@
 
 $(BUILD_LIBS):
 	ar -r $@ $^

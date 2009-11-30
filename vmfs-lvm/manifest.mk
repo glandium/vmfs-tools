@@ -1,3 +1,3 @@
 LDFLAGS := $(DLOPEN_LDFLAGS)
-vmfs-lvm.o_CFLAGS := -DVERSION=\"$(VERSION)\"
+vmfs-lvm.o_CFLAGS := -include version
 REQUIRES := libvmfs libreadcmd

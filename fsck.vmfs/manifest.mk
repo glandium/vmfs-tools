@@ -1,2 +1,2 @@
-vmfs_fsck.o_CFLAGS := -DVERSION=\"$(VERSION)\"
+vmfs_fsck.o_CFLAGS := -include version
 REQUIRES := libvmfs
