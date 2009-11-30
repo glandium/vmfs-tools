@@ -87,50 +87,6 @@ static int vmfs_fsinfo_read(vmfs_fs_t *fs)
    return(0);
 }
 
-/* Get string corresponding to specified mode */
-static char *vmfs_fs_mode_to_str(uint32_t mode)
-{
-   /* only two lower bits seem to be significant */
-   switch(mode & 0x03) {
-      case 0x00:
-         return "private";
-      case 0x01:
-      case 0x03:
-         return "shared";
-      case 0x02:
-         return "public";        
-   }
-   
-   /* should not happen */
-   return NULL;
-}
-
-/* Show FS information */
-void vmfs_fs_show(const vmfs_fs_t *fs)
-{  
-   char uuid_str[M_UUID_BUFLEN];
-   char tbuf[64];
-
-   printf("VMFS FS Information:\n");
-
-   printf("  - Volume Version   : %d\n",fs->fs_info.vol_version);
-   printf("  - Version          : %d\n",fs->fs_info.version);
-   printf("  - Label            : %s\n",fs->fs_info.label);
-   printf("  - Mode             : %s\n",vmfs_fs_mode_to_str(fs->fs_info.mode));
-   printf("  - UUID             : %s\n",
-          m_uuid_to_str(fs->fs_info.uuid,uuid_str));
-   printf("  - Creation time    : %s\n",
-          m_ctime(&fs->fs_info.ctime,tbuf,sizeof(tbuf)));
-   printf("  - Block size       : %"PRIu64" (0x%"PRIx64")\n",
-          fs->fs_info.block_size,fs->fs_info.block_size);
-   printf("  - Subblock size    : %u (0x%x)\n",
-          fs->fs_info.subblock_size,fs->fs_info.subblock_size);
-   printf("  - FDC Header size  : 0x%x\n", fs->fs_info.fdc_header_size);
-   printf("  - FDC Bitmap count : 0x%x\n", fs->fs_info.fdc_bitmap_count);
-
-   printf("\n");
-}
-
 /* Open all the VMFS meta files */
 static int vmfs_open_all_meta_files(vmfs_fs_t *fs)
 {
@@ -242,9 +198,6 @@ int vmfs_fs_open(vmfs_fs_t *fs)
       fprintf(stderr,"VMFS: FS doesn't belong to the underlying LVM\n");
       return(-1);
    }
-
-   if (fs->debug_level > 0)
-      vmfs_fs_show(fs);
 
    /* Read FDC base information */
    if (vmfs_read_fdc_base(fs) == -1) {
