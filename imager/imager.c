@@ -344,20 +344,20 @@ static void do_import(void)
 
 #ifdef __linux__
    if (blocksize) {
-      int i, max = (int) ((filesize + blocksize - 1) / blocksize);
+      uint32_t i, max = filesize / blocksize;
       for (i = 0; i < max; i++) {
-         int block = i;
+         uint32_t block = i;
          if (ioctl(0, FIBMAP, &block) < 0)
             goto fallback;
          if (block) {
             lseek(0, (off_t) i * blocksize, SEEK_SET);
             len = do_reads(buf, BLK_SIZE, blocksize / BLK_SIZE);
             import_blocks(buf, len / BLK_SIZE);
-         } else if (i < max - 1)
+         } else
             import_blocks(zero_blk, blocksize / BLK_SIZE);
-         else
-            import_blocks(zero_blk, (filesize % blocksize) / BLK_SIZE);
       }
+      if (filesize % blocksize)
+         import_blocks(zero_blk, (filesize % blocksize) / BLK_SIZE);
       import_blocks(NULL, 0);
       return;
    }
