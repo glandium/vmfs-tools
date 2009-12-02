@@ -160,7 +160,7 @@ static uint32_t do_read_number(void)
 static void skip_zero_blocks(size_t blks)
 {
    off_t pos;
-   if ((pos = lseek(1, BLK_SIZE * blks, SEEK_CUR)) == -1)
+   if ((pos = lseek(1, BLK_SIZE * (off_t) blks, SEEK_CUR)) == -1)
       die("Seek error\n");
    ftruncate(1, pos);
 }
