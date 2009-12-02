@@ -107,9 +107,9 @@ static int cmd_remove(vmfs_fs_t *fs,int argc,char *argv[])
       /* Until there is an API for that, do it by hand */
       m_pread(lvm->extents[i]->fd,buf,buf_len,
               lvm->extents[i]->vmfs_base + VMFS_LVMINFO_OFFSET);
-      write_le32(buf, VMFS_LVMINFO_OFS_SIZE - VMFS_LVMINFO_OFFSET,
+      write_le64(buf, VMFS_LVMINFO_OFS_SIZE - VMFS_LVMINFO_OFFSET,
          lvm->extents[i]->vol_info.lvm_size);
-      write_le32(buf, VMFS_LVMINFO_OFS_BLKS - VMFS_LVMINFO_OFFSET,
+      write_le64(buf, VMFS_LVMINFO_OFS_BLKS - VMFS_LVMINFO_OFFSET,
          lvm->extents[i]->vol_info.blocks);
       write_le32(buf, VMFS_LVMINFO_OFS_NUM_EXTENTS - VMFS_LVMINFO_OFFSET,
          lvm->extents[i]->vol_info.num_extents);
