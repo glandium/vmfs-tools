@@ -18,12 +18,18 @@
 #include <string.h>
 #include "vmfs.h"
 
-struct var_struct {
+struct var_member {
    const char *member_name;
    const char *description;
    unsigned short offset;
    unsigned short length;
    char *(*get_value)(char *buf, void *value, short len);
+};
+
+struct var_struct {
+   int (*dump)(struct var_struct *struct_def, void *value,
+               const char *name);
+   struct var_member members[];
 };
 
 static char *get_value_none(char *buf, void *value, short len);
@@ -38,7 +44,8 @@ static char *get_value_fs_mode(char *buf, void *value, short len);
    { # name, desc, offsetof(type, name), \
      sizeof(((type *)0)->name), get_value_ ## format }
 
-struct var_struct vmfs_bitmap[] = {
+struct var_struct vmfs_bitmap = {
+   NULL, {
    MEMBER(vmfs_bitmap_header_t, items_per_bitmap_entry,
           "Item per bitmap entry", uint),
    MEMBER(vmfs_bitmap_header_t, bmp_entries_per_area,
@@ -49,9 +56,10 @@ struct var_struct vmfs_bitmap[] = {
    MEMBER(vmfs_bitmap_header_t, area_count, "Area count", uint),
    MEMBER(vmfs_bitmap_header_t, total_items, "Total items", uint),
    { NULL, }
-};
+}};
 
-struct var_struct vmfs_fs[] = {
+struct var_struct vmfs_fs = {
+   NULL, {
    MEMBER(vmfs_fsinfo_t, vol_version, "Volume Version", uint),
    MEMBER(vmfs_fsinfo_t, version, "Version", uint),
    MEMBER(vmfs_fsinfo_t, label, "Label", string),
@@ -63,15 +71,16 @@ struct var_struct vmfs_fs[] = {
    MEMBER(vmfs_fsinfo_t, fdc_header_size, "FDC Header size", size),
    MEMBER(vmfs_fsinfo_t, fdc_bitmap_count, "FDC Bitmap count", uint),
    { NULL, }
-};
+}};
 
-struct var_struct vmfs_lvm[] = {
+struct var_struct vmfs_lvm = {
+   NULL, {
    MEMBER(vmfs_lvminfo_t, uuid, "UUID", uuid),
    MEMBER(vmfs_lvminfo_t, size, "Size", size),
    MEMBER(vmfs_lvminfo_t, blocks, "Blocks", uint),
    MEMBER(vmfs_lvminfo_t, num_extents, "Num. Extents", uint),
    { NULL, }
-};
+}};
 
 /* Get string corresponding to specified mode */
 static char *vmfs_fs_mode_to_str(uint32_t mode)
@@ -112,7 +121,7 @@ static char *human_readable_size(char *buf, uint64_t size)
    return buf;
 }
 
-static char *var_value(char *buf, char *struct_buf, struct var_struct *member)
+static char *var_value(char *buf, char *struct_buf, struct var_member *member)
 {
    return member->get_value(buf, &struct_buf[member->offset], member->length);
 }
@@ -169,11 +178,11 @@ static char *get_value_none(char *buf, void *value, short len)
    return buf;
 }
 
-static int longest_member_desc(struct var_struct *member)
+static int longest_member_desc(struct var_struct *struct_def)
 {
-   struct var_struct *m;
+   struct var_member *m;
    int len = 0, curlen;
-   for (m = member; m->member_name; m++) {
+   for (m = struct_def->members; m->member_name; m++) {
       curlen = strlen(m->description);
       if (curlen > len)
          len = curlen;
@@ -186,7 +195,8 @@ int vmfs_show_variable(const vmfs_fs_t *fs, const char *name)
    char split_name[256];
    char buf[256];
    char *current, *next;
-   struct var_struct *member = NULL;
+   struct var_struct *struct_def = NULL;
+   struct var_member *member;
    char *struct_buf = NULL;
 
    strncpy(split_name, name, 255);
@@ -202,32 +212,34 @@ int vmfs_show_variable(const vmfs_fs_t *fs, const char *name)
       if (current == split_name) {
          if (!strcmp(current, "fbb")) {
             struct_buf = (char *)&fs->fbb->bmh;
-            member = vmfs_bitmap;
+            struct_def = &vmfs_bitmap;
          } else if (!strcmp(current, "fdc")) {
             struct_buf = (char *)&fs->fdc->bmh;
-            member = vmfs_bitmap;
+            struct_def = &vmfs_bitmap;
          } else if (!strcmp(current, "pbc")) {
             struct_buf = (char *)&fs->pbc->bmh;
-            member = vmfs_bitmap;
+            struct_def = &vmfs_bitmap;
          } else if (!strcmp(current, "sbc")) {
             struct_buf = (char *)&fs->sbc->bmh;
-            member = vmfs_bitmap;
+            struct_def = &vmfs_bitmap;
          } else if (!strcmp(current, "fs")) {
             struct_buf = (char *)&fs->fs_info;
-            member = vmfs_fs;
+            struct_def = &vmfs_fs;
          } else if (!strcmp(current, "lvm")) {
             struct_buf = (char *)&fs->lvm->lvm_info;
-            member = vmfs_lvm;
+            struct_def = &vmfs_lvm;
          } else
             return(1);
          if (!next) {
+            struct var_member *member;
             char format[16];
-            sprintf(format, "%%%ds: %%s\n", longest_member_desc(member));
-            for (; member->member_name; member++)
+            sprintf(format, "%%%ds: %%s\n", longest_member_desc(struct_def));
+            for (member = struct_def->members; member->member_name; member++)
                printf(format, member->description,
                               var_value(buf, struct_buf, member));
          }
       } else {
+         member = struct_def->members;
          while(member->member_name && strcmp(member->member_name, current))
             member++;
          if (member->member_name)
