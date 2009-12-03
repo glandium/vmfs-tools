@@ -19,13 +19,13 @@
 #include "vmfs.h"
 
 enum var_format {
-   NONE,
-   UINT,
-   SIZE, /* Human readable size */
-   STRING,
-   UUID,
-   DATE,
-   FS_MODE,
+   none,
+   uint,
+   size, /* Human readable size */
+   string,
+   uuid,
+   date,
+   fs_mode,
 };
 
 struct var_struct {
@@ -42,36 +42,36 @@ struct var_struct {
 
 struct var_struct vmfs_bitmap[] = {
    MEMBER(vmfs_bitmap_header_t, items_per_bitmap_entry,
-          "Item per bitmap entry", UINT),
+          "Item per bitmap entry", uint),
    MEMBER(vmfs_bitmap_header_t, bmp_entries_per_area,
-          "Bitmap entries per area", UINT),
-   MEMBER(vmfs_bitmap_header_t, hdr_size, "Header size", SIZE),
-   MEMBER(vmfs_bitmap_header_t, data_size, "Data size", SIZE),
-   MEMBER(vmfs_bitmap_header_t, area_size, "Area size", SIZE),
-   MEMBER(vmfs_bitmap_header_t, area_count, "Area count", UINT),
-   MEMBER(vmfs_bitmap_header_t, total_items, "Total items", UINT),
+          "Bitmap entries per area", uint),
+   MEMBER(vmfs_bitmap_header_t, hdr_size, "Header size", size),
+   MEMBER(vmfs_bitmap_header_t, data_size, "Data size", size),
+   MEMBER(vmfs_bitmap_header_t, area_size, "Area size", size),
+   MEMBER(vmfs_bitmap_header_t, area_count, "Area count", uint),
+   MEMBER(vmfs_bitmap_header_t, total_items, "Total items", uint),
    { NULL, }
 };
 
 struct var_struct vmfs_fs[] = {
-   MEMBER(vmfs_fsinfo_t, vol_version, "Volume Version", UINT),
-   MEMBER(vmfs_fsinfo_t, version, "Version", UINT),
-   MEMBER(vmfs_fsinfo_t, label, "Label", STRING),
-   MEMBER(vmfs_fsinfo_t, mode, "Mode", FS_MODE),
-   MEMBER(vmfs_fsinfo_t, uuid, "UUID", UUID),
-   MEMBER(vmfs_fsinfo_t, ctime, "Creation time", DATE),
-   MEMBER(vmfs_fsinfo_t, block_size, "Block size", SIZE),
-   MEMBER(vmfs_fsinfo_t, subblock_size, "Subblock size", SIZE),
-   MEMBER(vmfs_fsinfo_t, fdc_header_size, "FDC Header size", SIZE),
-   MEMBER(vmfs_fsinfo_t, fdc_bitmap_count, "FDC Bitmap count", UINT),
+   MEMBER(vmfs_fsinfo_t, vol_version, "Volume Version", uint),
+   MEMBER(vmfs_fsinfo_t, version, "Version", uint),
+   MEMBER(vmfs_fsinfo_t, label, "Label", string),
+   MEMBER(vmfs_fsinfo_t, mode, "Mode", fs_mode),
+   MEMBER(vmfs_fsinfo_t, uuid, "UUID", uuid),
+   MEMBER(vmfs_fsinfo_t, ctime, "Creation time", date),
+   MEMBER(vmfs_fsinfo_t, block_size, "Block size", size),
+   MEMBER(vmfs_fsinfo_t, subblock_size, "Subblock size", size),
+   MEMBER(vmfs_fsinfo_t, fdc_header_size, "FDC Header size", size),
+   MEMBER(vmfs_fsinfo_t, fdc_bitmap_count, "FDC Bitmap count", uint),
    { NULL, }
 };
 
 struct var_struct vmfs_lvm[] = {
-   MEMBER(vmfs_lvminfo_t, uuid, "UUID", UUID),
-   MEMBER(vmfs_lvminfo_t, size, "Size", SIZE),
-   MEMBER(vmfs_lvminfo_t, blocks, "Blocks", UINT),
-   MEMBER(vmfs_lvminfo_t, num_extents, "Num. Extents", UINT),
+   MEMBER(vmfs_lvminfo_t, uuid, "UUID", uuid),
+   MEMBER(vmfs_lvminfo_t, size, "Size", size),
+   MEMBER(vmfs_lvminfo_t, blocks, "Blocks", uint),
+   MEMBER(vmfs_lvminfo_t, num_extents, "Num. Extents", uint),
    { NULL, }
 };
 
@@ -117,7 +117,7 @@ static char *human_readable_size(char *buf, uint64_t size)
 static char *var_value(char *buf, char *struct_buf, struct var_struct *member)
 {
    switch(member->format) {
-   case UINT:
+   case uint:
       switch (member->length) {
       case 4:
          sprintf(buf, "%" PRIu32, *((uint32_t *)&struct_buf[member->offset]));
@@ -128,7 +128,7 @@ static char *var_value(char *buf, char *struct_buf, struct var_struct *member)
       default:
          goto unknown;
       }
-   case SIZE:
+   case size:
       switch (member->length) {
       case 4:
          return human_readable_size(buf,
@@ -139,15 +139,15 @@ static char *var_value(char *buf, char *struct_buf, struct var_struct *member)
       default:
          goto unknown;
       }
-   case STRING:
+   case string:
       strcpy(buf, *((char **)&struct_buf[member->offset]));
       return buf;
-   case UUID:
+   case uuid:
       return m_uuid_to_str((u_char *)&struct_buf[member->offset],buf);
-   case DATE:
+   case date:
       return m_ctime((time_t *)(uint32_t *)&struct_buf[member->offset],
                      buf, 256);
-   case FS_MODE:
+   case fs_mode:
       sprintf(buf, "%s",
               vmfs_fs_mode_to_str(*((uint32_t *)&struct_buf[member->offset])));
       return buf;
