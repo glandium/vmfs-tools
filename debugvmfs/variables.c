@@ -23,23 +23,16 @@ struct var_struct {
    const char *description;
    unsigned short offset;
    unsigned short length;
-   char *(*get_value)(char *buf, char *struct_buf, struct var_struct *member);
+   char *(*get_value)(char *buf, void *value, short len);
 };
 
-static char *get_value_none(char *buf, char *struct_buf,
-                            struct var_struct *member);
-static char *get_value_uint(char *buf, char *struct_buf,
-                            struct var_struct *member);
-static char *get_value_size(char *buf, char *struct_buf,
-                            struct var_struct *member);
-static char *get_value_string(char *buf, char *struct_buf,
-                              struct var_struct *member);
-static char *get_value_uuid(char *buf, char *struct_buf,
-                            struct var_struct *member);
-static char *get_value_date(char *buf, char *struct_buf,
-                            struct var_struct *member);
-static char *get_value_fs_mode(char *buf, char *struct_buf,
-                               struct var_struct *member);
+static char *get_value_none(char *buf, void *value, short len);
+static char *get_value_uint(char *buf, void *value, short len);
+static char *get_value_size(char *buf, void *value, short len);
+static char *get_value_string(char *buf, void *value, short len);
+static char *get_value_uuid(char *buf, void *value, short len);
+static char *get_value_date(char *buf, void *value, short len);
+static char *get_value_fs_mode(char *buf, void *value, short len);
 
 #define MEMBER(type, name, desc, format) \
    { # name, desc, offsetof(type, name), \
@@ -121,66 +114,56 @@ static char *human_readable_size(char *buf, uint64_t size)
 
 static char *var_value(char *buf, char *struct_buf, struct var_struct *member)
 {
-   return member->get_value(buf, struct_buf, member);
+   return member->get_value(buf, &struct_buf[member->offset], member->length);
 }
 
-static char *get_value_uint(char *buf, char *struct_buf,
-                            struct var_struct *member)
+static char *get_value_uint(char *buf, void *value, short len)
 {
-   switch (member->length) {
+   switch (len) {
    case 4:
-      sprintf(buf, "%" PRIu32, *((uint32_t *)&struct_buf[member->offset]));
+      sprintf(buf, "%" PRIu32, *((uint32_t *)value));
       return buf;
    case 8:
-      sprintf(buf, "%" PRIu64, *((uint64_t *)&struct_buf[member->offset]));
+      sprintf(buf, "%" PRIu64, *((uint64_t *)value));
       return buf;
    }
-   return get_value_none(buf, struct_buf, member);
+   return get_value_none(buf, value, len);
 }
 
-static char *get_value_size(char *buf, char *struct_buf,
-                            struct var_struct *member)
+static char *get_value_size(char *buf, void *value, short len)
 {
-   switch (member->length) {
+   switch (len) {
    case 4:
-      return human_readable_size(buf,
-                                 *((uint32_t *)&struct_buf[member->offset]));
+      return human_readable_size(buf, *((uint32_t *)value));
    case 8:
-      return human_readable_size(buf,
-                                 *((uint64_t *)&struct_buf[member->offset]));
+      return human_readable_size(buf, *((uint64_t *)value));
    }
-   return get_value_none(buf, struct_buf, member);
+   return get_value_none(buf, value, len);
 }
 
-static char *get_value_string(char *buf, char *struct_buf,
-                              struct var_struct *member)
+static char *get_value_string(char *buf, void *value, short len)
 {
-   strcpy(buf, *((char **)&struct_buf[member->offset]));
+   strcpy(buf, *((char **)value));
    return buf;
 }
 
-static char *get_value_uuid(char *buf, char *struct_buf,
-                            struct var_struct *member)
+static char *get_value_uuid(char *buf, void *value, short len)
 {
-   return m_uuid_to_str((u_char *)&struct_buf[member->offset],buf);
+   return m_uuid_to_str((u_char *)value,buf);
 }
 
-static char *get_value_date(char *buf, char *struct_buf,
-                            struct var_struct *member)
+static char *get_value_date(char *buf, void *value, short len)
 {
-   return m_ctime((time_t *)(uint32_t *)&struct_buf[member->offset], buf, 256);
+   return m_ctime((time_t *)(uint32_t *)value, buf, 256);
 }
 
-static char *get_value_fs_mode(char *buf, char *struct_buf,
-                               struct var_struct *member)
+static char *get_value_fs_mode(char *buf, void *value, short len)
 {
-   sprintf(buf, "%s",
-           vmfs_fs_mode_to_str(*((uint32_t *)&struct_buf[member->offset])));
+   sprintf(buf, "%s", vmfs_fs_mode_to_str(*((uint32_t *)value)));
    return buf;
 }
 
-static char *get_value_none(char *buf, char *struct_buf,
-                            struct var_struct *member)
+static char *get_value_none(char *buf, void *value, short len)
 {
    strcpy(buf, "Don't know how to display");
    return buf;
