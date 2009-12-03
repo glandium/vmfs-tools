@@ -106,8 +106,8 @@ static char *human_readable_size(char *buf, uint64_t size)
    int scale = 0;
    for (scale = 0; (size >> scale) >= 1024; scale += 10);
 
-   if (size & ((1 << scale) - 1))
-      sprintf(buf, "%.2f%s", (float) size / (1 << scale), units[scale / 10]);
+   if (size & ((1L << scale) - 1))
+      sprintf(buf, "%.2f%s", (float) size / (1L << scale), units[scale / 10]);
    else
       sprintf(buf, "%"PRIu64"%s", size >> scale, units[scale / 10]);
 
