@@ -18,27 +18,32 @@
 #include <string.h>
 #include "vmfs.h"
 
-enum var_format {
-   none,
-   uint,
-   size, /* Human readable size */
-   string,
-   uuid,
-   date,
-   fs_mode,
-};
-
 struct var_struct {
    const char *member_name;
    const char *description;
    unsigned short offset;
    unsigned short length;
-   enum var_format format;
+   char *(*get_value)(char *buf, char *struct_buf, struct var_struct *member);
 };
+
+static char *get_value_none(char *buf, char *struct_buf,
+                            struct var_struct *member);
+static char *get_value_uint(char *buf, char *struct_buf,
+                            struct var_struct *member);
+static char *get_value_size(char *buf, char *struct_buf,
+                            struct var_struct *member);
+static char *get_value_string(char *buf, char *struct_buf,
+                              struct var_struct *member);
+static char *get_value_uuid(char *buf, char *struct_buf,
+                            struct var_struct *member);
+static char *get_value_date(char *buf, char *struct_buf,
+                            struct var_struct *member);
+static char *get_value_fs_mode(char *buf, char *struct_buf,
+                               struct var_struct *member);
 
 #define MEMBER(type, name, desc, format) \
    { # name, desc, offsetof(type, name), \
-     sizeof(((type *)0)->name), format }
+     sizeof(((type *)0)->name), get_value_ ## format }
 
 struct var_struct vmfs_bitmap[] = {
    MEMBER(vmfs_bitmap_header_t, items_per_bitmap_entry,
@@ -116,45 +121,67 @@ static char *human_readable_size(char *buf, uint64_t size)
 
 static char *var_value(char *buf, char *struct_buf, struct var_struct *member)
 {
-   switch(member->format) {
-   case uint:
-      switch (member->length) {
-      case 4:
-         sprintf(buf, "%" PRIu32, *((uint32_t *)&struct_buf[member->offset]));
-         return buf;
-      case 8:
-         sprintf(buf, "%" PRIu64, *((uint64_t *)&struct_buf[member->offset]));
-         return buf;
-      default:
-         goto unknown;
-      }
-   case size:
-      switch (member->length) {
-      case 4:
-         return human_readable_size(buf,
-                                  *((uint32_t *)&struct_buf[member->offset]));
-      case 8:
-         return human_readable_size(buf,
-                                  *((uint64_t *)&struct_buf[member->offset]));
-      default:
-         goto unknown;
-      }
-   case string:
-      strcpy(buf, *((char **)&struct_buf[member->offset]));
+   return member->get_value(buf, struct_buf, member);
+}
+
+static char *get_value_uint(char *buf, char *struct_buf,
+                            struct var_struct *member)
+{
+   switch (member->length) {
+   case 4:
+      sprintf(buf, "%" PRIu32, *((uint32_t *)&struct_buf[member->offset]));
       return buf;
-   case uuid:
-      return m_uuid_to_str((u_char *)&struct_buf[member->offset],buf);
-   case date:
-      return m_ctime((time_t *)(uint32_t *)&struct_buf[member->offset],
-                     buf, 256);
-   case fs_mode:
-      sprintf(buf, "%s",
-              vmfs_fs_mode_to_str(*((uint32_t *)&struct_buf[member->offset])));
+   case 8:
+      sprintf(buf, "%" PRIu64, *((uint64_t *)&struct_buf[member->offset]));
       return buf;
-   default:
-      goto unknown;
    }
-unknown:
+   return get_value_none(buf, struct_buf, member);
+}
+
+static char *get_value_size(char *buf, char *struct_buf,
+                            struct var_struct *member)
+{
+   switch (member->length) {
+   case 4:
+      return human_readable_size(buf,
+                                 *((uint32_t *)&struct_buf[member->offset]));
+   case 8:
+      return human_readable_size(buf,
+                                 *((uint64_t *)&struct_buf[member->offset]));
+   }
+   return get_value_none(buf, struct_buf, member);
+}
+
+static char *get_value_string(char *buf, char *struct_buf,
+                              struct var_struct *member)
+{
+   strcpy(buf, *((char **)&struct_buf[member->offset]));
+   return buf;
+}
+
+static char *get_value_uuid(char *buf, char *struct_buf,
+                            struct var_struct *member)
+{
+   return m_uuid_to_str((u_char *)&struct_buf[member->offset],buf);
+}
+
+static char *get_value_date(char *buf, char *struct_buf,
+                            struct var_struct *member)
+{
+   return m_ctime((time_t *)(uint32_t *)&struct_buf[member->offset], buf, 256);
+}
+
+static char *get_value_fs_mode(char *buf, char *struct_buf,
+                               struct var_struct *member)
+{
+   sprintf(buf, "%s",
+           vmfs_fs_mode_to_str(*((uint32_t *)&struct_buf[member->offset])));
+   return buf;
+}
+
+static char *get_value_none(char *buf, char *struct_buf,
+                            struct var_struct *member)
+{
    strcpy(buf, "Don't know how to display");
    return buf;
 }
