@@ -188,12 +188,12 @@ vmfs_volume_t *vmfs_vol_open(const char *filename,vmfs_flags_t flags)
    if (!(vol = calloc(1,sizeof(*vol))))
       return NULL;
 
-   if (!(vol->filename = strdup(filename)))
+   if (!(vol->device = strdup(filename)))
       goto err_filename;
 
    file_flags = (flags.read_write) ? O_RDWR : O_RDONLY;
 
-   if ((vol->fd = open(vol->filename,file_flags)) < 0) {
+   if ((vol->fd = open(vol->device,file_flags)) < 0) {
       perror("open");
       goto err_open;
    }
@@ -237,7 +237,7 @@ vmfs_volume_t *vmfs_vol_open(const char *filename,vmfs_flags_t flags)
    }
 
    if (vol->is_blkdev && (scsi_get_lun(vol->fd) != vol->vol_info.lun))
-      fprintf(stderr,"VMFS: Warning: Lun ID mismatch on %s\n", vol->filename);
+      fprintf(stderr,"VMFS: Warning: Lun ID mismatch on %s\n", vol->device);
 
    vmfs_vol_check_reservation(vol);
 
@@ -249,7 +249,7 @@ vmfs_volume_t *vmfs_vol_open(const char *filename,vmfs_flags_t flags)
    return vol;
 
  err_open:
-   free(vol->filename);
+   free(vol->device);
  err_filename:
    free(vol);
    return NULL;
@@ -261,7 +261,7 @@ void vmfs_vol_close(vmfs_volume_t *vol)
    if (!vol)
       return;
    close(vol->fd);
-   free(vol->filename);
+   free(vol->device);
    free(vol->vol_info.name);
    free(vol);
 }

@@ -152,13 +152,13 @@ int vmfs_lvm_add_extent(vmfs_lvm_t *lvm, vmfs_volume_t *vol)
       lvm->lvm_info.blocks = vol->vol_info.blocks;
       lvm->lvm_info.num_extents = vol->vol_info.num_extents;
    } else if (uuid_compare(lvm->lvm_info.uuid, vol->vol_info.lvm_uuid)) {
-      fprintf(stderr, "VMFS: The %s file/device is not part of the LVM\n", vol->filename);
+      fprintf(stderr, "VMFS: The %s file/device is not part of the LVM\n", vol->device);
       return(-1);
    } else if ((lvm->lvm_info.size != vol->vol_info.lvm_size) ||
               (lvm->lvm_info.blocks != vol->vol_info.blocks) ||
               (lvm->lvm_info.num_extents != vol->vol_info.num_extents)) {
       fprintf(stderr, "VMFS: LVM information mismatch for the %s"
-                      " file/device\n", vol->filename);
+                      " file/device\n", vol->device);
       return(-1);
    }
 

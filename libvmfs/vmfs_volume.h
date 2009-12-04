@@ -117,7 +117,7 @@ struct vmfs_volinfo {
 
 /* === VMFS mounted-volume === */
 struct vmfs_volume {
-   char *filename;
+   char *device;
    int fd;
    vmfs_flags_t flags;
    int is_blkdev;
