@@ -206,6 +206,29 @@ The *lvm* variable contains low-level information about the physical and
 
 - *lvm*.*num_extents*
 
+- *lvm*.*extent*['n']
+
+Each *lvm*.*extent*['n'] (where 0 ≤ 'n' < *lvm*.*num_extents*) contains
+low-level information about the physical volumes. The available fields are:
+
+- *lvm*.*extent*['n'].device
+
+- *lvm*.*extent*['n'].uuid
+
+- *lvm*.*extent*['n'].lun
+
+- *lvm*.*extent*['n'].version
+
+- *lvm*.*extent*['n'].name
+
+- *lvm*.*extent*['n'].size
+
+- *lvm*.*extent*['n'].num_segments
+
+- *lvm*.*extent*['n'].first_segment
+
+- *lvm*.*extent*['n'].last_segment
+
 
 AUTHORS
 -------
