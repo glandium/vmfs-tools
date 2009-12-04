@@ -56,6 +56,10 @@ static char *get_value_fs_mode(char *buf, void *value, short len);
    { # name, { desc }, offsetof(type, sub.name), \
      sizeof(((type *)0)->sub.name), get_value_ ## format }
 
+#define SUBVAR(type, name, struct_def) \
+   { # name, { subvar: &struct_def }, offsetof(type, name), \
+     sizeof(((type *)0)->name), NULL }
+
 struct var_struct vmfs_bitmap = {
    struct_dump, {
    MEMBER2(vmfs_bitmap_t, bmh, items_per_bitmap_entry,
@@ -91,6 +95,17 @@ struct var_struct vmfs_lvm = {
    MEMBER2(vmfs_lvm_t, lvm_info, size, "Size", size),
    MEMBER2(vmfs_lvm_t, lvm_info, blocks, "Blocks", uint),
    MEMBER2(vmfs_lvm_t, lvm_info, num_extents, "Num. Extents", uint),
+   { NULL, }
+}};
+
+struct var_struct debugvmfs = {
+   struct_dump, {
+   SUBVAR(struct { char fs[0]; }, fs, vmfs_fs),
+   SUBVAR(vmfs_fs_t, lvm, vmfs_lvm),
+   SUBVAR(vmfs_fs_t, fbb, vmfs_bitmap),
+   SUBVAR(vmfs_fs_t, fdc, vmfs_bitmap),
+   SUBVAR(vmfs_fs_t, pbc, vmfs_bitmap),
+   SUBVAR(vmfs_fs_t, sbc, vmfs_bitmap),
    { NULL, }
 }};
 
@@ -246,46 +261,5 @@ static int struct_dump(struct var_struct *struct_def, void *value,
 
 int vmfs_show_variable(const vmfs_fs_t *fs, const char *name)
 {
-   char split_name[256];
-   char *current, *next;
-   struct var_struct *struct_def = NULL;
-   char *struct_buf = NULL;
-
-   strncpy(split_name, name, 255);
-   split_name[255] = 0;
-
-   for (next = split_name; next;) {
-      current = next;
-      next = index(next, '.');
-      if (next)
-         *(next++) = 0;
-      if (*current == 0)
-         return(1);
-      if (current == split_name) {
-         if (!strcmp(current, "fbb")) {
-            struct_buf = (char *)fs->fbb;
-            struct_def = &vmfs_bitmap;
-         } else if (!strcmp(current, "fdc")) {
-            struct_buf = (char *)fs->fdc;
-            struct_def = &vmfs_bitmap;
-         } else if (!strcmp(current, "pbc")) {
-            struct_buf = (char *)fs->pbc;
-            struct_def = &vmfs_bitmap;
-         } else if (!strcmp(current, "sbc")) {
-            struct_buf = (char *)fs->sbc;
-            struct_def = &vmfs_bitmap;
-         } else if (!strcmp(current, "fs")) {
-            struct_buf = (char *)fs;
-            struct_def = &vmfs_fs;
-         } else if (!strcmp(current, "lvm")) {
-            struct_buf = (char *)fs->lvm;
-            struct_def = &vmfs_lvm;
-         } else
-            return(1);
-         if (!next)
-            return struct_def->dump(struct_def, (void *)struct_buf, next) ? 0 : 1;
-      } else
-         return struct_def->dump(struct_def, (void *)struct_buf, current) ? 0 : 1;
-   }
-   return(0);
+   return debugvmfs.dump(&debugvmfs, (void *)fs, name) ? 0 : 1;
 }
