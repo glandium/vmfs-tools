@@ -32,6 +32,9 @@ struct var_struct {
    struct var_member members[];
 };
 
+static int struct_dump(struct var_struct *struct_def, void *value,
+                       const char *name);
+
 static char *get_value_none(char *buf, void *value, short len);
 static char *get_value_uint(char *buf, void *value, short len);
 static char *get_value_size(char *buf, void *value, short len);
@@ -45,7 +48,7 @@ static char *get_value_fs_mode(char *buf, void *value, short len);
      sizeof(((type *)0)->name), get_value_ ## format }
 
 struct var_struct vmfs_bitmap = {
-   NULL, {
+   struct_dump, {
    MEMBER(vmfs_bitmap_header_t, items_per_bitmap_entry,
           "Item per bitmap entry", uint),
    MEMBER(vmfs_bitmap_header_t, bmp_entries_per_area,
@@ -59,7 +62,7 @@ struct var_struct vmfs_bitmap = {
 }};
 
 struct var_struct vmfs_fs = {
-   NULL, {
+   struct_dump, {
    MEMBER(vmfs_fsinfo_t, vol_version, "Volume Version", uint),
    MEMBER(vmfs_fsinfo_t, version, "Version", uint),
    MEMBER(vmfs_fsinfo_t, label, "Label", string),
@@ -74,7 +77,7 @@ struct var_struct vmfs_fs = {
 }};
 
 struct var_struct vmfs_lvm = {
-   NULL, {
+   struct_dump, {
    MEMBER(vmfs_lvminfo_t, uuid, "UUID", uuid),
    MEMBER(vmfs_lvminfo_t, size, "Size", size),
    MEMBER(vmfs_lvminfo_t, blocks, "Blocks", uint),
@@ -119,11 +122,6 @@ static char *human_readable_size(char *buf, uint64_t size)
       sprintf(buf, "%"PRIu64"%s", size >> scale, units[scale / 10]);
 
    return buf;
-}
-
-static char *var_value(char *buf, char *struct_buf, struct var_member *member)
-{
-   return member->get_value(buf, &struct_buf[member->offset], member->length);
 }
 
 static char *get_value_uint(char *buf, void *value, short len)
@@ -190,13 +188,37 @@ static int longest_member_desc(struct var_struct *struct_def)
    return len;
 }
 
+static int struct_dump(struct var_struct *struct_def, void *value,
+                       const char *name)
+{
+   char buf[256];
+   struct var_member *member = struct_def->members;
+
+   if (!name || !*name) { /* name is empty, we dump all members */
+      char format[16];
+      sprintf(format, "%%%ds: %%s\n", longest_member_desc(struct_def));
+      for (; member->member_name; member++)
+         printf(format, member->description,
+                member->get_value(buf, value + member->offset, member->length));
+      return(1);
+   }
+
+   while(member->member_name && strcmp(member->member_name, name))
+      member++;
+
+   if (member->member_name) {
+      printf("%s: %s\n", member->description,
+             member->get_value(buf, value + member->offset, member->length));
+      return(1);
+   }
+   return(0);
+}
+
 int vmfs_show_variable(const vmfs_fs_t *fs, const char *name)
 {
    char split_name[256];
-   char buf[256];
    char *current, *next;
    struct var_struct *struct_def = NULL;
-   struct var_member *member;
    char *struct_buf = NULL;
 
    strncpy(split_name, name, 255);
@@ -230,22 +252,10 @@ int vmfs_show_variable(const vmfs_fs_t *fs, const char *name)
             struct_def = &vmfs_lvm;
          } else
             return(1);
-         if (!next) {
-            struct var_member *member;
-            char format[16];
-            sprintf(format, "%%%ds: %%s\n", longest_member_desc(struct_def));
-            for (member = struct_def->members; member->member_name; member++)
-               printf(format, member->description,
-                              var_value(buf, struct_buf, member));
-         }
-      } else {
-         member = struct_def->members;
-         while(member->member_name && strcmp(member->member_name, current))
-            member++;
-         if (member->member_name)
-            printf("%s: %s\n", member->description,
-                               var_value(buf, struct_buf, member));
-      }
+         if (!next)
+            return struct_def->dump(struct_def, (void *)struct_buf, next) ? 0 : 1;
+      } else
+         return struct_def->dump(struct_def, (void *)struct_buf, current) ? 0 : 1;
    }
    return(0);
 }
