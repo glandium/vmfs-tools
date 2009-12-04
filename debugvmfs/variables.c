@@ -47,11 +47,13 @@ static int struct_dump(struct var_struct *struct_def, void *value,
 
 static char *get_value_none(char *buf, void *value, short len);
 static char *get_value_uint(char *buf, void *value, short len);
+static char *get_value_xint(char *buf, void *value, short len);
 static char *get_value_size(char *buf, void *value, short len);
 static char *get_value_string(char *buf, void *value, short len);
 static char *get_value_uuid(char *buf, void *value, short len);
 static char *get_value_date(char *buf, void *value, short len);
 static char *get_value_fs_mode(char *buf, void *value, short len);
+static char *get_value_hb_lock(char *buf, void *value, short len);
 static char *get_value_bitmap_used(char *buf, void *value, short len);
 static char *get_value_bitmap_free(char *buf, void *value, short len);
 static char *get_value_vol_size(char *buf, void *value, short len);
@@ -77,12 +79,26 @@ static char *get_value_vol_size(char *buf, void *value, short len);
 #define ARRAY_MEMBER(struct_def) \
    { NULL, { subvar: &struct_def }, 0, 0, NULL }
 
+struct var_struct vmfs_metadata_hdr = {
+   struct_dump, {
+   MEMBER(vmfs_metadata_hdr_t, magic, "Magic", xint),
+   MEMBER(vmfs_metadata_hdr_t, pos, "Position", xint),
+   MEMBER(vmfs_metadata_hdr_t, hb_pos, "HB Position", uint),
+   MEMBER(vmfs_metadata_hdr_t, hb_lock, "HB Lock", hb_lock),
+   MEMBER(vmfs_metadata_hdr_t, hb_uuid, "HB UUID", uuid),
+   MEMBER(vmfs_metadata_hdr_t, hb_seq, "HB Sequence", uint),
+   MEMBER(vmfs_metadata_hdr_t, obj_seq, "Obj Sequence", uint),
+   MEMBER(vmfs_metadata_hdr_t, mtime, "MTime", uint),
+   { NULL, }
+}};
+
 struct var_struct vmfs_bitmap_entry = {
    struct_dump, {
    MEMBER(vmfs_bitmap_entry_t, id, "Id", uint),
    MEMBER(vmfs_bitmap_entry_t, total, "Total items", uint),
    MEMBER(vmfs_bitmap_entry_t, free, "Free items", uint),
    MEMBER(vmfs_bitmap_entry_t, ffree, "First free", uint),
+   SELF_SUBVAR(mdh, vmfs_metadata_hdr),
    { NULL, }
 }};
 
@@ -217,6 +233,19 @@ static char *get_value_uint(char *buf, void *value, short len)
    return get_value_none(buf, value, len);
 }
 
+static char *get_value_xint(char *buf, void *value, short len)
+{
+   switch (len) {
+   case 4:
+      sprintf(buf, "0x%" PRIx32, *((uint32_t *)value));
+      return buf;
+   case 8:
+      sprintf(buf, "0x%" PRIx64, *((uint64_t *)value));
+      return buf;
+   }
+   return get_value_none(buf, value, len);
+}
+
 static char *get_value_size(char *buf, void *value, short len)
 {
    switch (len) {
@@ -247,6 +276,12 @@ static char *get_value_date(char *buf, void *value, short len)
 static char *get_value_fs_mode(char *buf, void *value, short len)
 {
    sprintf(buf, "%s", vmfs_fs_mode_to_str(*((uint32_t *)value)));
+   return buf;
+}
+
+static char *get_value_hb_lock(char *buf, void *value, short len)
+{
+   sprintf(buf, "%s", *((uint32_t *)value) ? "locked" : "unlocked");
    return buf;
 }
 

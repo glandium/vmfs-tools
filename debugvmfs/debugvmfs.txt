@@ -183,6 +183,11 @@ The available fields are:
 
 - 'bitmap'.*entry*['n'].ffree
 
+- 'bitmap'.*entry*['n'].mdh
+
+The 'bitmap'.*entry*['n'].mdh is a metadata header. See further below for
+more details about metadata headers.
+
 The *fs* variable contains low-level information about the filesystem. The
 available fields are:
 
@@ -240,6 +245,25 @@ low-level information about the physical volumes. The available fields are:
 
 - *lvm*.*extent*['n'].last_segment
 
+Metadata headers are being used in several places, such as
+'bitmap'.*entry*['n'].mdh. They mostly contain information about clustered
+accesses to metadata on the filesystem. The available fields are:
+
+- 'mdh'.magic
+
+- 'mdh'.pos
+
+- 'mdh'.hb_pos
+
+- 'mdh'.hb_lock
+
+- 'mdh'.hb_uuid
+
+- 'mdh'.hb_seq
+
+- 'mdh'.obj_seq
+
+- 'mdh'.mtime
 
 AUTHORS
 -------
