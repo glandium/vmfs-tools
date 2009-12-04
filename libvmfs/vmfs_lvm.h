@@ -53,9 +53,6 @@ int vmfs_lvm_reserve(const vmfs_lvm_t *lvm,off_t pos);
 /* Release the underlying volume given a LVM position */
 int vmfs_lvm_release(const vmfs_lvm_t *lvm,off_t pos);
 
-/* Show lvm information */
-void vmfs_lvm_show(const vmfs_lvm_t *lvm);
-
 /* Create a volume structure */
 vmfs_lvm_t *vmfs_lvm_create(vmfs_flags_t flags);
 

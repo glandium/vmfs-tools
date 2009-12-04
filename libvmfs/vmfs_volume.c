@@ -160,24 +160,6 @@ static int vmfs_volinfo_read(vmfs_volume_t *volume)
    return(0);
 }
 
-/* Show volume information */
-void vmfs_vol_show(const vmfs_volume_t *vol)
-{
-   char uuid_str[M_UUID_BUFLEN];
-
-   printf("Physical Volume Information:\n");
-   printf("  - UUID    : %s\n",m_uuid_to_str(vol->vol_info.uuid,uuid_str));
-   printf("  - LUN     : %d\n",vol->vol_info.lun);
-   printf("  - Version : %d\n",vol->vol_info.version);
-   printf("  - Name    : %s\n",vol->vol_info.name);
-   printf("  - Size    : %.2f GB\n",(float)vol->vol_info.size / (4*1048576));
-   printf("  - Num. Segments : %u\n",vol->vol_info.num_segments);
-   printf("  - First Segment : %u\n",vol->vol_info.first_segment);
-   printf("  - Last Segment  : %u\n",vol->vol_info.last_segment);
-
-   printf("\n");
-}
-
 /* Open a VMFS volume */
 vmfs_volume_t *vmfs_vol_open(const char *filename,vmfs_flags_t flags)
 {
@@ -242,7 +224,6 @@ vmfs_volume_t *vmfs_vol_open(const char *filename,vmfs_flags_t flags)
    vmfs_vol_check_reservation(vol);
 
    if (vol->flags.debug_level > 0) {
-      vmfs_vol_show(vol);
       printf("VMFS: volume opened successfully\n");
    }
 

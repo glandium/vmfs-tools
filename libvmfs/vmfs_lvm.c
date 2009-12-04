@@ -105,25 +105,6 @@ int vmfs_lvm_release(const vmfs_lvm_t *lvm,off_t pos)
    return(vmfs_vol_release(extent));
 }
 
-/* Show lvm information */
-void vmfs_lvm_show(const vmfs_lvm_t *lvm) {
-   char uuid_str[M_UUID_BUFLEN];
-   int i;
-
-   printf("Logical Volume Information:\n");
-   printf("  - UUID    : %s\n",m_uuid_to_str(lvm->lvm_info.uuid,uuid_str));
-   printf("  - Size    : %.2f GB\n",
-          (float)lvm->extents[0]->vol_info.lvm_size / (1024*1048576));
-   printf("  - Blocks  : %"PRIu64"\n",lvm->extents[0]->vol_info.blocks);
-   printf("  - Num. Extents : %u\n",lvm->extents[0]->vol_info.num_extents);
-
-   printf("\n");
-
-   for(i = 0; i < lvm->loaded_extents; i++) {
-      vmfs_vol_show(lvm->extents[i]);
-   }
-}
-
 /* Create a volume structure */
 vmfs_lvm_t *vmfs_lvm_create(vmfs_flags_t flags)
 {
