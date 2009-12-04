@@ -18,9 +18,14 @@
 #include <string.h>
 #include "vmfs.h"
 
+struct var_struct;
+
 struct var_member {
    const char *member_name;
-   const char *description;
+   union {
+      const char *description;
+      struct var_struct *subvar;
+   };
    unsigned short offset;
    unsigned short length;
    char *(*get_value)(char *buf, void *value, short len);
@@ -44,11 +49,11 @@ static char *get_value_date(char *buf, void *value, short len);
 static char *get_value_fs_mode(char *buf, void *value, short len);
 
 #define MEMBER(type, name, desc, format) \
-   { # name, desc, offsetof(type, name), \
+   { # name, { desc }, offsetof(type, name), \
      sizeof(((type *)0)->name), get_value_ ## format }
 
 #define MEMBER2(type, sub, name, desc, format) \
-   { # name, desc, offsetof(type, sub.name), \
+   { # name, { desc }, offsetof(type, sub.name), \
      sizeof(((type *)0)->sub.name), get_value_ ## format }
 
 struct var_struct vmfs_bitmap = {
@@ -197,6 +202,7 @@ static int struct_dump(struct var_struct *struct_def, void *value,
 {
    char buf[256];
    struct var_member *member = struct_def->members;
+   size_t len;
 
    if (!name || !*name) { /* name is empty, we dump all members */
       char format[16];
@@ -207,15 +213,35 @@ static int struct_dump(struct var_struct *struct_def, void *value,
       return(1);
    }
 
-   while(member->member_name && strcmp(member->member_name, name))
-      member++;
+   if (name[0] == '.')
+      name++;
 
-   if (member->member_name) {
+   len = strcspn(name, ".");
+
+   if (name[len] != 0) { /* name contains a ., we search a sub var */
+      strncpy(buf, name, len);
+      buf[len] = 0;
+      while(member->member_name && strcmp(member->member_name, buf))
+         member++;
+      if (member->get_value)
+         return(0);
+   } else
+      while(member->member_name && strcmp(member->member_name, name))
+         member++;
+
+   if (!member->member_name)
+      return(0);
+
+   if (member->get_value) {
       printf("%s: %s\n", member->description,
              member->get_value(buf, value + member->offset, member->length));
       return(1);
    }
-   return(0);
+
+   value += member->offset;
+   if (member->length)
+      value = *(void **)value;
+   return member->subvar->dump(member->subvar, value, name + len);
 }
 
 int vmfs_show_variable(const vmfs_fs_t *fs, const char *name)
