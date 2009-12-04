@@ -96,17 +96,6 @@ int vmfs_bme_update(const vmfs_fs_t *fs,const vmfs_bitmap_entry_t *bme)
    return(0);
 }
 
-/* Show bitmap entry information */
-void vmfs_bme_show(const vmfs_bitmap_entry_t *bme)
-{
-   vmfs_metadata_hdr_show(&bme->mdh);
-
-   printf("  - ID           : 0x%8.8x\n",bme->id);
-   printf("  - Total        : %u\n",bme->total);
-   printf("  - Free         : %u\n",bme->free);
-   printf("  - First free   : %u\n",bme->ffree);
-}
-
 /* Get number of items per area */
 static inline u_int
 vmfs_bitmap_get_items_per_area(const vmfs_bitmap_header_t *bmh)
