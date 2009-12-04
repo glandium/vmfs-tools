@@ -167,7 +167,21 @@ fields can also be displayed individually:
 
 - 'bitmap'.*free_items*
 
+- 'bitmap'.*entry*['n']
+
 e.g. to display the data size of the fdc bitmap, type *show fdc.data_size*.
+
+Each 'bitmap'.*entry*['n'] (where 0 ≤ 'n' < 'bitmap'.*bmp_entries_per_area*
+* 'bitmap'.*area_count*) contains information about each entry in the bitmap.
+The available fields are:
+
+- 'bitmap'.*entry*['n'].id
+
+- 'bitmap'.*entry*['n'].total
+
+- 'bitmap'.*entry*['n'].free
+
+- 'bitmap'.*entry*['n'].ffree
 
 The *fs* variable contains low-level information about the filesystem. The
 available fields are:

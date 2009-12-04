@@ -38,6 +38,8 @@ struct var_struct {
    struct var_member members[];
 };
 
+static int bitmap_entries_dump(struct var_struct *struct_def, void *value,
+                               const char *name);
 static int lvm_extents_dump(struct var_struct *struct_def, void *value,
                             const char *name);
 static int struct_dump(struct var_struct *struct_def, void *value,
@@ -75,6 +77,21 @@ static char *get_value_vol_size(char *buf, void *value, short len);
 #define ARRAY_MEMBER(struct_def) \
    { NULL, { subvar: &struct_def }, 0, 0, NULL }
 
+struct var_struct vmfs_bitmap_entry = {
+   struct_dump, {
+   MEMBER(vmfs_bitmap_entry_t, id, "Id", uint),
+   MEMBER(vmfs_bitmap_entry_t, total, "Total items", uint),
+   MEMBER(vmfs_bitmap_entry_t, free, "Free items", uint),
+   MEMBER(vmfs_bitmap_entry_t, ffree, "First free", uint),
+   { NULL, }
+}};
+
+struct var_struct vmfs_bitmap_entries = {
+   bitmap_entries_dump, {
+   ARRAY_MEMBER(vmfs_bitmap_entry),
+   { NULL, }
+}};
+
 struct var_struct vmfs_bitmap = {
    struct_dump, {
    MEMBER2(vmfs_bitmap_t, bmh, items_per_bitmap_entry,
@@ -88,6 +105,7 @@ struct var_struct vmfs_bitmap = {
    MEMBER2(vmfs_bitmap_t, bmh, total_items, "Total items", uint),
    VIRTUAL_MEMBER(used_items, "Used items", bitmap_used),
    VIRTUAL_MEMBER(free_items, "Free items", bitmap_free),
+   SELF_SUBVAR(entry, vmfs_bitmap_entries),
    { NULL, }
 }};
 
@@ -362,6 +380,23 @@ static int lvm_extents_dump(struct var_struct *struct_def, void *value,
 
    return struct_def->members[0].subvar->dump(struct_def->members[0].subvar,
                                               lvm->extents[idx], name);
+}
+
+static int bitmap_entries_dump(struct var_struct *struct_def, void *value,
+                               const char *name)
+{
+   vmfs_bitmap_entry_t entry = { { 0, }, };
+   vmfs_bitmap_t *bitmap = (vmfs_bitmap_t *)value;
+   int idx;
+   if (!get_numeric_index(&idx, &name))
+      return(0);
+
+   if (idx >= bitmap->bmh.bmp_entries_per_area * bitmap->bmh.area_count)
+      return(0);
+
+   vmfs_bitmap_get_entry(bitmap, idx, 0, &entry);
+   return struct_def->members[0].subvar->dump(struct_def->members[0].subvar,
+                                              &entry, name);
 }
 
 int vmfs_show_variable(const vmfs_fs_t *fs, const char *name)
