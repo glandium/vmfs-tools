@@ -47,6 +47,8 @@ static char *get_value_string(char *buf, void *value, short len);
 static char *get_value_uuid(char *buf, void *value, short len);
 static char *get_value_date(char *buf, void *value, short len);
 static char *get_value_fs_mode(char *buf, void *value, short len);
+static char *get_value_bitmap_used(char *buf, void *value, short len);
+static char *get_value_bitmap_free(char *buf, void *value, short len);
 
 #define MEMBER(type, name, desc, format) \
    { # name, { desc }, offsetof(type, name), \
@@ -60,6 +62,9 @@ static char *get_value_fs_mode(char *buf, void *value, short len);
    { # name, { subvar: &struct_def }, offsetof(type, name), \
      sizeof(((type *)0)->name), NULL }
 
+#define VIRTUAL_MEMBER(name, desc, format) \
+   MEMBER(struct { char name[0]; }, name, desc, format)
+
 struct var_struct vmfs_bitmap = {
    struct_dump, {
    MEMBER2(vmfs_bitmap_t, bmh, items_per_bitmap_entry,
@@ -71,6 +76,8 @@ struct var_struct vmfs_bitmap = {
    MEMBER2(vmfs_bitmap_t, bmh, area_size, "Area size", size),
    MEMBER2(vmfs_bitmap_t, bmh, area_count, "Area count", uint),
    MEMBER2(vmfs_bitmap_t, bmh, total_items, "Total items", uint),
+   VIRTUAL_MEMBER(used_items, "Used items", bitmap_used),
+   VIRTUAL_MEMBER(free_items, "Free items", bitmap_free),
    { NULL, }
 }};
 
@@ -197,6 +204,19 @@ static char *get_value_fs_mode(char *buf, void *value, short len)
 static char *get_value_none(char *buf, void *value, short len)
 {
    strcpy(buf, "Don't know how to display");
+   return buf;
+}
+
+static char *get_value_bitmap_used(char *buf, void *value, short len)
+{
+   sprintf(buf, "%d", vmfs_bitmap_allocated_items((vmfs_bitmap_t *)value));
+   return buf;
+}
+
+static char *get_value_bitmap_free(char *buf, void *value, short len)
+{
+   sprintf(buf, "%d", ((vmfs_bitmap_t *)value)->bmh.total_items -
+                      vmfs_bitmap_allocated_items((vmfs_bitmap_t *)value));
    return buf;
 }
 

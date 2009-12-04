@@ -169,6 +169,10 @@ fields can also be displayed individually:
 
 - 'bitmap'.*total_items*
 
+- 'bitmap'.*used_items*
+
+- 'bitmap'.*free_items*
+
 e.g. to display the data size of the fdc bitmap, type *show fdc.data_size*.
 
 The *fs* variable contains low-level information about the filesystem. The
