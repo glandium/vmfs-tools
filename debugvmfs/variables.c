@@ -47,41 +47,45 @@ static char *get_value_fs_mode(char *buf, void *value, short len);
    { # name, desc, offsetof(type, name), \
      sizeof(((type *)0)->name), get_value_ ## format }
 
+#define MEMBER2(type, sub, name, desc, format) \
+   { # name, desc, offsetof(type, sub.name), \
+     sizeof(((type *)0)->sub.name), get_value_ ## format }
+
 struct var_struct vmfs_bitmap = {
    struct_dump, {
-   MEMBER(vmfs_bitmap_header_t, items_per_bitmap_entry,
-          "Item per bitmap entry", uint),
-   MEMBER(vmfs_bitmap_header_t, bmp_entries_per_area,
-          "Bitmap entries per area", uint),
-   MEMBER(vmfs_bitmap_header_t, hdr_size, "Header size", size),
-   MEMBER(vmfs_bitmap_header_t, data_size, "Data size", size),
-   MEMBER(vmfs_bitmap_header_t, area_size, "Area size", size),
-   MEMBER(vmfs_bitmap_header_t, area_count, "Area count", uint),
-   MEMBER(vmfs_bitmap_header_t, total_items, "Total items", uint),
+   MEMBER2(vmfs_bitmap_t, bmh, items_per_bitmap_entry,
+           "Item per bitmap entry", uint),
+   MEMBER2(vmfs_bitmap_t, bmh, bmp_entries_per_area,
+           "Bitmap entries per area", uint),
+   MEMBER2(vmfs_bitmap_t, bmh, hdr_size, "Header size", size),
+   MEMBER2(vmfs_bitmap_t, bmh, data_size, "Data size", size),
+   MEMBER2(vmfs_bitmap_t, bmh, area_size, "Area size", size),
+   MEMBER2(vmfs_bitmap_t, bmh, area_count, "Area count", uint),
+   MEMBER2(vmfs_bitmap_t, bmh, total_items, "Total items", uint),
    { NULL, }
 }};
 
 struct var_struct vmfs_fs = {
    struct_dump, {
-   MEMBER(vmfs_fsinfo_t, vol_version, "Volume Version", uint),
-   MEMBER(vmfs_fsinfo_t, version, "Version", uint),
-   MEMBER(vmfs_fsinfo_t, label, "Label", string),
-   MEMBER(vmfs_fsinfo_t, mode, "Mode", fs_mode),
-   MEMBER(vmfs_fsinfo_t, uuid, "UUID", uuid),
-   MEMBER(vmfs_fsinfo_t, ctime, "Creation time", date),
-   MEMBER(vmfs_fsinfo_t, block_size, "Block size", size),
-   MEMBER(vmfs_fsinfo_t, subblock_size, "Subblock size", size),
-   MEMBER(vmfs_fsinfo_t, fdc_header_size, "FDC Header size", size),
-   MEMBER(vmfs_fsinfo_t, fdc_bitmap_count, "FDC Bitmap count", uint),
+   MEMBER2(vmfs_fs_t, fs_info, vol_version, "Volume Version", uint),
+   MEMBER2(vmfs_fs_t, fs_info, version, "Version", uint),
+   MEMBER2(vmfs_fs_t, fs_info, label, "Label", string),
+   MEMBER2(vmfs_fs_t, fs_info, mode, "Mode", fs_mode),
+   MEMBER2(vmfs_fs_t, fs_info, uuid, "UUID", uuid),
+   MEMBER2(vmfs_fs_t, fs_info, ctime, "Creation time", date),
+   MEMBER2(vmfs_fs_t, fs_info, block_size, "Block size", size),
+   MEMBER2(vmfs_fs_t, fs_info, subblock_size, "Subblock size", size),
+   MEMBER2(vmfs_fs_t, fs_info, fdc_header_size, "FDC Header size", size),
+   MEMBER2(vmfs_fs_t, fs_info, fdc_bitmap_count, "FDC Bitmap count", uint),
    { NULL, }
 }};
 
 struct var_struct vmfs_lvm = {
    struct_dump, {
-   MEMBER(vmfs_lvminfo_t, uuid, "UUID", uuid),
-   MEMBER(vmfs_lvminfo_t, size, "Size", size),
-   MEMBER(vmfs_lvminfo_t, blocks, "Blocks", uint),
-   MEMBER(vmfs_lvminfo_t, num_extents, "Num. Extents", uint),
+   MEMBER2(vmfs_lvm_t, lvm_info, uuid, "UUID", uuid),
+   MEMBER2(vmfs_lvm_t, lvm_info, size, "Size", size),
+   MEMBER2(vmfs_lvm_t, lvm_info, blocks, "Blocks", uint),
+   MEMBER2(vmfs_lvm_t, lvm_info, num_extents, "Num. Extents", uint),
    { NULL, }
 }};
 
@@ -233,22 +237,22 @@ int vmfs_show_variable(const vmfs_fs_t *fs, const char *name)
          return(1);
       if (current == split_name) {
          if (!strcmp(current, "fbb")) {
-            struct_buf = (char *)&fs->fbb->bmh;
+            struct_buf = (char *)fs->fbb;
             struct_def = &vmfs_bitmap;
          } else if (!strcmp(current, "fdc")) {
-            struct_buf = (char *)&fs->fdc->bmh;
+            struct_buf = (char *)fs->fdc;
             struct_def = &vmfs_bitmap;
          } else if (!strcmp(current, "pbc")) {
-            struct_buf = (char *)&fs->pbc->bmh;
+            struct_buf = (char *)fs->pbc;
             struct_def = &vmfs_bitmap;
          } else if (!strcmp(current, "sbc")) {
-            struct_buf = (char *)&fs->sbc->bmh;
+            struct_buf = (char *)fs->sbc;
             struct_def = &vmfs_bitmap;
          } else if (!strcmp(current, "fs")) {
-            struct_buf = (char *)&fs->fs_info;
+            struct_buf = (char *)fs;
             struct_def = &vmfs_fs;
          } else if (!strcmp(current, "lvm")) {
-            struct_buf = (char *)&fs->lvm->lvm_info;
+            struct_buf = (char *)fs->lvm;
             struct_def = &vmfs_lvm;
          } else
             return(1);
