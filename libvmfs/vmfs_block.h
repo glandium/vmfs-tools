@@ -94,9 +94,9 @@ enum vmfs_block_type {
      ((item) << VMFS_BLK_FD_ITEM_SHIFT) | \
      VMFS_BLK_TYPE_FD )
 
-/* Get bitmap info (bitmap pointer,entry and item) from a block ID */
-int vmfs_block_get_bitmap_info(const vmfs_fs_t *fs,uint32_t blk_id,
-                               vmfs_bitmap_t **bmp,
+/* Get bitmap info (bitmap type,entry and item) from a block ID */
+int vmfs_block_get_bitmap_info(uint32_t blk_id,
+                               enum vmfs_block_type *type,
                                uint32_t *entry,uint32_t *item);
 
 /* Get block status (allocated or free) */

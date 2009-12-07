@@ -28,9 +28,9 @@
 #include "utils.h"
 #include "vmfs.h"
 
-/* Get bitmap info (bitmap pointer,entry and item) from a block ID */
-int vmfs_block_get_bitmap_info(const vmfs_fs_t *fs,uint32_t blk_id,
-                               vmfs_bitmap_t **bmp,
+/* Get bitmap info (bitmap type,entry and item) from a block ID */
+int vmfs_block_get_bitmap_info(uint32_t blk_id,
+                               enum vmfs_block_type *type,
                                uint32_t *entry,uint32_t *item)
 {
    uint32_t blk_type;
@@ -40,28 +40,24 @@ int vmfs_block_get_bitmap_info(const vmfs_fs_t *fs,uint32_t blk_id,
    switch(blk_type) {
       /* File Block */
       case VMFS_BLK_TYPE_FB:
-         *bmp   = fs->fbb;
          *entry = 0;
          *item  = VMFS_BLK_FB_ITEM(blk_id);
          break;
 
       /* Sub-Block */
       case VMFS_BLK_TYPE_SB:
-         *bmp   = fs->sbc;
          *entry = VMFS_BLK_SB_ENTRY(blk_id);
          *item  = VMFS_BLK_SB_ITEM(blk_id);
          break;
 
       /* Pointer Block */
       case VMFS_BLK_TYPE_PB:
-         *bmp   = fs->pbc;
          *entry = VMFS_BLK_PB_ENTRY(blk_id);
          *item  = VMFS_BLK_PB_ITEM(blk_id);
          break;
 
       /* Inode */
       case VMFS_BLK_TYPE_FD:
-         *bmp   = fs->fdc;
          *entry = VMFS_BLK_FD_ENTRY(blk_id);
          *item  = VMFS_BLK_FD_ITEM(blk_id);
          break;
@@ -69,6 +65,8 @@ int vmfs_block_get_bitmap_info(const vmfs_fs_t *fs,uint32_t blk_id,
       default:
          return(-1);
    }
+
+   *type = blk_type;
 
    return(0);
 }
@@ -78,9 +76,13 @@ int vmfs_block_get_status(const vmfs_fs_t *fs,uint32_t blk_id)
 {
    vmfs_bitmap_entry_t entry;
    vmfs_bitmap_t *bmp;
+   enum vmfs_block_type blk_type;
    uint32_t blk_entry,blk_item;
 
-   if (vmfs_block_get_bitmap_info(fs,blk_id,&bmp,&blk_entry,&blk_item) == -1)
+   if (vmfs_block_get_bitmap_info(blk_id,&blk_type,&blk_entry,&blk_item) == -1)
+      return(-1);
+
+   if (!(bmp = vmfs_fs_get_bitmap(fs, blk_type)))
       return(-1);
 
    if (vmfs_bitmap_get_entry(bmp,blk_entry,blk_item,&entry) == -1)
@@ -96,9 +98,13 @@ static int vmfs_block_set_status(const vmfs_fs_t *fs,uint32_t blk_id,
    DECL_ALIGNED_BUFFER(buf,VMFS_BITMAP_ENTRY_SIZE);
    vmfs_bitmap_entry_t entry;
    vmfs_bitmap_t *bmp;
+   enum vmfs_block_type blk_type;
    uint32_t blk_entry,blk_item;
 
-   if (vmfs_block_get_bitmap_info(fs,blk_id,&bmp,&blk_entry,&blk_item) == -1)
+   if (vmfs_block_get_bitmap_info(blk_id,&blk_type,&blk_entry,&blk_item) == -1)
+      return(-1);
+
+   if (!(bmp = vmfs_fs_get_bitmap(fs, blk_type)))
       return(-1);
 
    if (vmfs_bitmap_get_entry(bmp,blk_entry,blk_item,&entry) == -1)
