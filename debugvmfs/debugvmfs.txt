@@ -280,6 +280,8 @@ the given block id. The available fields are:
 
 - *blkid*['blk'].item
 
+- *blkid*['blk'].flags
+
 
 AUTHORS
 -------

@@ -63,6 +63,7 @@ static char *get_value_bitmap_free(char *buf, void *value, short len);
 static char *get_value_bitmap_item_status(char *buf, void *value, short len);
 static char *get_value_vol_size(char *buf, void *value, short len);
 static char *get_value_blkid_item(char *buf, void *value, short len);
+static char *get_value_blkid_flags(char *buf, void *value, short len);
 
 #define MEMBER(type, name, desc, format) \
    { # name, { desc }, offsetof(type, name), \
@@ -192,6 +193,7 @@ struct var_struct vmfs_lvm = {
 struct var_struct blkid = {
    struct_dump, {
    VIRTUAL_MEMBER(item, "Referred Item", blkid_item),
+   VIRTUAL_MEMBER(flags, "Flags", blkid_flags),
    { NULL, }
 }};
 
@@ -503,6 +505,19 @@ static char *get_value_blkid_item(char *buf, void *value, short len)
    vmfs_block_info_t *info = (vmfs_block_info_t *)value;
    sprintf(buf, "%s.entry[%d].item[%d]", bitmaps[info->type - 1],
                                          info->entry, info->item);
+   return buf;
+}
+
+static char *get_value_blkid_flags(char *buf, void *value, short len)
+{
+   vmfs_block_info_t *info = (vmfs_block_info_t *)value;
+   if (info->flags)
+      sprintf(buf, "0x%x (%s)", info->flags,
+                                info->flags == VMFS_BLK_FB_TBZ_FLAG ? "tbz" :
+                                info->flags & VMFS_BLK_FB_TBZ_FLAG ? "tbz, unknown" :
+                                "unknown");
+   else
+      sprintf(buf, "none");
    return buf;
 }
 
