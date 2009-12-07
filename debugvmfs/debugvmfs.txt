@@ -145,6 +145,8 @@ supported top-level variables are the following:
 
 - *lvm*
 
+- *blkid*['blk']
+
 The *fbb*, *fdc*, *pbc* and *sbc* variables are bitmaps. Running them through
 the *show* command will display all the bitmaps header fields. Each of these
 fields can also be displayed individually:
@@ -272,6 +274,12 @@ accesses to metadata on the filesystem. The available fields are:
 - 'mdh'.obj_seq
 
 - 'mdh'.mtime
+
+Each *blkid*['blk'] (where 'blk' is a block id) contains information on
+the given block id. The available fields are:
+
+- *blkid*['blk'].item
+
 
 AUTHORS
 -------

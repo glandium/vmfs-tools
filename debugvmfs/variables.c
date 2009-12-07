@@ -44,6 +44,8 @@ static int bitmap_entries_dump(struct var_struct *struct_def, void *value,
                                const char *name);
 static int lvm_extents_dump(struct var_struct *struct_def, void *value,
                             const char *name);
+static int blkid_dump(struct var_struct *struct_def, void *value,
+                      const char *name);
 static int struct_dump(struct var_struct *struct_def, void *value,
                        const char *name);
 
@@ -60,6 +62,7 @@ static char *get_value_bitmap_used(char *buf, void *value, short len);
 static char *get_value_bitmap_free(char *buf, void *value, short len);
 static char *get_value_bitmap_item_status(char *buf, void *value, short len);
 static char *get_value_vol_size(char *buf, void *value, short len);
+static char *get_value_blkid_item(char *buf, void *value, short len);
 
 #define MEMBER(type, name, desc, format) \
    { # name, { desc }, offsetof(type, name), \
@@ -186,6 +189,18 @@ struct var_struct vmfs_lvm = {
    { NULL, }
 }};
 
+struct var_struct blkid = {
+   struct_dump, {
+   VIRTUAL_MEMBER(item, "Referred Item", blkid_item),
+   { NULL, }
+}};
+
+struct var_struct blkid_array = {
+   blkid_dump, {
+   ARRAY_MEMBER(blkid),
+   { NULL, }
+}};
+
 struct var_struct debugvmfs = {
    struct_dump, {
    SELF_SUBVAR(fs, vmfs_fs),
@@ -194,6 +209,7 @@ struct var_struct debugvmfs = {
    SUBVAR(vmfs_fs_t, fdc, vmfs_bitmap),
    SUBVAR(vmfs_fs_t, pbc, vmfs_bitmap),
    SUBVAR(vmfs_fs_t, sbc, vmfs_bitmap),
+   SELF_SUBVAR(blkid, blkid_array),
    { NULL, }
 }};
 
@@ -478,6 +494,27 @@ static int bitmap_items_dump(struct var_struct *struct_def, void *value,
 
    return struct_def->members[0].subvar->dump(struct_def->members[0].subvar,
                                               ref, name);
+}
+
+static const char *bitmaps[] = { "fbb", "sbc", "pbc", "fdc" };
+
+static char *get_value_blkid_item(char *buf, void *value, short len)
+{
+   enum vmfs_block_type type;
+   uint32_t entry, item;
+   vmfs_block_get_bitmap_info(*(uint32_t *)value, &type, &entry, &item);
+   sprintf(buf, "%s.entry[%d].item[%d]", bitmaps[type - 1], entry, item);
+   return buf;
+}
+
+static int blkid_dump(struct var_struct *struct_def, void *value,
+                      const char *name)
+{
+   uint32_t blkid;
+   if (!get_numeric_index(&blkid, &name))
+      return(0);
+   return struct_def->members[0].subvar->dump(struct_def->members[0].subvar,
+                                              &blkid, name);
 }
 
 int vmfs_show_variable(const vmfs_fs_t *fs, const char *name)
