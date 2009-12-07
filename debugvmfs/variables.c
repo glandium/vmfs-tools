@@ -500,10 +500,10 @@ static const char *bitmaps[] = { "fbb", "sbc", "pbc", "fdc" };
 
 static char *get_value_blkid_item(char *buf, void *value, short len)
 {
-   enum vmfs_block_type type;
-   uint32_t entry, item;
-   vmfs_block_get_bitmap_info(*(uint32_t *)value, &type, &entry, &item);
-   sprintf(buf, "%s.entry[%d].item[%d]", bitmaps[type - 1], entry, item);
+   vmfs_block_info_t info;
+   vmfs_block_get_info(*(uint32_t *)value, &info);
+   sprintf(buf, "%s.entry[%d].item[%d]", bitmaps[info.type - 1],
+                                         info.entry, info.item);
    return buf;
 }
 

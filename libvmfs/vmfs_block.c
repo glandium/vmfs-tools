@@ -29,9 +29,7 @@
 #include "vmfs.h"
 
 /* Get bitmap info (bitmap type,entry and item) from a block ID */
-int vmfs_block_get_bitmap_info(uint32_t blk_id,
-                               enum vmfs_block_type *type,
-                               uint32_t *entry,uint32_t *item)
+int vmfs_block_get_info(uint32_t blk_id, vmfs_block_info_t *info)
 {
    uint32_t blk_type;
 
@@ -40,33 +38,33 @@ int vmfs_block_get_bitmap_info(uint32_t blk_id,
    switch(blk_type) {
       /* File Block */
       case VMFS_BLK_TYPE_FB:
-         *entry = 0;
-         *item  = VMFS_BLK_FB_ITEM(blk_id);
+         info->entry = 0;
+         info->item  = VMFS_BLK_FB_ITEM(blk_id);
          break;
 
       /* Sub-Block */
       case VMFS_BLK_TYPE_SB:
-         *entry = VMFS_BLK_SB_ENTRY(blk_id);
-         *item  = VMFS_BLK_SB_ITEM(blk_id);
+         info->entry = VMFS_BLK_SB_ENTRY(blk_id);
+         info->item  = VMFS_BLK_SB_ITEM(blk_id);
          break;
 
       /* Pointer Block */
       case VMFS_BLK_TYPE_PB:
-         *entry = VMFS_BLK_PB_ENTRY(blk_id);
-         *item  = VMFS_BLK_PB_ITEM(blk_id);
+         info->entry = VMFS_BLK_PB_ENTRY(blk_id);
+         info->item  = VMFS_BLK_PB_ITEM(blk_id);
          break;
 
       /* Inode */
       case VMFS_BLK_TYPE_FD:
-         *entry = VMFS_BLK_FD_ENTRY(blk_id);
-         *item  = VMFS_BLK_FD_ITEM(blk_id);
+         info->entry = VMFS_BLK_FD_ENTRY(blk_id);
+         info->item  = VMFS_BLK_FD_ITEM(blk_id);
          break;
 
       default:
          return(-1);
    }
 
-   *type = blk_type;
+   info->type = blk_type;
 
    return(0);
 }
@@ -76,19 +74,18 @@ int vmfs_block_get_status(const vmfs_fs_t *fs,uint32_t blk_id)
 {
    vmfs_bitmap_entry_t entry;
    vmfs_bitmap_t *bmp;
-   enum vmfs_block_type blk_type;
-   uint32_t blk_entry,blk_item;
+   vmfs_block_info_t info;
 
-   if (vmfs_block_get_bitmap_info(blk_id,&blk_type,&blk_entry,&blk_item) == -1)
+   if (vmfs_block_get_info(blk_id,&info) == -1)
       return(-1);
 
-   if (!(bmp = vmfs_fs_get_bitmap(fs, blk_type)))
+   if (!(bmp = vmfs_fs_get_bitmap(fs, info.type)))
       return(-1);
 
-   if (vmfs_bitmap_get_entry(bmp,blk_entry,blk_item,&entry) == -1)
+   if (vmfs_bitmap_get_entry(bmp,info.entry,info.item,&entry) == -1)
       return(-1);
 
-   return(vmfs_bitmap_get_item_status(&bmp->bmh,&entry,blk_entry,blk_item));
+   return(vmfs_bitmap_get_item_status(&bmp->bmh,&entry,info.entry,info.item));
 }
 
 /* Allocate or free the specified block */
@@ -98,16 +95,15 @@ static int vmfs_block_set_status(const vmfs_fs_t *fs,uint32_t blk_id,
    DECL_ALIGNED_BUFFER(buf,VMFS_BITMAP_ENTRY_SIZE);
    vmfs_bitmap_entry_t entry;
    vmfs_bitmap_t *bmp;
-   enum vmfs_block_type blk_type;
-   uint32_t blk_entry,blk_item;
+   vmfs_block_info_t info;
 
-   if (vmfs_block_get_bitmap_info(blk_id,&blk_type,&blk_entry,&blk_item) == -1)
+   if (vmfs_block_get_info(blk_id,&info) == -1)
       return(-1);
 
-   if (!(bmp = vmfs_fs_get_bitmap(fs, blk_type)))
+   if (!(bmp = vmfs_fs_get_bitmap(fs, info.type)))
       return(-1);
 
-   if (vmfs_bitmap_get_entry(bmp,blk_entry,blk_item,&entry) == -1)
+   if (vmfs_bitmap_get_entry(bmp,info.entry,info.item,&entry) == -1)
       return(-1);
 
    /* Lock the bitmap entry to ensure exclusive access */
@@ -117,7 +113,7 @@ static int vmfs_block_set_status(const vmfs_fs_t *fs,uint32_t blk_id,
 
    /* Mark the item as allocated */
    if (vmfs_bitmap_set_item_status(&bmp->bmh,&entry,
-                                   blk_entry,blk_item,status) == -1) 
+                                   info.entry,info.item,status) == -1)
    {
       vmfs_metadata_unlock((vmfs_fs_t *)fs,&entry.mdh);
       return(-1);
