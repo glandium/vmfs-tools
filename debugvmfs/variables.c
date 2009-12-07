@@ -406,22 +406,23 @@ static int get_array_index(char *idx_str, const char **name)
    return(1);
 }
 
-static int get_numeric_index(int *idx, const char **name)
+static int get_numeric_index(uint32_t *idx, const char **name)
 {
    char idx_str[1024], *c;
+   unsigned long long_idx;
    if (!get_array_index(idx_str, name))
       return(0);
-   for (c = idx_str; *c; c++)
-      if ((*c < '0') || (*c > '9'))
-         return(0);
-   *idx = atoi(idx_str);
+   long_idx = strtoul(idx_str, &c, 0);
+   if (*c || (long_idx > (uint32_t)-1))
+      return(0);
+   *idx = long_idx;
    return(1);
 }
 
 static int lvm_extents_dump(struct var_struct *struct_def, void *value,
                             const char *name)
 {
-   int idx;
+   uint32_t idx;
    vmfs_lvm_t *lvm = (vmfs_lvm_t *)value;
    if (!get_numeric_index(&idx, &name))
       return(0);
@@ -436,7 +437,7 @@ static int lvm_extents_dump(struct var_struct *struct_def, void *value,
 struct vmfs_bitmap_item_ref {
    vmfs_bitmap_entry_t entry;
    vmfs_bitmap_t *bitmap;
-   int entry_idx, item_idx;
+   uint32_t entry_idx, item_idx;
 };
 
 static int bitmap_entries_dump(struct var_struct *struct_def, void *value,
