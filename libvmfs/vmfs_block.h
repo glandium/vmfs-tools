@@ -19,7 +19,7 @@
 #define VMFS_BLOCK_H
 
 /* Block types */
-enum {
+enum vmfs_block_type {
    VMFS_BLK_TYPE_NONE = 0,
    VMFS_BLK_TYPE_FB,     /* File Block */
    VMFS_BLK_TYPE_SB,     /* Sub-Block */

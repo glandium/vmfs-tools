@@ -92,7 +92,7 @@ struct vmfs_fs {
    vmfs_lvm_t *lvm;
 
    /* Meta-files containing file system structures */
-   vmfs_bitmap_t *fbb,*fdc,*pbc,*sbc;
+   vmfs_bitmap_t *fbb,*sbc,*pbc,*fdc;
 
    /* Heartbeat used to lock meta-data */
    vmfs_heartbeat_t hb;
@@ -108,6 +108,17 @@ struct vmfs_fs {
    u_int inode_hash_buckets;
    vmfs_inode_t **inodes;
 };
+
+/* Get the bitmap corresponding to the given type */
+static inline vmfs_bitmap_t *vmfs_fs_get_bitmap(const vmfs_fs_t *fs,
+                                                enum vmfs_block_type type)
+{
+   if ((type > VMFS_BLK_TYPE_NONE) && (type < VMFS_BLK_TYPE_MAX)) {
+      vmfs_bitmap_t * const *bitmap = (vmfs_bitmap_t **)&fs->fbb;
+      return bitmap[type - 1];
+   }
+   return NULL;
+}
 
 /* Get block size of a volume */
 static inline uint64_t vmfs_fs_get_blocksize(const vmfs_fs_t *fs)
