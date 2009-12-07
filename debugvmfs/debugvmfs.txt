@@ -185,8 +185,16 @@ The available fields are:
 
 - 'bitmap'.*entry*['n'].mdh
 
+- 'bitmap'.*entry*['n'].item['m']
+
 The 'bitmap'.*entry*['n'].mdh is a metadata header. See further below for
 more details about metadata headers.
+
+Each 'bitmap'.*entry*['n'].item['m'] (where 0 ≤ 'm' <
+'bitmap'.*items_per_bitmap_entry*) contains information about a given item
+in the given entry. The available fields are:
+
+- 'bitmap'.*entry*['n'].item['m'].used
 
 The *fs* variable contains low-level information about the filesystem. The
 available fields are:

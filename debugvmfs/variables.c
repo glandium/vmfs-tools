@@ -38,6 +38,8 @@ struct var_struct {
    struct var_member members[];
 };
 
+static int bitmap_items_dump(struct var_struct *struct_def, void *value,
+                               const char *name);
 static int bitmap_entries_dump(struct var_struct *struct_def, void *value,
                                const char *name);
 static int lvm_extents_dump(struct var_struct *struct_def, void *value,
@@ -56,6 +58,7 @@ static char *get_value_fs_mode(char *buf, void *value, short len);
 static char *get_value_hb_lock(char *buf, void *value, short len);
 static char *get_value_bitmap_used(char *buf, void *value, short len);
 static char *get_value_bitmap_free(char *buf, void *value, short len);
+static char *get_value_bitmap_item_status(char *buf, void *value, short len);
 static char *get_value_vol_size(char *buf, void *value, short len);
 
 #define MEMBER(type, name, desc, format) \
@@ -92,6 +95,18 @@ struct var_struct vmfs_metadata_hdr = {
    { NULL, }
 }};
 
+struct var_struct vmfs_bitmap_item = {
+   struct_dump, {
+   VIRTUAL_MEMBER(status, "Status", bitmap_item_status),
+   { NULL, }
+}};
+
+struct var_struct vmfs_bitmap_items = {
+   bitmap_items_dump, {
+   ARRAY_MEMBER(vmfs_bitmap_item),
+   { NULL, }
+}};
+
 struct var_struct vmfs_bitmap_entry = {
    struct_dump, {
    MEMBER(vmfs_bitmap_entry_t, id, "Id", uint),
@@ -99,6 +114,7 @@ struct var_struct vmfs_bitmap_entry = {
    MEMBER(vmfs_bitmap_entry_t, free, "Free items", uint),
    MEMBER(vmfs_bitmap_entry_t, ffree, "First free", uint),
    SELF_SUBVAR(mdh, vmfs_metadata_hdr),
+   SELF_SUBVAR(item, vmfs_bitmap_items),
    { NULL, }
 }};
 
@@ -417,21 +433,50 @@ static int lvm_extents_dump(struct var_struct *struct_def, void *value,
                                               lvm->extents[idx], name);
 }
 
+struct vmfs_bitmap_item_ref {
+   vmfs_bitmap_entry_t entry;
+   vmfs_bitmap_t *bitmap;
+   int entry_idx, item_idx;
+};
+
 static int bitmap_entries_dump(struct var_struct *struct_def, void *value,
                                const char *name)
 {
-   vmfs_bitmap_entry_t entry = { { 0, }, };
-   vmfs_bitmap_t *bitmap = (vmfs_bitmap_t *)value;
-   int idx;
-   if (!get_numeric_index(&idx, &name))
+   struct vmfs_bitmap_item_ref ref = { { { 0, } } };
+   ref.bitmap = (vmfs_bitmap_t *)value;
+   if (!get_numeric_index(&ref.entry_idx, &name))
       return(0);
 
-   if (idx >= bitmap->bmh.bmp_entries_per_area * bitmap->bmh.area_count)
+   if (ref.entry_idx >= ref.bitmap->bmh.bmp_entries_per_area *
+                        ref.bitmap->bmh.area_count)
       return(0);
 
-   vmfs_bitmap_get_entry(bitmap, idx, 0, &entry);
+   vmfs_bitmap_get_entry(ref.bitmap, ref.entry_idx, 0, &ref.entry);
    return struct_def->members[0].subvar->dump(struct_def->members[0].subvar,
-                                              &entry, name);
+                                              &ref, name);
+}
+
+static char *get_value_bitmap_item_status(char *buf, void *value, short len)
+{
+   struct vmfs_bitmap_item_ref *ref = (struct vmfs_bitmap_item_ref *) value;
+   int used = vmfs_bitmap_get_item_status(&ref->bitmap->bmh, value,
+                                          ref->entry_idx, ref->item_idx);
+   sprintf(buf, "%s", used ? "used" : "free");
+   return buf;
+}
+
+static int bitmap_items_dump(struct var_struct *struct_def, void *value,
+                               const char *name)
+{
+   struct vmfs_bitmap_item_ref *ref = (struct vmfs_bitmap_item_ref *) value;
+   if (!get_numeric_index(&ref->item_idx, &name))
+      return(0);
+
+   if (ref->item_idx >= ref->bitmap->bmh.items_per_bitmap_entry)
+      return(0);
+
+   return struct_def->members[0].subvar->dump(struct_def->members[0].subvar,
+                                              ref, name);
 }
 
 int vmfs_show_variable(const vmfs_fs_t *fs, const char *name)
