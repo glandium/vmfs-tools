@@ -500,10 +500,9 @@ static const char *bitmaps[] = { "fbb", "sbc", "pbc", "fdc" };
 
 static char *get_value_blkid_item(char *buf, void *value, short len)
 {
-   vmfs_block_info_t info;
-   vmfs_block_get_info(*(uint32_t *)value, &info);
-   sprintf(buf, "%s.entry[%d].item[%d]", bitmaps[info.type - 1],
-                                         info.entry, info.item);
+   vmfs_block_info_t *info = (vmfs_block_info_t *)value;
+   sprintf(buf, "%s.entry[%d].item[%d]", bitmaps[info->type - 1],
+                                         info->entry, info->item);
    return buf;
 }
 
@@ -511,10 +510,13 @@ static int blkid_dump(struct var_struct *struct_def, void *value,
                       const char *name)
 {
    uint32_t blkid;
+   vmfs_block_info_t info;
    if (!get_numeric_index(&blkid, &name))
       return(0);
+   if (vmfs_block_get_info(blkid, &info) == -1)
+      return(0);
    return struct_def->members[0].subvar->dump(struct_def->members[0].subvar,
-                                              &blkid, name);
+                                              &info, name);
 }
 
 int vmfs_show_variable(const vmfs_fs_t *fs, const char *name)
