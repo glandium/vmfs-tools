@@ -65,6 +65,7 @@ int vmfs_block_get_info(uint32_t blk_id, vmfs_block_info_t *info)
    }
 
    info->type = blk_type;
+   info->flags = VMFS_BLK_FLAGS(blk_id);
 
    return(0);
 }

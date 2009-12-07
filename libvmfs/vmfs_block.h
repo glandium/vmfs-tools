@@ -31,14 +31,22 @@ enum vmfs_block_type {
 /* Extract block type from a block ID */
 #define VMFS_BLK_TYPE(blk_id)  ((blk_id) & 0x07)
 
+/* Extract block flags from a block ID */
+/* There is probably really no more than one flag, but so far, nothing
+   indicates what can be stored between the significant bits for the block
+   type and the TBZ flag, so we'll consider they are flags of some sort,
+   and will display them as such. */
+#define VMFS_BLK_FLAGS(blk_id)  ((blk_id >> 3) & 0x07)
+
 /* File-Block - TBZ flag specifies if the block must be zeroed. */
 #define VMFS_BLK_FB_ITEM_SHIFT  6
-#define VMFS_BLK_FB_TBZ_SHIFT   5
-#define VMFS_BLK_FB_TBZ_MASK    0x1
+#define VMFS_BLK_FB_TBZ_FLAG    4
 
 #define VMFS_BLK_FB_ITEM(blk_id)   ((blk_id) >> VMFS_BLK_FB_ITEM_SHIFT)
 #define VMFS_BLK_FB_TBZ(blk_id) \
-   (((blk_id) >> VMFS_BLK_FB_TBZ_SHIFT) & VMFS_BLK_FB_TBZ_MASK)
+   (VMFS_BLK_FLAGS(blk_id) & VMFS_BLK_FB_TBZ_FLAG)
+
+#define VMFS_BLK_FB_TBZ_CLEAR(blk_id) ((blk_id) & ~(VMFS_BLK_FB_TBZ_FLAG << 3))
 
 #define VMFS_BLK_FB_BUILD(item) \
    (((item) << VMFS_BLK_FB_ITEM_SHIFT) | VMFS_BLK_TYPE_FB)
@@ -95,7 +103,7 @@ enum vmfs_block_type {
      VMFS_BLK_TYPE_FD )
 
 struct vmfs_block_info {
-   uint32_t entry, item;
+   uint32_t entry, item, flags;
    enum vmfs_block_type type;
 };
 

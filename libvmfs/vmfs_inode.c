@@ -573,7 +573,7 @@ int vmfs_inode_get_wrblock(vmfs_inode_t *inode,off_t pos,uint32_t *blk_id)
             if ((res = vmfs_block_zeroize_fb(fs,*blk_id)) < 0)
                return(res);
 
-            *blk_id &= ~(VMFS_BLK_FB_TBZ_MASK << VMFS_BLK_FB_TBZ_SHIFT);
+            *blk_id = VMFS_BLK_FB_TBZ_CLEAR(*blk_id);
             write_le32(buf,sub_index*sizeof(uint32_t),*blk_id);
             inode->tbz--;
             inode->update_flags |= VMFS_INODE_SYNC_BLK;
@@ -608,7 +608,7 @@ int vmfs_inode_get_wrblock(vmfs_inode_t *inode,off_t pos,uint32_t *blk_id)
             if ((res = vmfs_block_zeroize_fb(fs,*blk_id)) < 0)
                return(res);
 
-            *blk_id &= ~(VMFS_BLK_FB_TBZ_MASK << VMFS_BLK_FB_TBZ_SHIFT);
+            *blk_id = VMFS_BLK_FB_TBZ_CLEAR(*blk_id);
             inode->blocks[blk_index] = *blk_id;
             inode->tbz--;
             inode->update_flags |= VMFS_INODE_SYNC_BLK;
