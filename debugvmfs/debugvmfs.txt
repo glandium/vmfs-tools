@@ -59,10 +59,6 @@ Checks volume bitmaps consistency.
 *show_heartbeats*::
 Outputs active heartbeats on the file system.
 
-*convert_block_id* 'block_id' [ ... ]::
-Outputs information about the given block_id, such as block type, entry and
-item numbers.
-
 *read_block* 'block_id' [ ... ]::
 Outputs content within the specified block_id in binary
 

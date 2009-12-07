@@ -400,52 +400,6 @@ static int cmd_show_heartbeats(vmfs_dir_t *base_dir,int argc,char *argv[])
    return(vmfs_heartbeat_show_active(fs));
 }
 
-/* Convert a raw block ID in human readable form */
-static int cmd_convert_block_id(vmfs_dir_t *base_dir,int argc,char *argv[])
-{
-   uint32_t blk_id,blk_type;
-   int i;
-
-   if (argc == 0) {
-      fprintf(stderr,"Usage: convert_block_id blk1 ... blkN\n");
-      return(-1);
-   }
-   
-   for(i=0;i<argc;i++) {
-      blk_id = (uint32_t)strtoul(argv[i],NULL,16);
-      blk_type = VMFS_BLK_TYPE(blk_id);
-
-      printf("Block ID 0x%8.8x: ",blk_id);
-      
-      switch(blk_type) {
-         case VMFS_BLK_TYPE_FB:
-            printf("File-Block, Item=0x%8.8x, TBZ=%d\n",
-                   VMFS_BLK_FB_ITEM(blk_id),VMFS_BLK_FB_TBZ(blk_id));
-            break;
-
-         case VMFS_BLK_TYPE_SB:
-            printf("Sub-Block, Entry=0x%8.8x, Item=0x%2.2x\n",
-                   VMFS_BLK_SB_ENTRY(blk_id),VMFS_BLK_SB_ITEM(blk_id));
-            break;
-
-         case VMFS_BLK_TYPE_PB:
-            printf("Pointer-Block, Entry=0x%8.8x, Item=0x%2.2x\n",
-                   VMFS_BLK_PB_ENTRY(blk_id),VMFS_BLK_PB_ITEM(blk_id));
-            break;
-
-         case VMFS_BLK_TYPE_FD:
-            printf("File Descriptor, Entry=0x%4.4x, Item=0x%3.3x\n",
-                   VMFS_BLK_FD_ENTRY(blk_id),VMFS_BLK_FD_ITEM(blk_id));
-            break;
-
-         default:
-            printf("Unknown block type 0x%2.2x\n",blk_type);
-      }
-   };
-
-   return(0);
-}
-
 /* Read/Dump a block */
 static int read_dump_block(vmfs_dir_t *base_dir,int argc,char *argv[],int action)
 {    
@@ -709,7 +663,6 @@ struct cmd cmd_array[] = {
    { "check_file_blocks", "Check file blocks", cmd_check_file_blocks },
    { "check_vol_bitmaps", "Check volume bitmaps", cmd_check_vol_bitmaps },
    { "show_heartbeats", "Show active heartbeats", cmd_show_heartbeats },
-   { "convert_block_id", "Convert block ID", cmd_convert_block_id },
    { "read_block", "Read a block", cmd_read_block },
    { "dump_block", "Dump a block in hex", cmd_dump_block },
    { "get_block_status", "Get block status", cmd_get_block_status },
