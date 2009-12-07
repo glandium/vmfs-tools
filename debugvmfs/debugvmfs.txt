@@ -86,9 +86,6 @@ used by a file can be freed.
 *show_bitmap_item* 'block_id'::
 Outputs raw content for the bitmap item corresponding to the given block_id.
 
-*show_bitmap_entry* 'block_id'::
-Outputs content of the bitmap entry containing the specified block_id.
-
 *show*::
 Display value(s) of the given variable. See the *VARIABLES* section for more
 details.
