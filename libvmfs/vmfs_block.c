@@ -148,22 +148,8 @@ int vmfs_block_alloc(const vmfs_fs_t *fs,uint32_t blk_type,uint32_t *blk_id)
    vmfs_bitmap_entry_t entry;
    uint32_t item,addr;
 
-   switch(blk_type) {
-      case VMFS_BLK_TYPE_FB:
-         bmp = fs->fbb;
-         break;
-      case VMFS_BLK_TYPE_SB:
-         bmp = fs->sbc;
-         break;
-      case VMFS_BLK_TYPE_PB:
-         bmp = fs->pbc;
-         break;
-      case VMFS_BLK_TYPE_FD:
-         bmp = fs->fdc;
-         break;
-      default:
-         return(-EINVAL);
-   }
+   if (!(bmp = vmfs_fs_get_bitmap(fs, blk_type)))
+      return(-EINVAL);
 
    if (vmfs_bitmap_find_free_items(bmp,1,&entry) == -1)
       return(-ENOSPC);
