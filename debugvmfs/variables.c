@@ -368,9 +368,19 @@ static char *get_value_fs_mode(char *buf, void *value, short len)
    return buf;
 }
 
+const char *hb_lock[] = {
+   "unlocked",
+   "write lock",
+   "read lock",
+};
+
 static char *get_value_hb_lock(char *buf, void *value, short len)
 {
-   sprintf(buf, "%s", *((uint32_t *)value) ? "locked" : "unlocked");
+   uint32_t lock = *((uint32_t *)value);
+   if ((lock >= 0) && (lock <= 2))
+      sprintf(buf, "%s", hb_lock[lock]);
+   else
+      sprintf(buf, "0x%x", lock);
    return buf;
 }
 
