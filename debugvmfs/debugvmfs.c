@@ -242,26 +242,6 @@ static int cmd_df(vmfs_dir_t *base_dir,int argc,char *argv[])
    return(0);
 }
 
-/* Show an inode */
-static int cmd_show_inode(vmfs_dir_t *base_dir,int argc,char *argv[])
-{
-   vmfs_file_t *f;
-
-   if (argc == 0) {
-      fprintf(stderr,"Usage: show_inode <filename>\n");
-      return(-1);
-   }
-
-   if (!(f = vmfs_file_open_at(base_dir,argv[0]))) {
-      fprintf(stderr,"Unable to open file '%s'\n",argv[0]);
-      return(-1);
-   }
-
-   vmfs_inode_show(f->inode);
-   vmfs_file_close(f);
-   return(0);
-}
-
 /* Show file blocks */
 static int cmd_show_file_blocks(vmfs_dir_t *base_dir,int argc,char *argv[])
 {
@@ -618,7 +598,6 @@ struct cmd cmd_array[] = {
    { "chmod", "Change permissions", cmd_chmod },
    { "mkdir", "Create a directory", cmd_mkdir },
    { "df", "Show available free space", cmd_df },
-   { "show_inode", "Show inode", cmd_show_inode },
    { "show_file_blocks", "Show file blocks", cmd_show_file_blocks },
    { "get_file_block", "Get file block", cmd_get_file_block },
    { "check_file_blocks", "Check file blocks", cmd_check_file_blocks },

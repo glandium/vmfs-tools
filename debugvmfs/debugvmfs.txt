@@ -38,9 +38,6 @@ Truncate the file to the specified length. R/W support must be enabled.
 *df*::
 Outputs information about file system size.
 
-*show_inode* 'file'::
-Outputs inode information about the given file from the VMFS.
-
 *show_file_blocks* 'file'::
 Outputs block_ids for the given file's content blocks.
 
