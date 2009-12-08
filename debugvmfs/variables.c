@@ -48,6 +48,8 @@ static int blkid_dump(struct var_struct *struct_def, void *value,
                       const char *name);
 static int dirent_dump(struct var_struct *struct_def, void *value,
                        const char *name);
+static int inode_dump(struct var_struct *struct_def, void *value,
+                      const char *name);
 static int struct_dump(struct var_struct *struct_def, void *value,
                        const char *name);
 
@@ -66,6 +68,7 @@ static char *get_value_bitmap_item_status(char *buf, void *value, short len);
 static char *get_value_vol_size(char *buf, void *value, short len);
 static char *get_value_blkid_item(char *buf, void *value, short len);
 static char *get_value_blkid_flags(char *buf, void *value, short len);
+static char *get_value_mode(char *buf, void *value, short len);
 
 #define MEMBER(type, name, desc, format) \
    { # name, { desc }, offsetof(type, name), \
@@ -220,6 +223,36 @@ struct var_struct dirent_array = {
    { NULL, }
 }};
 
+struct var_struct inode = {
+   struct_dump, {
+   MEMBER(vmfs_inode_t, id, "ID", xint),
+   MEMBER(vmfs_inode_t, id2, "ID2", xint),
+   MEMBER(vmfs_inode_t, nlink, "Links", uint),
+   MEMBER(vmfs_inode_t, type, "Type", uint),
+   MEMBER(vmfs_inode_t, flags, "Flags", uint),
+   MEMBER(vmfs_inode_t, size, "Size", size),
+   MEMBER(vmfs_inode_t, blk_size, "Block size", size),
+   MEMBER(vmfs_inode_t, blk_count, "Block count", uint),
+   MEMBER(vmfs_inode_t, uid, "UID", uint),
+   MEMBER(vmfs_inode_t, gid, "GID", uint),
+   MEMBER(vmfs_inode_t, mode, "Mode", mode),
+   MEMBER(vmfs_inode_t, zla, "ZLA", uint),
+   MEMBER(vmfs_inode_t, tbz, "TBZ", uint),
+   MEMBER(vmfs_inode_t, cow, "COW", uint),
+   MEMBER(vmfs_inode_t, atime, "Access Time", date),
+   MEMBER(vmfs_inode_t, mtime, "Modify Time", date),
+   MEMBER(vmfs_inode_t, ctime, "Change Time", date),
+   MEMBER(vmfs_inode_t, rdm_id, "RDM ID", xint),
+   SELF_SUBVAR(mdh, vmfs_metadata_hdr),
+   { NULL, }
+}};
+
+struct var_struct inode_array = {
+   inode_dump, {
+   ARRAY_MEMBER(inode),
+   { NULL, }
+}};
+
 struct var_struct debugvmfs = {
    struct_dump, {
    SELF_SUBVAR(fs, vmfs_fs),
@@ -230,6 +263,7 @@ struct var_struct debugvmfs = {
    SUBVAR(vmfs_fs_t, sbc, vmfs_bitmap),
    SELF_SUBVAR(blkid, blkid_array),
    SELF_SUBVAR(dirent, dirent_array),
+   SELF_SUBVAR(inode, inode_array),
    { NULL, }
 }};
 
@@ -581,6 +615,33 @@ static int dirent_dump(struct var_struct *struct_def, void *value,
    vmfs_dir_close(dir);
    free(bname);
    free(dname);
+   return(ret);
+}
+
+static char *get_value_mode(char *buf, void *value, short len)
+{
+   char tbuf[64];
+   uint32_t mode = *((uint32_t *)value);
+   sprintf(buf, "%04o (%s)", mode, m_fmode_to_str(mode, tbuf));
+   return buf;
+}
+
+static int inode_dump(struct var_struct *struct_def, void *value,
+                      const char *name)
+{
+   char path[1024];
+   vmfs_file_t *file;
+   int ret;
+
+   if (!get_array_index(path, &name))
+      return(0);
+
+   if (!(file = vmfs_file_open_at(current_dir,path)))
+      return(0);
+
+   ret = struct_def->members[0].subvar->dump(struct_def->members[0].subvar,
+                                             (void *)file->inode, name);
+   vmfs_file_close(file);
    return(ret);
 }
 

@@ -139,6 +139,8 @@ supported top-level variables are the following:
 
 - *dirent*['path']
 
+- *inode*['path']
+
 The *fbb*, *fdc*, *pbc* and *sbc* variables are bitmaps. Running them through
 the *show* command will display all the bitmaps header fields. Each of these
 fields can also be displayed individually:
@@ -247,26 +249,6 @@ low-level information about the physical volumes. The available fields are:
 
 - *lvm*.*extent*['n'].last_segment
 
-Metadata headers are being used in several places, such as
-'bitmap'.*entry*['n'].mdh. They mostly contain information about clustered
-accesses to metadata on the filesystem. The available fields are:
-
-- 'mdh'.magic
-
-- 'mdh'.pos
-
-- 'mdh'.hb_pos
-
-- 'mdh'.hb_lock
-
-- 'mdh'.hb_uuid
-
-- 'mdh'.hb_seq
-
-- 'mdh'.obj_seq
-
-- 'mdh'.mtime
-
 Each *blkid*['blk'] (where 'blk' is a block id) contains information on
 the given block id. The available fields are:
 
@@ -286,6 +268,69 @@ are:
 - *dirent*['path'].record_id
 
 - *dirent*['path'].name
+
+Each *inode*['path'] (where 'path' is a path relative to the current
+directory in the shell or / outside the shell) contains information on
+the inode corresponding to the given path. The available fields are:
+
+- *inode*['path'].id
+
+- *inode*['path'].id2
+
+- *inode*['path'].nlink
+
+- *inode*['path'].type
+
+- *inode*['path'].flags
+
+- *inode*['path'].size
+
+- *inode*['path'].blk_size
+
+- *inode*['path'].blk_count
+
+- *inode*['path'].uid
+
+- *inode*['path'].gid
+
+- *inode*['path'].mode
+
+- *inode*['path'].zla
+
+- *inode*['path'].tbz
+
+- *inode*['path'].cow
+
+- *inode*['path'].atime
+
+- *inode*['path'].mtime
+
+- *inode*['path'].ctime
+
+- *inode*['path'].rdm_id
+
+- *inode*['path'].mdh
+
+Metadata headers are being used in several places, such as
+'bitmap'.*entry*['n'].mdh and *inode*['path'].mdh. They mostly contain
+information about clustered accesses to metadata on the filesystem.
+ The available fields are:
+
+- 'mdh'.magic
+
+- 'mdh'.pos
+
+- 'mdh'.hb_pos
+
+- 'mdh'.hb_lock
+
+- 'mdh'.hb_uuid
+
+- 'mdh'.hb_seq
+
+- 'mdh'.obj_seq
+
+- 'mdh'.mtime
 
 
 AUTHORS
