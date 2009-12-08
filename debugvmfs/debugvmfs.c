@@ -242,39 +242,6 @@ static int cmd_df(vmfs_dir_t *base_dir,int argc,char *argv[])
    return(0);
 }
 
-/* Show a directory entry */
-static int cmd_show_dirent(vmfs_dir_t *base_dir,int argc,char *argv[])
-{
-   const vmfs_dirent_t *entry;
-   vmfs_dir_t *dir;
-   char *bname, *dname;
-   int res = -1;
-
-   if (argc == 0) {
-      fprintf(stderr,"Usage: show_dirent <filename>\n");
-      return(-1);
-   }
-
-   bname = m_basename(argv[0]);
-   dname = m_dirname(argv[0]);
-   if (!(dir = vmfs_dir_open_at(base_dir,dname))) {
-      fprintf(stderr,"Unable to open directory '%s'\n", dname);
-      goto cleanup;
-   }
-
-   if ((entry = vmfs_dir_lookup(dir,bname))) {
-      vmfs_dirent_show(entry);
-      res = 0;
-   } else
-      fprintf(stderr,"Unable to find '%s'\n",argv[0]);
-
-   vmfs_dir_close(dir);
-cleanup:
-   free(bname);
-   free(dname);
-   return(res);
-}
-
 /* Show an inode */
 static int cmd_show_inode(vmfs_dir_t *base_dir,int argc,char *argv[])
 {
@@ -651,7 +618,6 @@ struct cmd cmd_array[] = {
    { "chmod", "Change permissions", cmd_chmod },
    { "mkdir", "Create a directory", cmd_mkdir },
    { "df", "Show available free space", cmd_df },
-   { "show_dirent", "Show directory entry", cmd_show_dirent },
    { "show_inode", "Show inode", cmd_show_inode },
    { "show_file_blocks", "Show file blocks", cmd_show_file_blocks },
    { "get_file_block", "Get file block", cmd_get_file_block },
