@@ -53,22 +53,6 @@ int vmfs_metadata_hdr_write(const vmfs_metadata_hdr_t *mdh,u_char *buf)
    return(0);
 }
 
-/* Show a metadata header */
-void vmfs_metadata_hdr_show(const vmfs_metadata_hdr_t *mdh)
-{
-   char uuid_str[M_UUID_BUFLEN];
-
-   printf("  - Magic        : 0x%8.8x\n",mdh->magic);
-   printf("  - Position     : 0x%"PRIx64"\n",mdh->pos);
-   printf("  - HB Position  : 0x%"PRIx64"\n",mdh->hb_pos);
-   printf("  - HB Lock      : %d (%s)\n",
-          mdh->hb_lock,(mdh->hb_lock > 0) ? "LOCKED":"UNLOCKED");
-   printf("  - HB UUID      : %s\n",m_uuid_to_str(mdh->hb_uuid,uuid_str));
-   printf("  - HB Sequence  : 0x%"PRIx64"\n",mdh->hb_seq);
-   printf("  - Obj Sequence : 0x%"PRIx64"\n",mdh->obj_seq);
-   printf("  - MTime        : %"PRId64"\n",mdh->mtime);
-}
-
 /* Lock and read metadata at specified position */
 int vmfs_metadata_lock(vmfs_fs_t *fs,off_t pos,u_char *buf,size_t buf_len,
                        vmfs_metadata_hdr_t *mdh)
