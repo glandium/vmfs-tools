@@ -293,7 +293,10 @@ static char *get_value_size(char *buf, void *value, short len)
 
 static char *get_value_string(char *buf, void *value, short len)
 {
-   strcpy(buf, *((char **)value));
+   if (len == sizeof(void *))
+      strcpy(buf, *((char **)value));
+   else
+      strcpy(buf, (char *)value);
    return buf;
 }
 
