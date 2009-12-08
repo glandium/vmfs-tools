@@ -46,6 +46,8 @@ static int lvm_extents_dump(struct var_struct *struct_def, void *value,
                             const char *name);
 static int blkid_dump(struct var_struct *struct_def, void *value,
                       const char *name);
+static int dirent_dump(struct var_struct *struct_def, void *value,
+                       const char *name);
 static int struct_dump(struct var_struct *struct_def, void *value,
                        const char *name);
 
@@ -203,6 +205,21 @@ struct var_struct blkid_array = {
    { NULL, }
 }};
 
+struct var_struct dirent = {
+   struct_dump, {
+   MEMBER(vmfs_dirent_t, type, "Type", uint),
+   MEMBER(vmfs_dirent_t, block_id, "Block ID", xint),
+   MEMBER(vmfs_dirent_t, record_id, "Record ID", xint),
+   MEMBER(vmfs_dirent_t, name, "Name", string),
+   { NULL, }
+}};
+
+struct var_struct dirent_array = {
+   dirent_dump, {
+   ARRAY_MEMBER(dirent),
+   { NULL, }
+}};
+
 struct var_struct debugvmfs = {
    struct_dump, {
    SELF_SUBVAR(fs, vmfs_fs),
@@ -212,6 +229,7 @@ struct var_struct debugvmfs = {
    SUBVAR(vmfs_fs_t, pbc, vmfs_bitmap),
    SUBVAR(vmfs_fs_t, sbc, vmfs_bitmap),
    SELF_SUBVAR(blkid, blkid_array),
+   SELF_SUBVAR(dirent, dirent_array),
    { NULL, }
 }};
 
@@ -538,6 +556,33 @@ static int blkid_dump(struct var_struct *struct_def, void *value,
 }
 
 static vmfs_dir_t *current_dir = NULL;
+
+static int dirent_dump(struct var_struct *struct_def, void *value,
+                       const char *name)
+{
+   char path[1024];
+   const vmfs_dirent_t *entry;
+   vmfs_dir_t *dir;
+   char *bname, *dname;
+   int ret;
+
+   if (!get_array_index(path, &name))
+      return(0);
+   bname = m_basename(path);
+   dname = m_dirname(path);
+
+   if (!(dir = vmfs_dir_open_at(current_dir,dname)))
+      return(0);
+   if (!(entry = vmfs_dir_lookup(dir,bname)))
+      return(0);
+
+   ret = struct_def->members[0].subvar->dump(struct_def->members[0].subvar,
+                                             (void *)entry, name);
+   vmfs_dir_close(dir);
+   free(bname);
+   free(dname);
+   return(ret);
+}
 
 int cmd_show(vmfs_dir_t *base_dir,int argc,char *argv[])
 {

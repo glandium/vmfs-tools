@@ -140,6 +140,8 @@ supported top-level variables are the following:
 
 - *blkid*['blk']
 
+- *dirent*['path']
+
 The *fbb*, *fdc*, *pbc* and *sbc* variables are bitmaps. Running them through
 the *show* command will display all the bitmaps header fields. Each of these
 fields can also be displayed individually:
@@ -274,6 +276,19 @@ the given block id. The available fields are:
 - *blkid*['blk'].item
 
 - *blkid*['blk'].flags
+
+Each *dirent*['path'] (where 'path' is a path relative to the current
+directory in the shell or / outside the shell) contains information on
+the directory entry corresponding to the given path. The available fields
+are:
+
+- *dirent*['path'].type
+
+- *dirent*['path'].block_id
+
+- *dirent*['path'].record_id
+
+- *dirent*['path'].name
 
 
 AUTHORS
