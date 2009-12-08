@@ -110,9 +110,6 @@ typedef void (*vmfs_inode_foreach_block_cbk_t)(const vmfs_inode_t *inode,
 /* Update an inode on disk */
 int vmfs_inode_update(const vmfs_inode_t *inode,int update_blk_list);
 
-/* Show an inode */
-void vmfs_inode_show(const vmfs_inode_t *inode);
-
 /* Get inode corresponding to a block id */
 int vmfs_inode_get(const vmfs_fs_t *fs,uint32_t blk_id,vmfs_inode_t *inode);
 

@@ -131,39 +131,6 @@ int vmfs_inode_update(const vmfs_inode_t *inode,int update_blk_list)
    return(0);
 }
 
-/* Show an inode */
-void vmfs_inode_show(const vmfs_inode_t *inode)
-{
-   char tbuf[64];
-
-   vmfs_metadata_hdr_show(&inode->mdh);
-
-   printf("  - ID           : 0x%8.8x\n",inode->id);
-   printf("  - ID2          : 0x%8.8x\n",inode->id2);
-   printf("  - Links        : %u\n",inode->nlink);
-   printf("  - Type         : 0x%8.8x\n",inode->type);
-   printf("  - Flags        : 0x%8.8x\n",inode->flags);
-   printf("  - Size         : 0x%8.8"PRIx64"\n",inode->size);
-   printf("  - Block size   : 0x%"PRIx64"\n",inode->blk_size);
-   printf("  - Block count  : 0x%"PRIx64"\n",inode->blk_count);
-   printf("  - UID/GID      : %d/%d\n",inode->uid,inode->gid);
-   printf("  - Mode         : 0%o (%s)\n",
-          inode->mode,m_fmode_to_str(inode->mode,tbuf));
-   printf("  - CMode        : 0%o (%s)\n",
-          inode->cmode,m_fmode_to_str(inode->cmode,tbuf));
-   printf("  - ZLA          : 0x%8.8x\n",inode->zla);
-   printf("  - TBZ          : 0x%8.8x\n",inode->tbz);
-   printf("  - COW          : 0x%8.8x\n",inode->cow);
-
-   printf("  - Access Time  : %s\n",m_ctime(&inode->atime,tbuf,sizeof(tbuf)));
-   printf("  - Modify Time  : %s\n",m_ctime(&inode->mtime,tbuf,sizeof(tbuf)));
-   printf("  - Change Time  : %s\n",m_ctime(&inode->ctime,tbuf,sizeof(tbuf)));
-
-   if (inode->type == VMFS_FILE_TYPE_RDM) {
-      printf("  - RDM ID       : 0x%8.8x\n",inode->rdm_id);
-   }
-}
-
 /* Get inode corresponding to a block id */
 int vmfs_inode_get(const vmfs_fs_t *fs,uint32_t blk_id,vmfs_inode_t *inode)
 {
