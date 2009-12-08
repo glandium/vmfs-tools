@@ -534,7 +534,11 @@ static int blkid_dump(struct var_struct *struct_def, void *value,
                                               &info, name);
 }
 
-int vmfs_show_variable(const vmfs_fs_t *fs, const char *name)
+static vmfs_dir_t *current_dir = NULL;
+
+int cmd_show(vmfs_dir_t *base_dir,int argc,char *argv[])
 {
-   return debugvmfs.dump(&debugvmfs, (void *)fs, name) ? 0 : 1;
+   current_dir = base_dir;
+   return debugvmfs.dump(&debugvmfs, (void *)vmfs_dir_get_fs(base_dir),
+                         argv[0]) ? 0 : 1;
 }

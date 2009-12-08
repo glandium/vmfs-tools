@@ -632,12 +632,7 @@ static int cmd_show_bitmap_item(vmfs_dir_t *base_dir,int argc,char *argv[])
    return(0);
 }
 
-int vmfs_show_variable(const vmfs_fs_t *fs, const char *name);
-
-static int cmd_show(vmfs_dir_t *base_dir,int argc,char *argv[])
-{
-   return vmfs_show_variable(vmfs_dir_get_fs(base_dir), argv[0]);
-}
+int cmd_show(vmfs_dir_t *base_dir,int argc,char *argv[]);
 
 struct cmd {
    char *name;
