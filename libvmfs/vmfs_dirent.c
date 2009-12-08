@@ -46,15 +46,6 @@ static int vmfs_dirent_write(const vmfs_dirent_t *entry,u_char *buf)
    return(0);
 }
 
-/* Show a directory entry */
-void vmfs_dirent_show(const vmfs_dirent_t *entry)
-{
-   printf("  - Type      : 0x%x\n",entry->type);
-   printf("  - Block ID  : 0x%8.8x\n",entry->block_id);
-   printf("  - Record ID : 0x%8.8x\n",entry->record_id);
-   printf("  - Name      : %s\n",entry->name);
-}
-
 /* Search for an entry into a directory ; affects position of the next
 entry vmfs_dir_read will return */
 const vmfs_dirent_t *vmfs_dir_lookup(vmfs_dir_t *d,const char *name)

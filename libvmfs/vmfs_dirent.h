@@ -44,9 +44,6 @@ struct vmfs_dirent {
    char name[129];
 };
 
-/* Show a directory entry */
-void vmfs_dirent_show(const vmfs_dirent_t *entry);
-
 struct vmfs_dir {
    vmfs_file_t *dir;
    uint32_t pos;
