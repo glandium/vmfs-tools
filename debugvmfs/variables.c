@@ -1,6 +1,6 @@
 /*
  * vmfs-tools - Tools to access VMFS filesystems
- * Copyright (C) 2009 Mike Hommey <mh@glandium.org>
+ * Copyright (C) 2009,2010 Mike Hommey <mh@glandium.org>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -595,6 +595,12 @@ static int blkid_dump(struct var_struct *struct_def, void *value,
       return(0);
    if (vmfs_block_get_info(blkid, &info) == -1)
       return(0);
+   /* Normalize entry and item for fbb */
+   if (info.type == VMFS_BLK_TYPE_FB) {
+      vmfs_fs_t *fs = (vmfs_fs_t *)value;
+      info.entry = info.item / fs->fbb->bmh.items_per_bitmap_entry;
+      info.item = info.item % fs->fbb->bmh.items_per_bitmap_entry;
+   }
    return struct_def->members[0].subvar->dump(struct_def->members[0].subvar,
                                               &info, name);
 }
