@@ -1,0 +1,28 @@
+fsck.vmfs(8)
+============
+
+NAME
+----
+fsck.vmfs - VMFS file system check utility
+
+
+SYNOPSIS
+--------
+*fsck.vmfs* 'VOLUME'...
+
+
+DESCRIPTION
+-----------
+The *fsck.vmfs* performs various integrity checks on a VMFS file system.
+
+The 'VOLUME' to be opened can be either a block device or an image file.
+When the VMFS spreads accross several extents, all extents must be given.
+
+AUTHORS
+-------
+include::../AUTHORS[]
+
+
+SEE ALSO
+--------
+debugvmfs(8)
