@@ -23,4 +23,5 @@ for opt; do
 	esac
 done
 
-exec $MAKE -B config.cache ${MAKEOPTS}
+rm -f config.cache
+exec $MAKE config.cache ${MAKEOPTS}
