@@ -642,6 +642,10 @@ static char *get_value_mode(char *buf, void *value, short len)
    return buf;
 }
 
+/* Defined in debugvmfs.c */
+vmfs_file_t *vmfs_file_open_from_filespec(vmfs_dir_t *base_dir,
+                                          const char *filespec);
+
 static int inode_dump(struct var_struct *struct_def, void *value,
                       const char *name)
 {
@@ -652,7 +656,7 @@ static int inode_dump(struct var_struct *struct_def, void *value,
    if (!get_array_index(path, &name))
       return(0);
 
-   if (!(file = vmfs_file_open_at(current_dir,path)))
+   if (!(file = vmfs_file_open_from_filespec(current_dir,path)))
       return(0);
 
    ret = struct_def->members[0].subvar->dump(struct_def->members[0].subvar,

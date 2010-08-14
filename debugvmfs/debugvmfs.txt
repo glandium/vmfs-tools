@@ -151,7 +151,7 @@ supported top-level variables are the following:
 
 - *dirent*['path']
 
-- *inode*['path']
+- *inode*['filespec']
 
 The *fbb*, *fdc*, *pbc* and *sbc* variables are bitmaps. Running them through
 the *show* command will display all the bitmaps header fields. Each of these
@@ -281,50 +281,49 @@ are:
 
 - *dirent*['path'].name
 
-Each *inode*['path'] (where 'path' is a path relative to the current
-directory in the shell or / outside the shell) contains information on
-the inode corresponding to the given path. The available fields are:
+Each *inode*['filespec'] contains information on the inode corresponding
+to the given filespec. The available fields are:
 
-- *inode*['path'].id
+- *inode*['filespec'].id
 
-- *inode*['path'].id2
+- *inode*['filespec'].id2
 
-- *inode*['path'].nlink
+- *inode*['filespec'].nlink
 
-- *inode*['path'].type
+- *inode*['filespec'].type
 
-- *inode*['path'].flags
+- *inode*['filespec'].flags
 
-- *inode*['path'].size
+- *inode*['filespec'].size
 
-- *inode*['path'].blk_size
+- *inode*['filespec'].blk_size
 
-- *inode*['path'].blk_count
+- *inode*['filespec'].blk_count
 
-- *inode*['path'].uid
+- *inode*['filespec'].uid
 
-- *inode*['path'].gid
+- *inode*['filespec'].gid
 
-- *inode*['path'].mode
+- *inode*['filespec'].mode
 
-- *inode*['path'].zla
+- *inode*['filespec'].zla
 
-- *inode*['path'].tbz
+- *inode*['filespec'].tbz
 
-- *inode*['path'].cow
+- *inode*['filespec'].cow
 
-- *inode*['path'].atime
+- *inode*['filespec'].atime
 
-- *inode*['path'].mtime
+- *inode*['filespec'].mtime
 
-- *inode*['path'].ctime
+- *inode*['filespec'].ctime
 
-- *inode*['path'].rdm_id
+- *inode*['filespec'].rdm_id
 
-- *inode*['path'].mdh
+- *inode*['filespec'].mdh
 
 Metadata headers are being used in several places, such as
-'bitmap'.*entry*['n'].mdh and *inode*['path'].mdh. They mostly contain
+'bitmap'.*entry*['n'].mdh and *inode*['filespec'].mdh. They mostly contain
 information about clustered accesses to metadata on the filesystem.
  The available fields are:
 

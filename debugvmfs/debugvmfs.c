@@ -32,7 +32,7 @@
 
 /* Opens a vmfs_file_t/vmfs_dir_t corresponding to the given filespec */
 #define vmfs_foo_open_from_filespec(foo) \
-static vmfs_## foo ##_t *vmfs_## foo ##_open_from_filespec( \
+vmfs_## foo ##_t *vmfs_## foo ##_open_from_filespec( \
    vmfs_dir_t *base_dir, const char *filespec) \
 { \
    if (filespec[0] == '<') { /* Possibly a "<inode>" filespec */ \
