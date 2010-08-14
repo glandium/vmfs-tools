@@ -1,7 +1,7 @@
 /*
  * vmfs-tools - Tools to access VMFS filesystems
  * Copyright (C) 2009 Christophe Fillot <cf@utc.fr>
- * Copyright (C) 2009 Mike Hommey <mh@glandium.org>
+ * Copyright (C) 2009,2010 Mike Hommey <mh@glandium.org>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -724,14 +724,15 @@ static int cmd_shell(vmfs_dir_t *base_dir,int argc,char *argv[])
       if (!strcmp(cmdline->argv[0], "cd")) {
          if (cmdline->argc == 2) {
             vmfs_dir_t *new_dir;
-            if (!(new_dir = vmfs_dir_open_at(cur_dir, cmdline->argv[1]))) {
+            if (!(new_dir = vmfs_dir_open_from_filespec(cur_dir,
+                                                        cmdline->argv[1]))) {
                fprintf(stderr, "No such directory: %s\n", cmdline->argv[1]);
                continue;
             }
             vmfs_dir_close(cur_dir);
             cur_dir = new_dir;
          } else {
-            fprintf(stderr, "Usage: cd <path>\n");
+            fprintf(stderr, "Usage: cd <filespec>\n");
          }
          continue;
       }

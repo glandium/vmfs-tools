@@ -104,7 +104,7 @@ Starts an interactive session. All of the above commands can be executed from
 within the interactive session.
 +
 The current working directory can be changed with the *cd* command,
-followed by a path.
+followed by a filespec.
 +
 The following output redirections are supported within the shell:
 +
