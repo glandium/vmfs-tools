@@ -21,30 +21,45 @@ When the VMFS spreads accross several extents, all extents must be given.
 
 Please note that most commands are still likely to change in future versions.
 
+SPECIFYING FILES
+----------------
+Some commands take a 'filespec' as an argument. A 'filespec' may take either
+of the following forms:
+
+- A path name, relative to the root of the filesystem if it starts with \'/',
+  or relative to the current working directory otherwise (interactive mode
+  only).
+
+- An inode number, enclosed between angle brackets, e.g. \'<4>',
+  \'<0x1400004>'
+
 COMMANDS
 --------
-*cat* 'file' [ ... ]::
+*cat* 'filespec' [ ... ]::
 Outputs the content of the given files from the VMFS.
 
-*ls* [ *-l* ] 'path'::
+*ls* [ *-l* ] 'filespec'::
 Lists files contained at the given location within the VMFS.
 +
 With *-l*, gives some more information, much like the output from *ls*(1)
 when given the *-l* option.
 
-*truncate* 'path' 'length'::
+*truncate* 'filespec' 'length'::
 Truncate the file to the specified length. R/W support must be enabled.
+
+*chmod* 'filespec' 'mode'::
+Change file permissions to the given mode.
 
 *df*::
 Outputs information about file system size.
 
-*show_file_blocks* 'file'::
+*show_file_blocks* 'filespec'::
 Outputs block_ids for the given file's content blocks.
 
-*get_file_block* 'file' 'position'::
+*get_file_block* 'filespec' 'position'::
 Get file block corresponding to position in the specified file.
 
-*check_file_blocks* 'file'::
+*check_file_blocks* 'filespec'::
 Check that all blocks used by a file are correctly allocated.
 
 *check_vol_bitmaps*::

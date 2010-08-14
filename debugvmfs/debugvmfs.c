@@ -30,6 +30,24 @@
 #include "vmfs.h"
 #include "readcmd.h"
 
+/* Opens a vmfs_file_t/vmfs_dir_t corresponding to the given filespec */
+#define vmfs_foo_open_from_filespec(foo) \
+static vmfs_## foo ##_t *vmfs_## foo ##_open_from_filespec( \
+   vmfs_dir_t *base_dir, const char *filespec) \
+{ \
+   if (filespec[0] == '<') { /* Possibly a "<inode>" filespec */ \
+      char *end; \
+      off_t inode = (off_t)strtoull(filespec + 1,&end,0); \
+      if ((end != filespec) && (end[0] == '>') && (end[1] == 0)) { \
+         const vmfs_fs_t *fs = vmfs_dir_get_fs(base_dir); \
+         return vmfs_## foo ##_open_from_blkid(fs, inode); \
+      } \
+   } \
+   return vmfs_## foo ##_open_at(base_dir, filespec); \
+}
+vmfs_foo_open_from_filespec(file)
+vmfs_foo_open_from_filespec(dir)
+
 /* "cat" command */
 static int cmd_cat(vmfs_dir_t *base_dir,int argc,char *argv[])
 {
@@ -42,7 +60,7 @@ static int cmd_cat(vmfs_dir_t *base_dir,int argc,char *argv[])
    }
 
    for(i=0;i<argc;i++) {
-      if (!(f = vmfs_file_open_at(base_dir,argv[i]))) {
+      if (!(f = vmfs_file_open_from_filespec(base_dir, argv[i]))) {
          fprintf(stderr,"Unable to open file %s\n",argv[i]);
          return(-1);
       }
@@ -84,7 +102,7 @@ static int cmd_ls(vmfs_dir_t *base_dir,int argc,char *argv[])
       return(-1);
    }
 
-   if (!(d = vmfs_dir_open_at(base_dir,arg))) {
+   if (!(d = vmfs_dir_open_from_filespec(base_dir,arg))) {
       fprintf(stderr,"Unable to open directory %s\n",argv[0]);
       return(-1);
    }
@@ -129,22 +147,32 @@ static int cmd_ls(vmfs_dir_t *base_dir,int argc,char *argv[])
 static int cmd_truncate(vmfs_dir_t *base_dir,int argc,char *argv[])
 {
    off_t new_size;
+   vmfs_file_t *f;
+   int ret = 0;
 
    if (argc < 2) {
-      fprintf(stderr,"Usage: truncate filename size\n");
+      fprintf(stderr,"Usage: truncate filespec size\n");
       return(-1);
    }
 
    new_size = (off_t)strtoull(argv[1],NULL,0);
 
-   if (vmfs_file_truncate_at(base_dir,argv[0],new_size) < 0) {
-      fprintf(stderr,"Unable to truncate file.\n");
+   if (!(f = vmfs_file_open_from_filespec(base_dir, argv[0]))) {
+      fprintf(stderr,"Unable to open file %s\n",argv[0]);
       return(-1);
+   }
+
+   if (vmfs_file_truncate(f,new_size) < 0) {
+      fprintf(stderr,"Unable to truncate file.\n");
+      ret = -1;
+      goto end;
    }
    
    printf("File truncated to %"PRIu64" (0x%"PRIx64") bytes\n",
           (uint64_t)new_size,(uint64_t)new_size);
-   return(0);
+end:
+   vmfs_file_close(f);
+   return ret;
 }
 
 /* "copy_file" command */
@@ -189,20 +217,28 @@ static int cmd_copy_file(vmfs_dir_t *base_dir,int argc,char *argv[])
 static int cmd_chmod(vmfs_dir_t *base_dir,int argc,char *argv[])
 {
    mode_t mode;
+   vmfs_file_t *f;
+   int ret = 0;
 
    if (argc < 2) {
-      fprintf(stderr,"Usage: chmod filename mode\n");
+      fprintf(stderr,"Usage: chmod filespec mode\n");
       return(-1);
    }
 
    mode = (mode_t)strtoul(argv[1],NULL,0);
 
-   if (vmfs_file_chmod_at(base_dir,argv[0],mode) < 0) {
-      fprintf(stderr,"Unable to change file permissions.\n");
+   if (!(f = vmfs_file_open_from_filespec(base_dir, argv[0]))) {
+      fprintf(stderr,"Unable to open file %s\n",argv[0]);
       return(-1);
    }
 
-   return(0);
+   if (vmfs_file_chmod(f,mode) < 0) {
+      fprintf(stderr,"Unable to change file permissions.\n");
+      ret = -1;
+   }
+
+   vmfs_file_close(f);
+   return ret;
 }
 
 /* "mkdir" command */
@@ -248,12 +284,12 @@ static int cmd_show_file_blocks(vmfs_dir_t *base_dir,int argc,char *argv[])
    vmfs_file_t *f;
 
    if (argc == 0) {
-      fprintf(stderr,"Usage: show_file_blocks <filename>\n");
+      fprintf(stderr,"Usage: show_file_blocks <filespec>\n");
       return(-1);
    }
 
-   if (!(f = vmfs_file_open_at(base_dir,argv[0]))) {
-      fprintf(stderr,"Unable to open file '%s'\n",argv[0]);
+   if (!(f = vmfs_file_open_from_filespec(base_dir, argv[0]))) {
+      fprintf(stderr,"Unable to open file %s\n",argv[0]);
       return(-1);
    }
 
@@ -268,13 +304,14 @@ static int cmd_get_file_block(vmfs_dir_t *base_dir,int argc,char *argv[])
    vmfs_file_t *f;
    uint32_t blk_id;
    off_t pos;
+   int ret = 0;
 
    if (argc < 2) {
-      fprintf(stderr,"Usage: get_file_block <filename> <position>\n");
+      fprintf(stderr,"Usage: get_file_block <filespec> <position>\n");
       return(-1);
    }
 
-   if (!(f = vmfs_file_open_at(base_dir,argv[0]))) {
+   if (!(f = vmfs_file_open_from_filespec(base_dir,argv[0]))) {
       fprintf(stderr,"Unable to open file '%s'\n",argv[0]);
       return(-1);
    }
@@ -285,10 +322,11 @@ static int cmd_get_file_block(vmfs_dir_t *base_dir,int argc,char *argv[])
       printf("0x%8.8x\n",blk_id);
    } else {
       fprintf(stderr,"Unable to get block info\n");
+      ret = -1;
    }
 
    vmfs_file_close(f);
-   return(0);
+   return ret;
 }
 
 /* Check file blocks */
@@ -298,11 +336,11 @@ static int cmd_check_file_blocks(vmfs_dir_t *base_dir,int argc,char *argv[])
    int res;
 
    if (argc == 0) {
-      fprintf(stderr,"Usage: check_file_blocks <filename>\n");
+      fprintf(stderr,"Usage: check_file_blocks <filespec>\n");
       return(-1);
    }
 
-   if (!(f = vmfs_file_open_at(base_dir,argv[0]))) {
+   if (!(f = vmfs_file_open_from_filespec(base_dir,argv[0]))) {
       fprintf(stderr,"Unable to open file '%s'\n",argv[0]);
       return(-1);
    }
