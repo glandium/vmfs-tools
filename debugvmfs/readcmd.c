@@ -1,7 +1,7 @@
 /*
  * vmfs-tools - Tools to access VMFS filesystems
  * Copyright (C) 2009 Christophe Fillot <cf@utc.fr>
- * Copyright (C) 2009 Mike Hommey <mh@glandium.org>
+ * Copyright (C) 2009,2010 Mike Hommey <mh@glandium.org>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -99,7 +99,7 @@ const cmd_t *readcmd(const char *prompt)
       cmd->piped = 1;
    else
       cmd->redir = index(buf, '>');
-   if (cmd->redir) {
+   if (cmd->redir && (cmd->redir != buf) && (cmd->redir[-1] == ' ')) {
       char *s;
       for(s=cmd->redir-1;(s>=buf)&&(*s==' ');*(s--)=0);
       *(cmd->redir++) = 0;
@@ -114,7 +114,8 @@ const cmd_t *readcmd(const char *prompt)
       }
       while (*cmd->redir == ' ')
          cmd->redir++;
-   }
+   } else
+      cmd->redir = NULL;
    cmd->argv = malloc(ARGV_INCR * sizeof(char *));
    cmd->argv[0] = buf;
    do {
