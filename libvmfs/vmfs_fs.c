@@ -39,7 +39,7 @@ ssize_t vmfs_fs_read(const vmfs_fs_t *fs,uint32_t blk,off_t offset,
    pos  = (uint64_t)blk * vmfs_fs_get_blocksize(fs);
    pos += offset;
 
-   return(vmfs_lvm_read(fs->lvm,pos,buf,len));
+   return(vmfs_device_read(fs->dev,pos,buf,len));
 }
 
 /* Write a block to the filesystem */
@@ -51,7 +51,7 @@ ssize_t vmfs_fs_write(const vmfs_fs_t *fs,uint32_t blk,off_t offset,
    pos  = (uint64_t)blk * vmfs_fs_get_blocksize(fs);
    pos += offset;
 
-   return(vmfs_lvm_write(fs->lvm,pos,buf,len));
+   return(vmfs_device_write(fs->dev,pos,buf,len));
 }
 
 /* Read filesystem information */
@@ -60,7 +60,7 @@ static int vmfs_fsinfo_read(vmfs_fs_t *fs)
    DECL_ALIGNED_BUFFER(buf,512);
    vmfs_fsinfo_t *fsi = &fs->fs_info;
 
-   if (vmfs_lvm_read(fs->lvm,VMFS_FSINFO_BASE,buf,buf_len) != buf_len)
+   if (vmfs_device_read(fs->dev,VMFS_FSINFO_BASE,buf,buf_len) != buf_len)
       return(-1);
 
    fsi->magic = read_le32(buf,VMFS_FSINFO_OFS_MAGIC);
@@ -161,12 +161,41 @@ static int vmfs_read_fdc_base(vmfs_fs_t *fs)
    return(0);
 }
 
-/* Create a FS structure */
-vmfs_fs_t *vmfs_fs_create(vmfs_lvm_t *lvm)
+static vmfs_device_t *vmfs_device_open(char **paths, vmfs_flags_t flags)
 {
+   vmfs_lvm_t *lvm;
+
+   if (!(lvm = vmfs_lvm_create(flags))) {
+      fprintf(stderr,"Unable to create LVM structure\n");
+      return NULL;
+   }
+
+   for (; *paths; paths++) {
+      if (vmfs_lvm_add_extent(lvm, vmfs_vol_open(*paths, flags)) == -1) {
+         fprintf(stderr,"Unable to open device/file \"%s\".\n",*paths);
+         return NULL;
+      }
+   }
+
+   if (vmfs_lvm_open(lvm)) {
+      vmfs_device_close(&lvm->dev);
+      return NULL;
+   }
+
+   return &lvm->dev;
+}
+
+/* Open a filesystem */
+vmfs_fs_t *vmfs_fs_open(char **paths, vmfs_flags_t flags)
+{
+   vmfs_device_t *dev;
    vmfs_fs_t *fs;
 
-   if (!(fs = calloc(1,sizeof(*fs))))
+   vmfs_host_init();
+
+   dev = vmfs_device_open(paths, flags);
+
+   if (!dev || !(fs = calloc(1,sizeof(*fs))))
       return NULL;
 
    fs->inode_hash_buckets = VMFS_INODE_HASH_BUCKETS;
@@ -177,37 +206,32 @@ vmfs_fs_t *vmfs_fs_create(vmfs_lvm_t *lvm)
       return NULL;
    }
 
-   fs->lvm = lvm;
-   fs->debug_level = lvm->flags.debug_level;
-   return fs;
-}
-
-/* Open a filesystem */
-int vmfs_fs_open(vmfs_fs_t *fs)
-{
-   if (vmfs_lvm_open(fs->lvm))
-      return(-1);
+   fs->dev = dev;
+   fs->debug_level = flags.debug_level;
 
    /* Read FS info */
    if (vmfs_fsinfo_read(fs) == -1) {
       fprintf(stderr,"VMFS: Unable to read FS information\n");
-      return(-1);
+      vmfs_fs_close(fs);
+      return NULL;
    }
 
-   if (uuid_compare(fs->fs_info.lvm_uuid, fs->lvm->lvm_info.uuid)) {
+   if (uuid_compare(fs->fs_info.lvm_uuid, *fs->dev->uuid)) {
       fprintf(stderr,"VMFS: FS doesn't belong to the underlying LVM\n");
-      return(-1);
+      vmfs_fs_close(fs);
+      return NULL;
    }
 
    /* Read FDC base information */
    if (vmfs_read_fdc_base(fs) == -1) {
       fprintf(stderr,"VMFS: Unable to read FDC information\n");
-      return(-1);
+      vmfs_fs_close(fs);
+      return NULL;
    }
 
    if (fs->debug_level > 0)
       printf("VMFS: filesystem opened successfully\n");
-   return(0);
+   return fs;
 }
 
 /* 
@@ -252,7 +276,7 @@ void vmfs_fs_close(vmfs_fs_t *fs)
 
    vmfs_fs_sync_inodes(fs);
 
-   vmfs_lvm_close(fs->lvm);
+   vmfs_device_close(fs->dev);
    free(fs->inodes);
    free(fs->fs_info.label);
    free(fs);

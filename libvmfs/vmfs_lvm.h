@@ -20,6 +20,8 @@
 
 #define VMFS_LVM_MAX_EXTENTS 32
 
+#define VMFS_LVM_SEGMENT_SIZE (256 * 1024 * 1024)
+
 struct vmfs_lvminfo {
    uuid_t uuid;
    uint32_t num_extents;
@@ -29,6 +31,8 @@ struct vmfs_lvminfo {
 
 /* === LVM === */
 struct vmfs_lvm {
+   vmfs_device_t dev;
+
    vmfs_flags_t flags;
 
    /* LVM information */
@@ -41,18 +45,6 @@ struct vmfs_lvm {
    vmfs_volume_t *extents[VMFS_LVM_MAX_EXTENTS];
 };
 
-/* Read a raw block of data on logical volume */
-ssize_t vmfs_lvm_read(const vmfs_lvm_t *lvm,off_t pos,u_char *buf,size_t len);
-
-/* Write a raw block of data on logical volume */
-ssize_t vmfs_lvm_write(const vmfs_lvm_t *lvm,off_t pos,const u_char *buf,size_t len);
-
-/* Reserve the underlying volume given a LVM position */
-int vmfs_lvm_reserve(const vmfs_lvm_t *lvm,off_t pos);
-
-/* Release the underlying volume given a LVM position */
-int vmfs_lvm_release(const vmfs_lvm_t *lvm,off_t pos);
-
 /* Create a volume structure */
 vmfs_lvm_t *vmfs_lvm_create(vmfs_flags_t flags);
 
@@ -61,8 +53,5 @@ int vmfs_lvm_add_extent(vmfs_lvm_t *lvm, vmfs_volume_t *vol);
 
 /* Open an LVM */
 int vmfs_lvm_open(vmfs_lvm_t *lvm);
-
-/* Close an LVM */
-void vmfs_lvm_close(vmfs_lvm_t *lvm);
 
 #endif

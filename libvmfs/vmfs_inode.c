@@ -125,7 +125,7 @@ int vmfs_inode_update(const vmfs_inode_t *inode,int update_blk_list)
       buf_len -= VMFS_INODE_BLK_COUNT * sizeof(uint32_t);
    }
 
-   if (vmfs_lvm_write(inode->fs->lvm,inode->mdh.pos,buf,buf_len) != buf_len)
+   if (vmfs_device_write(inode->fs->dev,inode->mdh.pos,buf,buf_len) != buf_len)
       return(-1);
 
    return(0);

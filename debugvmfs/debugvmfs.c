@@ -783,11 +783,10 @@ cleanup:
 
 int main(int argc,char *argv[])
 {
-   vmfs_lvm_t *lvm;
    vmfs_fs_t *fs;
    vmfs_dir_t *root_dir;
    struct cmd *cmd = NULL;
-   int arg, i, ret;
+   int arg, ret;
    vmfs_flags_t flags;
 
    if (argc < 3) {
@@ -806,8 +805,6 @@ int main(int argc,char *argv[])
       return(0);
    }
 
-   vmfs_host_init();
-
    flags.packed = 0;
 
 #ifdef VMFS_WRITE
@@ -816,28 +813,12 @@ int main(int argc,char *argv[])
 
    flags.allow_missing_extents = 1;
 
-   if (!(lvm = vmfs_lvm_create(flags))) {
-      fprintf(stderr,"Unable to create LVM structure\n");
-      exit(EXIT_FAILURE);
-   }
-
-   for (i = 1; i < arg; i++) {
-      if (vmfs_lvm_add_extent(lvm, vmfs_vol_open(argv[i], flags)) == -1) {
-         fprintf(stderr,"Unable to open device/file \"%s\".\n",argv[i]);
-         exit(EXIT_FAILURE);
-      }
-   }
-
-   if (!(fs = vmfs_fs_create(lvm))) {
+   argv[arg] = NULL;
+   if (!(fs = vmfs_fs_open(&argv[1], flags))) {
       fprintf(stderr,"Unable to open filesystem\n");
       exit(EXIT_FAILURE);
    }
    
-   if (vmfs_fs_open(fs) == -1) {
-      fprintf(stderr,"Unable to open volume.\n");
-      exit(EXIT_FAILURE);
-   }
-
    if (!(root_dir = vmfs_dir_open_from_blkid(fs,VMFS_BLK_FD_BUILD(0,0)))) {
       fprintf(stderr,"Unable to open root directory\n");
       exit(EXIT_FAILURE);

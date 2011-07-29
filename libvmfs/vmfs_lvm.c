@@ -22,8 +22,6 @@
 #include <stdlib.h>
 #include "vmfs.h"
 
-#define VMFS_LVM_SEGMENT_SIZE (256 * 1024 * 1024)
-
 /* 
  * Until we uncover the details of the segment descriptors format,
  * it is useless to try to do something more efficient.
@@ -50,7 +48,7 @@ static inline uint64_t vmfs_lvm_extent_size(const vmfs_volume_t *extent)
    return((uint64_t)extent->vol_info.num_segments * VMFS_LVM_SEGMENT_SIZE);
 }
 
-typedef ssize_t (*vmfs_vol_io_func)(const vmfs_volume_t *,off_t,u_char *,size_t);
+typedef ssize_t (*vmfs_vol_io_func)(const vmfs_device_t *,off_t,u_char *,size_t);
 
 /* Read a raw block of data on logical volume */
 static inline ssize_t vmfs_lvm_io(const vmfs_lvm_t *lvm,off_t pos,u_char *buf,
@@ -68,41 +66,47 @@ static inline ssize_t vmfs_lvm_io(const vmfs_lvm_t *lvm,off_t pos,u_char *buf,
       return(-1);
    }
 
-   return(func(extent,pos,buf,len));
+   return(func(&extent->dev,pos,buf,len));
 }
 
 /* Read a raw block of data on logical volume */
-ssize_t vmfs_lvm_read(const vmfs_lvm_t *lvm,off_t pos,u_char *buf,size_t len)
+static ssize_t vmfs_lvm_read(const vmfs_device_t *dev,off_t pos,
+                             u_char *buf,size_t len)
 {
-   return(vmfs_lvm_io(lvm,pos,buf,len,vmfs_vol_read));
+   vmfs_lvm_t *lvm = (vmfs_lvm_t *)dev;
+   return(vmfs_lvm_io(lvm,pos,buf,len,vmfs_device_read));
 }
 
 /* Write a raw block of data on logical volume */
-ssize_t vmfs_lvm_write(const vmfs_lvm_t *lvm,off_t pos,const u_char *buf,size_t len)
+static ssize_t vmfs_lvm_write(const vmfs_device_t *dev,off_t pos,
+                              const u_char *buf,size_t len)
 {
-   return(vmfs_lvm_io(lvm,pos,(u_char *)buf,len,(vmfs_vol_io_func)vmfs_vol_write));
+   vmfs_lvm_t *lvm = (vmfs_lvm_t *)dev;
+   return(vmfs_lvm_io(lvm,pos,(u_char *)buf,len,(vmfs_vol_io_func)vmfs_device_write));
 }
 
 /* Reserve the underlying volume given a LVM position */
-int vmfs_lvm_reserve(const vmfs_lvm_t *lvm,off_t pos)
+static int vmfs_lvm_reserve(const vmfs_device_t *dev,off_t pos)
 {
+   vmfs_lvm_t *lvm = (vmfs_lvm_t *)dev;
    vmfs_volume_t *extent = vmfs_lvm_get_extent_from_offset(lvm,pos);
 
    if (!extent)
       return(-1);
 
-   return(vmfs_vol_reserve(extent));
+   return(vmfs_device_reserve(&extent->dev, 0));
 }
 
 /* Release the underlying volume given a LVM position */
-int vmfs_lvm_release(const vmfs_lvm_t *lvm,off_t pos)
+static int vmfs_lvm_release(const vmfs_device_t *dev,off_t pos)
 {
+   vmfs_lvm_t *lvm = (vmfs_lvm_t *)dev;
    vmfs_volume_t *extent = vmfs_lvm_get_extent_from_offset(lvm,pos);
 
    if (!extent)
       return(-1);
 
-   return(vmfs_vol_release(extent));
+   return(vmfs_device_release(&extent->dev, 0));
 }
 
 /* Create a volume structure */
@@ -124,6 +128,8 @@ vmfs_lvm_t *vmfs_lvm_create(vmfs_flags_t flags)
 /* Add an extent to the LVM */
 int vmfs_lvm_add_extent(vmfs_lvm_t *lvm, vmfs_volume_t *vol)
 {
+   uint32_t i;
+
    if (!vol)
       return(-1);
 
@@ -143,8 +149,30 @@ int vmfs_lvm_add_extent(vmfs_lvm_t *lvm, vmfs_volume_t *vol)
       return(-1);
    }
 
-   lvm->extents[lvm->loaded_extents++] = vol;
+   for (i = 0;
+        (i < lvm->loaded_extents) &&
+           (vol->vol_info.first_segment > lvm->extents[i]->vol_info.first_segment);
+        i++);
+
+   if (lvm->loaded_extents)
+      memmove(&lvm->extents[i + 1], &lvm->extents[i],
+              (lvm->loaded_extents - i) * sizeof(vmfs_volume_t *));
+   lvm->extents[i] = vol;
+   lvm->loaded_extents++;
+
    return(0);
+}
+
+/* Close an LVM */
+static void vmfs_lvm_close(vmfs_device_t *dev)
+{
+   vmfs_lvm_t *lvm = (vmfs_lvm_t *)dev;
+   if (!lvm)
+      return;
+   while(lvm->loaded_extents--)
+      vmfs_device_close(&lvm->extents[lvm->loaded_extents]->dev);
+
+   free(lvm);
 }
 
 /* Open an LVM */
@@ -157,16 +185,12 @@ int vmfs_lvm_open(vmfs_lvm_t *lvm)
       return(-1);
    }
 
+   lvm->dev.read = vmfs_lvm_read;
+   if (lvm->flags.read_write)
+      lvm->dev.write = vmfs_lvm_write;
+   lvm->dev.reserve = vmfs_lvm_reserve;
+   lvm->dev.release = vmfs_lvm_release;
+   lvm->dev.close = vmfs_lvm_close;
+   lvm->dev.uuid = &lvm->lvm_info.uuid;
    return(0);
-}
-
-/* Close an LVM */
-void vmfs_lvm_close(vmfs_lvm_t *lvm)
-{
-   if (!lvm)
-      return;
-   while(lvm->loaded_extents--)
-      vmfs_vol_close(lvm->extents[lvm->loaded_extents]);
-
-   free(lvm);
 }

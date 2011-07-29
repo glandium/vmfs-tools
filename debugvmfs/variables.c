@@ -256,7 +256,8 @@ struct var_struct inode_array = {
 struct var_struct debugvmfs = {
    struct_dump, {
    SELF_SUBVAR(fs, vmfs_fs),
-   SUBVAR(vmfs_fs_t, lvm, vmfs_lvm),
+   { "lvm", { subvar: &vmfs_lvm }, offsetof(vmfs_fs_t, dev), /* Ugly, and dangerous if dev is not an lvm */
+     sizeof(((vmfs_fs_t *)0)->dev), NULL },
    SUBVAR(vmfs_fs_t, fbb, vmfs_bitmap),
    SUBVAR(vmfs_fs_t, fdc, vmfs_bitmap),
    SUBVAR(vmfs_fs_t, pbc, vmfs_bitmap),

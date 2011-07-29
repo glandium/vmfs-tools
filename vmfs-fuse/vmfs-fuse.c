@@ -436,7 +436,8 @@ const static struct fuse_lowlevel_ops vmfs_oper = {
 };
 
 struct vmfs_fuse_opts {
-   vmfs_lvm_t *lvm;
+   char **path;
+   char *paths[VMFS_LVM_MAX_EXTENTS + 1];
    char *mountpoint;
    int foreground;
 };
@@ -464,11 +465,7 @@ static int vmfs_fuse_opts_func(void *data, const char *arg, int key,
       if (S_ISDIR(st.st_mode)) {
          opts->mountpoint = strdup(arg);
       } else if (S_ISREG(st.st_mode) || S_ISBLK(st.st_mode)) {
-         if (vmfs_lvm_add_extent(opts->lvm,
-                                 vmfs_vol_open(arg, opts->lvm->flags)) == -1) {
-            fprintf(stderr,"Unable to open device/file \"%s\".\n",arg);
-            return -1;
-         }
+         *(opts->path++) = strdup(arg);
       }
       return 0;
    }
@@ -483,8 +480,6 @@ int main(int argc, char *argv[])
    vmfs_flags_t flags;
    int err = -1;
 
-   vmfs_host_init();
-
    flags.packed = 0;
 
 #ifdef VMFS_WRITE
@@ -493,24 +488,15 @@ int main(int argc, char *argv[])
 
    flags.allow_missing_extents = 1;
 
-   if (!(opts.lvm = vmfs_lvm_create(flags))) {
-      fprintf(stderr,"Unable to create LVM structure\n");
-      goto cleanup;
-   }
-
+   opts.path = &opts.paths[0];
    if ((fuse_opt_parse(&args, &opts, vmfs_fuse_args,
                        &vmfs_fuse_opts_func) == -1) ||
        (fuse_opt_add_arg(&args, "-odefault_permissions"))) {
       goto cleanup;
    }
 
-   if (!(fs = vmfs_fs_create(opts.lvm))) {
+   if (!(fs = vmfs_fs_open(opts.paths, flags))) {
       fprintf(stderr,"Unable to open filesystem\n");
-      goto cleanup;
-   }
-
-   if (vmfs_fs_open(fs) == -1) {
-      fprintf(stderr,"Unable to open volume.\n");
       goto cleanup;
    }
 
@@ -534,6 +520,9 @@ int main(int argc, char *argv[])
 cleanup:
    vmfs_fs_close(fs);
    fuse_opt_free_args(&args);
+   opts.path = &opts.paths[0];
+   for(;*opts.path;opts.path++)
+     free(*opts.path);
    free(opts.mountpoint);
 
    return err ? 1 : 0;

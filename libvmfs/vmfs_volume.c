@@ -30,53 +30,37 @@
 #include "vmfs.h"
 #include "scsi.h"
 
-/* Read a data block from the physical volume */
-static ssize_t vmfs_vol_read_data(const vmfs_volume_t *vol,off_t pos,
-                                  u_char *buf,size_t len)
+/* Read a raw block of data on logical volume */
+static ssize_t vmfs_vol_read(const vmfs_device_t *dev,off_t pos,
+                             u_char *buf,size_t len)
 {
+   vmfs_volume_t *vol = (vmfs_volume_t *) dev;
+   pos += vol->vmfs_base + 0x1000000;
+
    return(m_pread(vol->fd,buf,len,pos));
 }
 
-/* Read a raw block of data on logical volume */
-ssize_t vmfs_vol_read(const vmfs_volume_t *vol,off_t pos,
-                      u_char *buf,size_t len)
+/* Write a raw block of data on logical volume */
+static ssize_t vmfs_vol_write(const vmfs_device_t *dev,off_t pos,
+                              const u_char *buf,size_t len)
 {
+   vmfs_volume_t *vol = (vmfs_volume_t *) dev;
    pos += vol->vmfs_base + 0x1000000;
 
-   return(vmfs_vol_read_data(vol,pos,buf,len));
-}
-
-/* Write a data block to the physical volume */
-static ssize_t vmfs_vol_write_data(const vmfs_volume_t *vol,off_t pos,
-                                   const u_char *buf,size_t len)
-{
    return(m_pwrite(vol->fd,buf,len,pos));
 }
 
-/* Write a raw block of data on logical volume */
-ssize_t vmfs_vol_write(const vmfs_volume_t *vol,off_t pos,
-                       const u_char *buf,size_t len)
-{
-   pos += vol->vmfs_base + 0x1000000;
-
-   return(vmfs_vol_write_data(vol,pos,buf,len));
-}
-
 /* Volume reservation */
-int vmfs_vol_reserve(const vmfs_volume_t *vol)
+static int vmfs_vol_reserve(const vmfs_device_t *dev, off_t pos)
 {
-   if (!vol->scsi_reservation)
-      return(0);
-
+   vmfs_volume_t *vol = (vmfs_volume_t *) dev;
    return(scsi_reserve(vol->fd));
 }
 
 /* Volume release */
-int vmfs_vol_release(const vmfs_volume_t *vol)
+static int vmfs_vol_release(const vmfs_device_t *dev, off_t pos)
 {
-   if (!vol->scsi_reservation)
-      return(0);
-
+   vmfs_volume_t *vol = (vmfs_volume_t *) dev;
    return(scsi_release(vol->fd));
 }
 
@@ -84,7 +68,7 @@ int vmfs_vol_release(const vmfs_volume_t *vol)
  * Check if physical volume support reservation.
  * TODO: We should probably check some capabilities info.
  */
-int vmfs_vol_check_reservation(vmfs_volume_t *vol)
+static int vmfs_vol_check_reservation(vmfs_volume_t *vol)
 {
    int res[2];
 
@@ -100,7 +84,8 @@ int vmfs_vol_check_reservation(vmfs_volume_t *vol)
    if ((res[0] < 0) || (res[1] < 0))
       return(0);
 
-   vol->scsi_reservation = 1;
+   vol->dev.reserve = vmfs_vol_reserve;
+   vol->dev.release = vmfs_vol_release;
    return(1);
 }
 
@@ -158,6 +143,18 @@ static int vmfs_volinfo_read(vmfs_volume_t *volume)
 #endif
 
    return(0);
+}
+
+/* Close a VMFS volume */
+static void vmfs_vol_close(vmfs_device_t *dev)
+{
+   vmfs_volume_t *vol = (vmfs_volume_t *) dev;
+   if (!vol)
+      return;
+   close(vol->fd);
+   free(vol->device);
+   free(vol->vol_info.name);
+   free(vol);
 }
 
 /* Open a VMFS volume */
@@ -227,6 +224,12 @@ vmfs_volume_t *vmfs_vol_open(const char *filename,vmfs_flags_t flags)
       printf("VMFS: volume opened successfully\n");
    }
 
+   vol->dev.read = vmfs_vol_read;
+   if (vol->flags.read_write)
+      vol->dev.write = vmfs_vol_write;
+   vol->dev.close = vmfs_vol_close;
+   vol->dev.uuid = &vol->vol_info.lvm_uuid;
+
    return vol;
 
  err_open:
@@ -234,15 +237,4 @@ vmfs_volume_t *vmfs_vol_open(const char *filename,vmfs_flags_t flags)
  err_filename:
    free(vol);
    return NULL;
-}
-
-/* Close a VMFS volume */
-void vmfs_vol_close(vmfs_volume_t *vol)
-{
-   if (!vol)
-      return;
-   close(vol->fd);
-   free(vol->device);
-   free(vol->vol_info.name);
-   free(vol);
 }
