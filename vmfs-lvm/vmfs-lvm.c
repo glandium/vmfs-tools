@@ -17,6 +17,8 @@
 
 #include <libgen.h>
 #include <stdlib.h>
+#include <ctype.h>
+#include "readcmd.h"
 #include "vmfs.h"
 
 /* Until a better API is defined */
@@ -33,6 +35,16 @@ static int cmd_remove(vmfs_fs_t *fs,int argc,char *argv[])
             items_in_last_entry, old_area_count;
 
    fprintf(stderr, "Extents removal is experimental ! Use at your own risk !\n");
+   while (1) {
+      char *answer = local_readline("Are you sure you want to go further? [y/N] ");
+      char a = answer[0];
+      char null = answer[1];
+      free(answer);
+      if ((a == 0) || (tolower(a) == 'n') && (null == 0))
+         return(2);
+      if ((tolower(a) == 'y') && (null == 0))
+         break;
+   }
    if (lvm->lvm_info.num_extents == 1) {
       fprintf(stderr, "Can't remove an extent when there is only one\n");
       return(1);
