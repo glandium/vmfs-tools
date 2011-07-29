@@ -34,7 +34,7 @@ static void (*add_history)(const char *string);
 /* local_readline() buffer allocation increment */
 #define READLINE_INCR 256
 
-static char *local_readline(const char *prompt) {
+char *local_readline(const char *prompt) {
    char *buf = NULL, *buf2;
    size_t len, alloc = READLINE_INCR;
 

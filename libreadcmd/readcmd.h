@@ -28,6 +28,9 @@ struct _cmd {
 
 typedef struct _cmd cmd_t;
 
+/* Return a line after having prompted for it */
+char *local_readline(const char *prompt);
+
 /* Return a command after having prompted for it */
 const cmd_t *readcmd(const char *prompt);
 
