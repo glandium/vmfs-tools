@@ -209,9 +209,14 @@ vmfs_volume_t *vmfs_vol_open(const char *filename,vmfs_flags_t flags)
          goto err_open;
    }
 
-   /* We support only VMFS3 */
-   if (vol->vol_info.version != 3) {
+   /* We support only VMFS3 and VMFS5*/
+   if ((vol->vol_info.version != 3) && (vol->vol_info.version != 5)) {
       fprintf(stderr,"VMFS: Unsupported version %u\n",vol->vol_info.version);
+      goto err_open;
+   }
+
+   if ((vol->vol_info.version == 5) && flags.read_write) {
+      fprintf(stderr, "VMFS: Can't open VMFS read/write\n");
       goto err_open;
    }
 
