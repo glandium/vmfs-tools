@@ -168,11 +168,15 @@ ssize_t vmfs_file_pread(vmfs_file_t *f,u_char *buf,size_t len,off_t pos)
             break;
 
          /* File-Block */
-         case VMFS_BLK_TYPE_FB: {
+         case VMFS_BLK_TYPE_FB:
             exp_len = m_min(len,file_size - pos);
-            res = vmfs_block_read_fb(fs,blk_id,pos,buf,exp_len);
+            if (VMFS_BLK_FLAGS(blk_id) & VMFS_BLK_FB_INLINE_FLAG) {
+               memcpy(buf, f->inode->content + pos, exp_len);
+               res = exp_len;
+            } else {
+               res = vmfs_block_read_fb(fs,blk_id,pos,buf,exp_len);
+            }
             break;
-         }
 
          /* Sub-Block */
          case VMFS_BLK_TYPE_SB: {

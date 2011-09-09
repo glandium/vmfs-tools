@@ -49,6 +49,7 @@ struct vmfs_inode_raw {
    union {
       uint32_t blocks[VMFS_INODE_BLK_COUNT];
       uint32_t rdm_id;
+      char content[VMFS_INODE_BLK_COUNT * sizeof(uint32_t)];
    };
 } __attribute__((packed));
 
@@ -72,6 +73,7 @@ struct vmfs_inode_raw {
 
 #define VMFS_INODE_OFS_BLK_ARRAY  offsetof(struct vmfs_inode_raw, blocks)
 #define VMFS_INODE_OFS_RDM_ID     offsetof(struct vmfs_inode_raw, rdm_id)
+#define VMFS_INODE_OFS_CONTENT    offsetof(struct vmfs_inode_raw, content)
 
 /* Synchronization flags */
 #define VMFS_INODE_SYNC_META  0x01
@@ -92,7 +94,10 @@ struct vmfs_inode {
    uint32_t mode,cmode;
    uint32_t zla,tbz,cow;
    uint32_t rdm_id;
-   uint32_t blocks[VMFS_INODE_BLK_COUNT];
+   union {
+     uint32_t blocks[VMFS_INODE_BLK_COUNT];
+     char content[VMFS_INODE_BLK_COUNT * sizeof(uint32_t)];
+   };
 
    /* In-core inode information */
    const vmfs_fs_t *fs;

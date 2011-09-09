@@ -70,6 +70,8 @@ static int vmfs_inode_read(vmfs_inode_t *inode,const u_char *buf)
 
    if (inode->type == VMFS_FILE_TYPE_RDM) {
       inode->rdm_id = read_le32(buf,VMFS_INODE_OFS_RDM_ID);
+   } else if (VMFS_BLK_FLAGS(inode->zla) & VMFS_BLK_FB_INLINE_FLAG) {
+      memcpy(inode->content, buf + VMFS_INODE_OFS_CONTENT, inode->size);
    } else {
       for(i=0;i<VMFS_INODE_BLK_COUNT;i++)
          inode->blocks[i] = vmfs_inode_read_blk_id(buf,i);
@@ -285,8 +287,12 @@ int vmfs_inode_get_block(const vmfs_inode_t *inode,off_t pos,uint32_t *blk_id)
    if (!inode->blk_size)
       return(-EIO);
 
-   switch(inode->zla) {
+   switch(VMFS_BLK_TYPE(inode->zla)) {
       case VMFS_BLK_TYPE_FB:
+         if (VMFS_BLK_FLAGS(inode->zla) & VMFS_BLK_FB_INLINE_FLAG) {
+            *blk_id = inode->zla;
+            break;
+         }
       case VMFS_BLK_TYPE_SB:
          blk_index = pos / inode->blk_size;
          

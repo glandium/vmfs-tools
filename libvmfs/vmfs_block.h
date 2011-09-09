@@ -42,6 +42,9 @@ enum vmfs_block_type {
 #define VMFS_BLK_FB_ITEM_SHIFT  6
 #define VMFS_BLK_FB_TBZ_FLAG    4
 
+/* Block is inlined in the inode */
+#define VMFS_BLK_FB_INLINE_FLAG 2
+
 #define VMFS_BLK_FB_ITEM(blk_id)   ((blk_id) >> VMFS_BLK_FB_ITEM_SHIFT)
 #define VMFS_BLK_FB_TBZ(blk_id) \
    (VMFS_BLK_FLAGS(blk_id) & VMFS_BLK_FB_TBZ_FLAG)

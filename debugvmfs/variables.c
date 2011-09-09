@@ -577,13 +577,34 @@ static char *get_value_blkid_item(char *buf, void *value, short len)
 static char *get_value_blkid_flags(char *buf, void *value, short len)
 {
    vmfs_block_info_t *info = (vmfs_block_info_t *)value;
-   if (info->flags)
-      sprintf(buf, "0x%x (%s)", info->flags,
-                                info->flags == VMFS_BLK_FB_TBZ_FLAG ? "tbz" :
-                                info->flags & VMFS_BLK_FB_TBZ_FLAG ? "tbz, unknown" :
-                                "unknown");
-   else
-      sprintf(buf, "none");
+   int more_than_one = 0;
+
+   if (sprintf(buf, "0x%x (", info->flags) <= 0)
+      return NULL;
+
+   if (info->flags & VMFS_BLK_FB_TBZ_FLAG) {
+      strcat(buf, "tbz");
+      more_than_one = 1;
+   }
+
+   if (info->flags & VMFS_BLK_FB_INLINE_FLAG) {
+      if (more_than_one)
+         strcat(buf, ", ");
+      strcat(buf, "inline");
+      more_than_one = 1;
+   }
+
+   if (info->flags & ~(VMFS_BLK_FB_INLINE_FLAG | VMFS_BLK_FB_TBZ_FLAG)) {
+      if (more_than_one)
+         strcat(buf, ", ");
+      strcat(buf, "unknown");
+   }
+
+   if (!info->flags)
+      strcat(buf, "none");
+
+   strcat(buf, ")");
+
    return buf;
 }
 
