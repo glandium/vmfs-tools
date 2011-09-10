@@ -23,10 +23,8 @@ struct var_struct;
 
 struct var_member {
    const char *member_name;
-   union {
-      const char *description;
-      struct var_struct *subvar;
-   };
+   const char *description;
+   struct var_struct *subvar;
    unsigned short offset;
    unsigned short length;
    char *(*get_value)(char *buf, void *value, short len);
@@ -71,15 +69,15 @@ static char *get_value_blkid_flags(char *buf, void *value, short len);
 static char *get_value_mode(char *buf, void *value, short len);
 
 #define MEMBER(type, name, desc, format) \
-   { # name, { desc }, offsetof(type, name), \
+   { # name, desc, NULL, offsetof(type, name), \
      sizeof(((type *)0)->name), get_value_ ## format }
 
 #define MEMBER2(type, sub, name, desc, format) \
-   { # name, { desc }, offsetof(type, sub.name), \
+   { # name, desc, NULL, offsetof(type, sub.name), \
      sizeof(((type *)0)->sub.name), get_value_ ## format }
 
 #define SUBVAR(type, name, struct_def) \
-   { # name, { subvar: &struct_def }, offsetof(type, name), \
+   { # name, NULL, &struct_def, offsetof(type, name), \
      sizeof(((type *)0)->name), NULL }
 
 #define VIRTUAL_MEMBER(name, desc, format) \
@@ -89,7 +87,7 @@ static char *get_value_mode(char *buf, void *value, short len);
    SUBVAR(struct { char name[0]; }, name, struct_def)
 
 #define ARRAY_MEMBER(struct_def) \
-   { NULL, { subvar: &struct_def }, 0, 0, NULL }
+   { NULL, NULL, &struct_def, 0, 0, NULL }
 
 struct var_struct vmfs_metadata_hdr = {
    struct_dump, {
@@ -240,7 +238,7 @@ struct var_struct inode_array = {
 
 struct var_struct vmfs_fs = {
    struct_dump, {
-   { "lvm", { subvar: &vmfs_lvm }, offsetof(vmfs_fs_t, dev), /* Ugly, and dangerous if dev is not an lvm */
+   { "lvm", NULL, &vmfs_lvm, offsetof(vmfs_fs_t, dev), /* Ugly, and dangerous if dev is not an lvm */
      sizeof(((vmfs_fs_t *)0)->dev), NULL },
    SUBVAR(vmfs_fs_t, fbb, vmfs_bitmap),
    SUBVAR(vmfs_fs_t, fdc, vmfs_bitmap),
@@ -409,6 +407,8 @@ static int longest_member_desc(struct var_struct *struct_def)
    struct var_member *m;
    int len = 0, curlen;
    for (m = struct_def->members; m->member_name; m++) {
+      if (!m->description)
+         continue;
       curlen = strlen(m->description);
       if (curlen > len)
          len = curlen;
