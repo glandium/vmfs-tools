@@ -587,14 +587,7 @@ static char *get_value_blkid_flags(char *buf, void *value, short len)
       more_than_one = 1;
    }
 
-   if (info->flags & VMFS_BLK_FB_INLINE_FLAG) {
-      if (more_than_one)
-         strcat(buf, ", ");
-      strcat(buf, "inline");
-      more_than_one = 1;
-   }
-
-   if (info->flags & ~(VMFS_BLK_FB_INLINE_FLAG | VMFS_BLK_FB_TBZ_FLAG)) {
+   if (info->flags & ~VMFS_BLK_FB_TBZ_FLAG) {
       if (more_than_one)
          strcat(buf, ", ");
       strcat(buf, "unknown");

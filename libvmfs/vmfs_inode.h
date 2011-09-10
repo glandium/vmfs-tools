@@ -80,6 +80,9 @@ struct vmfs_inode_raw {
 #define VMFS_INODE_SYNC_BLK   0x02
 #define VMFS_INODE_SYNC_ALL   (VMFS_INODE_SYNC_META | VMFS_INODE_SYNC_BLK)
 
+/* Some VMFS 5 features use a weird ZLA */
+#define VMFS5_ZLA_BASE 4301
+
 struct vmfs_inode {
    vmfs_metadata_hdr_t mdh;
    uint32_t id,id2;

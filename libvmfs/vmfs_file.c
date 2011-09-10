@@ -170,12 +170,7 @@ ssize_t vmfs_file_pread(vmfs_file_t *f,u_char *buf,size_t len,off_t pos)
          /* File-Block */
          case VMFS_BLK_TYPE_FB:
             exp_len = m_min(len,file_size - pos);
-            if (VMFS_BLK_FLAGS(blk_id) & VMFS_BLK_FB_INLINE_FLAG) {
-               memcpy(buf, f->inode->content + pos, exp_len);
-               res = exp_len;
-            } else {
-               res = vmfs_block_read_fb(fs,blk_id,pos,buf,exp_len);
-            }
+            res = vmfs_block_read_fb(fs,blk_id,pos,buf,exp_len);
             break;
 
          /* Sub-Block */
@@ -184,6 +179,15 @@ ssize_t vmfs_file_pread(vmfs_file_t *f,u_char *buf,size_t len,off_t pos)
             res = vmfs_block_read_sb(fs,blk_id,pos,buf,exp_len);
             break;
          }
+
+         /* Inline in the inode */
+         case VMFS_BLK_TYPE_FD:
+            if (blk_id == f->inode->id) {
+               exp_len = m_min(len,file_size - pos);
+               memcpy(buf, f->inode->content + pos, exp_len);
+               res = exp_len;
+               break;
+            }
 
          default:
             fprintf(stderr,"VMFS: unknown block type 0x%2.2x\n",blk_type);

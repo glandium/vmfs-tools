@@ -70,7 +70,7 @@ static int vmfs_inode_read(vmfs_inode_t *inode,const u_char *buf)
 
    if (inode->type == VMFS_FILE_TYPE_RDM) {
       inode->rdm_id = read_le32(buf,VMFS_INODE_OFS_RDM_ID);
-   } else if (VMFS_BLK_FLAGS(inode->zla) & VMFS_BLK_FB_INLINE_FLAG) {
+   } else if (inode->zla == VMFS5_ZLA_BASE + VMFS_BLK_TYPE_FD) {
       memcpy(inode->content, buf + VMFS_INODE_OFS_CONTENT, inode->size);
    } else {
       for(i=0;i<VMFS_INODE_BLK_COUNT;i++)
@@ -281,18 +281,25 @@ int vmfs_inode_get_block(const vmfs_inode_t *inode,off_t pos,uint32_t *blk_id)
 {
    const vmfs_fs_t *fs = inode->fs;
    u_int blk_index;
+   uint32_t zla;
+   int vmfs5_extension;
 
    *blk_id = 0;
 
    if (!inode->blk_size)
       return(-EIO);
 
-   switch(VMFS_BLK_TYPE(inode->zla)) {
+   /* This doesn't make much sense but looks like how it's being coded. At
+    * least, the result has some sense. */
+   zla = inode->zla;
+   if (zla >= VMFS5_ZLA_BASE) {
+      vmfs5_extension = 1;
+      zla -= VMFS5_ZLA_BASE;
+   } else
+      vmfs5_extension = 0;
+
+   switch(zla) {
       case VMFS_BLK_TYPE_FB:
-         if (VMFS_BLK_FLAGS(inode->zla) & VMFS_BLK_FB_INLINE_FLAG) {
-            *blk_id = inode->zla;
-            break;
-         }
       case VMFS_BLK_TYPE_SB:
          blk_index = pos / inode->blk_size;
          
@@ -334,6 +341,11 @@ int vmfs_inode_get_block(const vmfs_inode_t *inode,off_t pos,uint32_t *blk_id)
          break;
       }
 
+      case VMFS_BLK_TYPE_FD:
+         if (vmfs5_extension) {
+            *blk_id = inode->id;
+            break;
+         }
       default:
          /* Unexpected ZLA type */
          return(-EIO);
