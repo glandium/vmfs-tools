@@ -264,15 +264,15 @@ static int cmd_df(vmfs_dir_t *base_dir,int argc,char *argv[])
    printf("Block size       : %"PRIu64" bytes\n",vmfs_fs_get_blocksize(fs));
 
    printf("Total blocks     : %u\n",total);
-   printf("Total size       : %"PRIu64" Mb\n",
+   printf("Total size       : %"PRIu64" MiB\n",
           (vmfs_fs_get_blocksize(fs)*total)/1048576);
 
    printf("Allocated blocks : %u\n",alloc);
-   printf("Allocated space  : %"PRIu64" Mb\n",
+   printf("Allocated space  : %"PRIu64" MiB\n",
           (vmfs_fs_get_blocksize(fs)*alloc)/1048576);
 
    printf("Free blocks      : %u\n",total-alloc);
-   printf("Free size        : %"PRIu64" Mb\n",
+   printf("Free size        : %"PRIu64" MiB\n",
           (vmfs_fs_get_blocksize(fs)*(total-alloc))/1048576);
 
    return(0);
