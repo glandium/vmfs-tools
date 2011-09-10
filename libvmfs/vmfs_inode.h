@@ -149,9 +149,6 @@ void vmfs_inode_show_blocks(const vmfs_inode_t *inode);
 int vmfs_inode_foreach_block(const vmfs_inode_t *inode,
                              vmfs_inode_foreach_block_cbk_t cbk,void *opt_arg);
 
-/* Check that all blocks bound to an inode are allocated */
-int vmfs_inode_check_blocks(const vmfs_inode_t *inode);
-
 /* Get inode status */
 int vmfs_inode_stat(const vmfs_inode_t *inode,struct stat *buf);
 

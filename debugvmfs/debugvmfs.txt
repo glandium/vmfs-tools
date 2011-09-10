@@ -59,9 +59,6 @@ Outputs block_ids for the given file's content blocks.
 *get_file_block* 'filespec' 'position'::
 Get file block corresponding to position in the specified file.
 
-*check_file_blocks* 'filespec'::
-Check that all blocks used by a file are correctly allocated.
-
 *check_vol_bitmaps*::
 Checks volume bitmaps consistency.
 

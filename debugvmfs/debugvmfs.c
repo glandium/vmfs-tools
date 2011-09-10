@@ -329,33 +329,6 @@ static int cmd_get_file_block(vmfs_dir_t *base_dir,int argc,char *argv[])
    return ret;
 }
 
-/* Check file blocks */
-static int cmd_check_file_blocks(vmfs_dir_t *base_dir,int argc,char *argv[])
-{
-   vmfs_file_t *f;
-   int res;
-
-   if (argc == 0) {
-      fprintf(stderr,"Usage: check_file_blocks <filespec>\n");
-      return(-1);
-   }
-
-   if (!(f = vmfs_file_open_from_filespec(base_dir,argv[0]))) {
-      fprintf(stderr,"Unable to open file '%s'\n",argv[0]);
-      return(-1);
-   }
-
-   res = vmfs_inode_check_blocks(f->inode);
-
-   if (res > 0)
-      fprintf(stderr,"%d allocation errors detected.\n",res);
-   else
-      fprintf(stderr,"No error detected.\n");
-
-   vmfs_file_close(f);
-   return(0);
-}
-
 /* Check volume bitmaps */
 static int cmd_check_vol_bitmaps(vmfs_dir_t *base_dir,int argc,char *argv[])
 {
@@ -638,7 +611,6 @@ struct cmd cmd_array[] = {
    { "df", "Show available free space", cmd_df },
    { "show_file_blocks", "Show file blocks", cmd_show_file_blocks },
    { "get_file_block", "Get file block", cmd_get_file_block },
-   { "check_file_blocks", "Check file blocks", cmd_check_file_blocks },
    { "check_vol_bitmaps", "Check volume bitmaps", cmd_check_vol_bitmaps },
    { "show_heartbeats", "Show active heartbeats", cmd_show_heartbeats },
    { "read_block", "Read a block", cmd_read_block },
