@@ -150,21 +150,6 @@ struct var_struct vmfs_bitmap = {
    { NULL, }
 }};
 
-struct var_struct vmfs_fs = {
-   struct_dump, {
-   MEMBER2(vmfs_fs_t, fs_info, vol_version, "Volume Version", uint),
-   MEMBER2(vmfs_fs_t, fs_info, version, "Version", uint),
-   MEMBER2(vmfs_fs_t, fs_info, label, "Label", string),
-   MEMBER2(vmfs_fs_t, fs_info, mode, "Mode", fs_mode),
-   MEMBER2(vmfs_fs_t, fs_info, uuid, "UUID", uuid),
-   MEMBER2(vmfs_fs_t, fs_info, ctime, "Creation time", date),
-   MEMBER2(vmfs_fs_t, fs_info, block_size, "Block size", size),
-   MEMBER2(vmfs_fs_t, fs_info, subblock_size, "Subblock size", size),
-   MEMBER2(vmfs_fs_t, fs_info, fdc_header_size, "FDC Header size", size),
-   MEMBER2(vmfs_fs_t, fs_info, fdc_bitmap_count, "FDC Bitmap count", uint),
-   { NULL, }
-}};
-
 struct var_struct vmfs_volume = {
    struct_dump, {
    MEMBER(vmfs_volume_t, device, "Device", string),
@@ -253,9 +238,8 @@ struct var_struct inode_array = {
    { NULL, }
 }};
 
-struct var_struct debugvmfs = {
+struct var_struct vmfs_fs = {
    struct_dump, {
-   SELF_SUBVAR(fs, vmfs_fs),
    { "lvm", { subvar: &vmfs_lvm }, offsetof(vmfs_fs_t, dev), /* Ugly, and dangerous if dev is not an lvm */
      sizeof(((vmfs_fs_t *)0)->dev), NULL },
    SUBVAR(vmfs_fs_t, fbb, vmfs_bitmap),
@@ -265,6 +249,16 @@ struct var_struct debugvmfs = {
    SELF_SUBVAR(blkid, blkid_array),
    SELF_SUBVAR(dirent, dirent_array),
    SELF_SUBVAR(inode, inode_array),
+   MEMBER2(vmfs_fs_t, fs_info, vol_version, "Volume Version", uint),
+   MEMBER2(vmfs_fs_t, fs_info, version, "Version", uint),
+   MEMBER2(vmfs_fs_t, fs_info, label, "Label", string),
+   MEMBER2(vmfs_fs_t, fs_info, mode, "Mode", fs_mode),
+   MEMBER2(vmfs_fs_t, fs_info, uuid, "UUID", uuid),
+   MEMBER2(vmfs_fs_t, fs_info, ctime, "Creation time", date),
+   MEMBER2(vmfs_fs_t, fs_info, block_size, "Block size", size),
+   MEMBER2(vmfs_fs_t, fs_info, subblock_size, "Subblock size", size),
+   MEMBER2(vmfs_fs_t, fs_info, fdc_header_size, "FDC Header size", size),
+   MEMBER2(vmfs_fs_t, fs_info, fdc_bitmap_count, "FDC Bitmap count", uint),
    { NULL, }
 }};
 
@@ -683,6 +677,6 @@ static int inode_dump(struct var_struct *struct_def, void *value,
 int cmd_show(vmfs_dir_t *base_dir,int argc,char *argv[])
 {
    current_dir = base_dir;
-   return debugvmfs.dump(&debugvmfs, (void *)vmfs_dir_get_fs(base_dir),
+   return vmfs_fs.dump(&vmfs_fs, (void *)vmfs_dir_get_fs(base_dir),
                          argv[0]) ? 0 : 1;
 }

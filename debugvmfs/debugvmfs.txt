@@ -94,7 +94,7 @@ Outputs raw content for the bitmap item corresponding to the given block_id.
 
 *show*::
 Display value(s) of the given variable. See the *VARIABLES* section for more
-details.
+details. When no variable is given, it lists the top-level properties.
 
 *shell*::
 Starts an interactive session. All of the above commands can be executed from
@@ -132,6 +132,26 @@ VARIABLES
 Variables in debugvmfs represent structures on the filesystem. The currently
 supported top-level variables are the following:
 
+- *vol_version*
+
+- *version*
+
+- *label*
+
+- *mode*
+
+- *uuid*
+
+- *ctime*
+
+- *block_size*
+
+- *subblock_size*
+
+- *fdc_header_size*
+
+- *fdc_bitmap_count*
+
 - *fbb*
 
 - *fdc*
@@ -149,6 +169,10 @@ supported top-level variables are the following:
 - *dirent*['path']
 
 - *inode*['filespec']
+
+The *vol_version*, *version*, *label*, *mode*, *uuid*, *ctime*, *block_size*,
+*subblock_size*, *fdc_header_size*, and *fdc_bitmap_count* properties are
+low-level information about the filesystem.
 
 The *fbb*, *fdc*, *pbc* and *sbc* variables are bitmaps. Running them through
 the *show* command will display all the bitmaps header fields. Each of these
@@ -200,29 +224,6 @@ Each 'bitmap'.*entry*['n'].item['m'] (where 0 ≤ 'm' <
 in the given entry. The available fields are:
 
 - 'bitmap'.*entry*['n'].item['m'].used
-
-The *fs* variable contains low-level information about the filesystem. The
-available fields are:
-
-- *fs*.*vol_version*
-
-- *fs*.*version*
-
-- *fs*.*label*
-
-- *fs*.*mode*
-
-- *fs*.*uuid*
-
-- *fs*.*ctime*
-
-- *fs*.*block_size*
-
-- *fs*.*subblock_size*
-
-- *fs*.*fdc_header_size*
-
-- *fs*.*fdc_bitmap_count*
 
 The *lvm* variable contains low-level information about the physical and
  logical volumes. The available fields are:
