@@ -1,6 +1,6 @@
 /*
  * vmfs-tools - Tools to access VMFS filesystems
- * Copyright (C) 2009,2010 Mike Hommey <mh@glandium.org>
+ * Copyright (C) 2009,2011 Mike Hommey <mh@glandium.org>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,37 +19,29 @@
 #include <stdlib.h>
 #include "vmfs.h"
 
-struct var_struct;
-
 struct var_member {
    const char *member_name;
    const char *description;
-   struct var_struct *subvar;
+   const struct var_member *subvar;
    unsigned short offset;
    unsigned short length;
+   void *(*get_member)(void *value, const char *index);
+   void (*free_member)(void *value);
    char *(*get_value)(char *buf, void *value, short len);
 };
 
-struct var_struct {
-   int (*dump)(struct var_struct *struct_def, void *value,
-               const char *name);
-   struct var_member members[];
-};
-
-static int bitmap_items_dump(struct var_struct *struct_def, void *value,
-                               const char *name);
-static int bitmap_entries_dump(struct var_struct *struct_def, void *value,
-                               const char *name);
-static int lvm_extents_dump(struct var_struct *struct_def, void *value,
-                            const char *name);
-static int blkid_dump(struct var_struct *struct_def, void *value,
-                      const char *name);
-static int dirent_dump(struct var_struct *struct_def, void *value,
-                       const char *name);
-static int inode_dump(struct var_struct *struct_def, void *value,
-                      const char *name);
-static int struct_dump(struct var_struct *struct_def, void *value,
-                       const char *name);
+static void *get_bitmap_item(void *value, const char *index);
+#define free_bitmap_item free
+static void *get_bitmap_entry(void *value, const char *index);
+#define free_bitmap_entry free
+static void *get_lvm_extent(void *value, const char *index);
+#define free_lvm_extent NULL
+static void *get_blkid(void *value, const char *index);
+#define free_blkid free
+static void *get_dirent(void *value, const char *index);
+#define free_dirent (void (*)(void *))vmfs_dir_close
+static void *get_inode(void *value, const char *index);
+#define free_inode (void (*)(void *))vmfs_inode_release
 
 static char *get_value_none(char *buf, void *value, short len);
 static char *get_value_uint(char *buf, void *value, short len);
@@ -68,29 +60,30 @@ static char *get_value_blkid_item(char *buf, void *value, short len);
 static char *get_value_blkid_flags(char *buf, void *value, short len);
 static char *get_value_mode(char *buf, void *value, short len);
 
+#define PTR(type, name) 0
+#define FIELD(type, name) sizeof(((type *)0)->name)
+
 #define MEMBER(type, name, desc, format) \
    { # name, desc, NULL, offsetof(type, name), \
-     sizeof(((type *)0)->name), get_value_ ## format }
+     FIELD(type, name), NULL, NULL, get_value_ ## format }
 
 #define MEMBER2(type, sub, name, desc, format) \
    { # name, desc, NULL, offsetof(type, sub.name), \
-     sizeof(((type *)0)->sub.name), get_value_ ## format }
+     FIELD(type, sub.name), NULL, NULL, get_value_ ## format }
 
-#define SUBVAR(type, name, struct_def) \
-   { # name, NULL, &struct_def, offsetof(type, name), \
-     sizeof(((type *)0)->name), NULL }
+#define VIRTUAL_MEMBER(type, name, desc, format) \
+   { # name, desc, NULL, 0, sizeof(type), NULL, NULL, get_value_ ## format }
 
-#define VIRTUAL_MEMBER(name, desc, format) \
-   MEMBER(struct { char name[0]; }, name, desc, format)
+#define GET_SUBVAR(type, name, subvar, what) \
+   { # name, NULL, subvar, 0, sizeof(type), get_ ## what, free_ ## what, NULL }
 
-#define SELF_SUBVAR(name, struct_def) \
-   SUBVAR(struct { char name[0]; }, name, struct_def)
+#define SUBVAR(type, name, subvar, kind) \
+   { # name, NULL, subvar, offsetof(type, name), kind(type, name), NULL, NULL, NULL }
 
-#define ARRAY_MEMBER(struct_def) \
-   { NULL, NULL, &struct_def, 0, 0, NULL }
+#define SUBVAR2(type, name, subvar, field_name, kind) \
+   { # name, NULL, subvar, offsetof(type, field_name), kind(type, field_name), NULL, NULL, NULL }
 
-struct var_struct vmfs_metadata_hdr = {
-   struct_dump, {
+static const struct var_member vmfs_metadata_hdr[] = {
    MEMBER(vmfs_metadata_hdr_t, magic, "Magic", xint),
    MEMBER(vmfs_metadata_hdr_t, pos, "Position", xint),
    MEMBER(vmfs_metadata_hdr_t, hb_pos, "HB Position", uint),
@@ -100,39 +93,30 @@ struct var_struct vmfs_metadata_hdr = {
    MEMBER(vmfs_metadata_hdr_t, obj_seq, "Obj Sequence", uint),
    MEMBER(vmfs_metadata_hdr_t, mtime, "MTime", uint),
    { NULL, }
-}};
+};
 
-struct var_struct vmfs_bitmap_item = {
-   struct_dump, {
-   VIRTUAL_MEMBER(status, "Status", bitmap_item_status),
+struct vmfs_bitmap_item_ref {
+   vmfs_bitmap_entry_t entry;
+   vmfs_bitmap_t *bitmap;
+   uint32_t entry_idx, item_idx;
+};
+
+static const struct var_member vmfs_bitmap_item[] = {
+   VIRTUAL_MEMBER(struct vmfs_bitmap_item_ref, status, "Status", bitmap_item_status),
    { NULL, }
-}};
+};
 
-struct var_struct vmfs_bitmap_items = {
-   bitmap_items_dump, {
-   ARRAY_MEMBER(vmfs_bitmap_item),
-   { NULL, }
-}};
-
-struct var_struct vmfs_bitmap_entry = {
-   struct_dump, {
+static const struct var_member vmfs_bitmap_entry[] = {
    MEMBER(vmfs_bitmap_entry_t, id, "Id", uint),
    MEMBER(vmfs_bitmap_entry_t, total, "Total items", uint),
    MEMBER(vmfs_bitmap_entry_t, free, "Free items", uint),
    MEMBER(vmfs_bitmap_entry_t, ffree, "First free", uint),
-   SELF_SUBVAR(mdh, vmfs_metadata_hdr),
-   SELF_SUBVAR(item, vmfs_bitmap_items),
+   SUBVAR(vmfs_inode_t, mdh, vmfs_metadata_hdr, FIELD),
+   GET_SUBVAR(struct vmfs_bitmap_item_ref, item, vmfs_bitmap_item, bitmap_item),
    { NULL, }
-}};
+};
 
-struct var_struct vmfs_bitmap_entries = {
-   bitmap_entries_dump, {
-   ARRAY_MEMBER(vmfs_bitmap_entry),
-   { NULL, }
-}};
-
-struct var_struct vmfs_bitmap = {
-   struct_dump, {
+static const struct var_member vmfs_bitmap[] = {
    MEMBER2(vmfs_bitmap_t, bmh, items_per_bitmap_entry,
            "Item per bitmap entry", uint),
    MEMBER2(vmfs_bitmap_t, bmh, bmp_entries_per_area,
@@ -142,72 +126,49 @@ struct var_struct vmfs_bitmap = {
    MEMBER2(vmfs_bitmap_t, bmh, area_size, "Area size", size),
    MEMBER2(vmfs_bitmap_t, bmh, area_count, "Area count", uint),
    MEMBER2(vmfs_bitmap_t, bmh, total_items, "Total items", uint),
-   VIRTUAL_MEMBER(used_items, "Used items", bitmap_used),
-   VIRTUAL_MEMBER(free_items, "Free items", bitmap_free),
-   SELF_SUBVAR(entry, vmfs_bitmap_entries),
+   VIRTUAL_MEMBER(vmfs_bitmap_t, used_items, "Used items", bitmap_used),
+   VIRTUAL_MEMBER(vmfs_bitmap_t, free_items, "Free items", bitmap_free),
+   GET_SUBVAR(vmfs_bitmap_t, entry, vmfs_bitmap_entry, bitmap_entry),
    { NULL, }
-}};
+};
 
-struct var_struct vmfs_volume = {
-   struct_dump, {
+static const struct var_member vmfs_volume[] = {
    MEMBER(vmfs_volume_t, device, "Device", string),
    MEMBER2(vmfs_volume_t, vol_info, uuid, "UUID", uuid),
    MEMBER2(vmfs_volume_t, vol_info, lun, "LUN", uint),
    MEMBER2(vmfs_volume_t, vol_info, version, "Version", uint),
    MEMBER2(vmfs_volume_t, vol_info, name, "Name", string),
-   VIRTUAL_MEMBER(size, "Size", vol_size),
+   VIRTUAL_MEMBER(vmfs_volume_t, size, "Size", vol_size),
    MEMBER2(vmfs_volume_t, vol_info, num_segments, "Num. Segments", uint),
    MEMBER2(vmfs_volume_t, vol_info, first_segment, "First Segment", uint),
    MEMBER2(vmfs_volume_t, vol_info, last_segment, "Last Segment", uint),
    { NULL, }
-}};
+};
 
-struct var_struct vmfs_lvm_extent = {
-   lvm_extents_dump, {
-   ARRAY_MEMBER(vmfs_volume),
-   { NULL, }
-}};
-
-struct var_struct vmfs_lvm = {
-   struct_dump, {
+static const struct var_member vmfs_lvm[] = {
    MEMBER2(vmfs_lvm_t, lvm_info, uuid, "UUID", uuid),
    MEMBER2(vmfs_lvm_t, lvm_info, size, "Size", size),
    MEMBER2(vmfs_lvm_t, lvm_info, blocks, "Blocks", uint),
    MEMBER2(vmfs_lvm_t, lvm_info, num_extents, "Num. Extents", uint),
-   SELF_SUBVAR(extent, vmfs_lvm_extent),
+   GET_SUBVAR(vmfs_lvm_t, extent, vmfs_volume, lvm_extent),
    { NULL, }
-}};
+};
 
-struct var_struct blkid = {
-   struct_dump, {
-   VIRTUAL_MEMBER(item, "Referred Item", blkid_item),
-   VIRTUAL_MEMBER(flags, "Flags", blkid_flags),
+static const struct var_member blkid[] = {
+   VIRTUAL_MEMBER(vmfs_block_info_t, item, "Referred Item", blkid_item),
+   VIRTUAL_MEMBER(vmfs_block_info_t, flags, "Flags", blkid_flags),
    { NULL, }
-}};
+};
 
-struct var_struct blkid_array = {
-   blkid_dump, {
-   ARRAY_MEMBER(blkid),
+static const struct var_member dirent[] = {
+   MEMBER2(vmfs_dir_t, dirent, type, "Type", uint),
+   MEMBER2(vmfs_dir_t, dirent, block_id, "Block ID", xint),
+   MEMBER2(vmfs_dir_t, dirent, record_id, "Record ID", xint),
+   MEMBER2(vmfs_dir_t, dirent, name, "Name", string),
    { NULL, }
-}};
+};
 
-struct var_struct dirent = {
-   struct_dump, {
-   MEMBER(vmfs_dirent_t, type, "Type", uint),
-   MEMBER(vmfs_dirent_t, block_id, "Block ID", xint),
-   MEMBER(vmfs_dirent_t, record_id, "Record ID", xint),
-   MEMBER(vmfs_dirent_t, name, "Name", string),
-   { NULL, }
-}};
-
-struct var_struct dirent_array = {
-   dirent_dump, {
-   ARRAY_MEMBER(dirent),
-   { NULL, }
-}};
-
-struct var_struct inode = {
-   struct_dump, {
+static const struct var_member inode[] = {
    MEMBER(vmfs_inode_t, id, "ID", xint),
    MEMBER(vmfs_inode_t, id2, "ID2", xint),
    MEMBER(vmfs_inode_t, nlink, "Links", uint),
@@ -226,27 +187,19 @@ struct var_struct inode = {
    MEMBER(vmfs_inode_t, mtime, "Modify Time", date),
    MEMBER(vmfs_inode_t, ctime, "Change Time", date),
    MEMBER(vmfs_inode_t, rdm_id, "RDM ID", xint),
-   SELF_SUBVAR(mdh, vmfs_metadata_hdr),
+   SUBVAR(vmfs_inode_t, mdh, vmfs_metadata_hdr, FIELD),
    { NULL, }
-}};
+};
 
-struct var_struct inode_array = {
-   inode_dump, {
-   ARRAY_MEMBER(inode),
-   { NULL, }
-}};
-
-struct var_struct vmfs_fs = {
-   struct_dump, {
-   { "lvm", NULL, &vmfs_lvm, offsetof(vmfs_fs_t, dev), /* Ugly, and dangerous if dev is not an lvm */
-     sizeof(((vmfs_fs_t *)0)->dev), NULL },
-   SUBVAR(vmfs_fs_t, fbb, vmfs_bitmap),
-   SUBVAR(vmfs_fs_t, fdc, vmfs_bitmap),
-   SUBVAR(vmfs_fs_t, pbc, vmfs_bitmap),
-   SUBVAR(vmfs_fs_t, sbc, vmfs_bitmap),
-   SELF_SUBVAR(blkid, blkid_array),
-   SELF_SUBVAR(dirent, dirent_array),
-   SELF_SUBVAR(inode, inode_array),
+static const struct var_member vmfs_fs[] = {
+   SUBVAR2(vmfs_fs_t, lvm, vmfs_lvm, dev, PTR),
+   SUBVAR(vmfs_fs_t, fbb, vmfs_bitmap, PTR),
+   SUBVAR(vmfs_fs_t, fdc, vmfs_bitmap, PTR),
+   SUBVAR(vmfs_fs_t, pbc, vmfs_bitmap, PTR),
+   SUBVAR(vmfs_fs_t, sbc, vmfs_bitmap, PTR),
+   GET_SUBVAR(vmfs_fs_t, blkid, blkid, blkid),
+   GET_SUBVAR(vmfs_fs_t, dirent, dirent, dirent),
+   GET_SUBVAR(vmfs_fs_t, inode, inode, inode),
    MEMBER2(vmfs_fs_t, fs_info, vol_version, "Volume Version", uint),
    MEMBER2(vmfs_fs_t, fs_info, version, "Version", uint),
    MEMBER2(vmfs_fs_t, fs_info, label, "Label", string),
@@ -258,7 +211,72 @@ struct var_struct vmfs_fs = {
    MEMBER2(vmfs_fs_t, fs_info, fdc_header_size, "FDC Header size", size),
    MEMBER2(vmfs_fs_t, fs_info, fdc_bitmap_count, "FDC Bitmap count", uint),
    { NULL, }
-}};
+};
+
+static const struct var_member root = {
+   NULL, NULL, vmfs_fs, 0, sizeof(vmfs_fs_t), NULL, NULL, NULL
+};
+
+static void *get_member(const struct var_member *member, void *value, const char *index)
+{
+   void *result = &((char *) value)[member->offset];
+   if (member->length == 0)
+      result = *(void**)result;
+   if (member->get_member)
+      result = member->get_member(result, index);
+   return result;
+}
+
+static void free_member(const struct var_member *member, void *value)
+{
+   if (!value)
+      return;
+   if (member->free_member)
+      member->free_member(value);
+}
+
+static void *resolve_var(const struct var_member **member, const char *name, void *value)
+{
+   size_t len;
+   const struct var_member *m = (*member)->subvar;
+   char *index = NULL;
+
+   if (!name || !value)
+      return value;
+
+   len = strcspn(name, ".[");
+
+   if (len == 0)
+      return NULL;
+
+   while (m->member_name && !(!strncmp(m->member_name, name, len) && m->member_name[len] == 0))
+      m++;
+
+   if (!m->member_name)
+      return NULL;
+
+   if (name[len] == '[') {
+      char *end = strchr(name + len + 1, ']');
+      if (end) {
+          size_t len2 = end - name - 1;
+          index = malloc(len2 - len + 1);
+          strncpy(index, name + len + 1, len2 - len);
+          index[len2 - len] = 0;
+          len = len2 + 2;
+      }
+   }
+
+   value = get_member(m, value, index);
+   free(index);
+   *member = m;
+   if (name[len]) {
+      void *result = resolve_var(member, name + len + 1, value);
+      free_member(m, value);
+      value = result;
+   }
+
+   return value;
+}
 
 /* Get string corresponding to specified mode */
 static char *vmfs_fs_mode_to_str(uint32_t mode)
@@ -402,160 +420,97 @@ static char *get_value_vol_size(char *buf, void *value, short len)
                    (uint64_t)(((vmfs_volume_t *)value)->vol_info.size) * 256);
 }
 
-static int longest_member_desc(struct var_struct *struct_def)
+static int longest_member_desc(const struct var_member *members)
 {
-   struct var_member *m;
    int len = 0, curlen;
-   for (m = struct_def->members; m->member_name; m++) {
-      if (!m->description)
+   for (; members->member_name; members++) {
+      if (!members->description)
          continue;
-      curlen = strlen(m->description);
+      curlen = strlen(members->description);
       if (curlen > len)
          len = curlen;
    }
    return len;
 }
 
-static int struct_dump(struct var_struct *struct_def, void *value,
-                       const char *name)
+static int get_numeric_index(uint32_t *idx, const char *index)
 {
-   char buf[256];
-   struct var_member *member = struct_def->members;
-   size_t len;
+   char *c;
+   unsigned long ret;
 
-   if (!name || !*name) { /* name is empty, we dump all members */
-      char format[16];
-      sprintf(format, "%%%ds: %%s\n", longest_member_desc(struct_def));
-      for (; member->member_name; member++)
-         if (member->get_value)
-            printf(format, member->description,
-                member->get_value(buf, value + member->offset, member->length));
-      return(1);
-   }
+   if (!idx)
+      return 0;
 
-   if (name[0] == '.')
-      name++;
+   ret = strtoul(index, &c, 0);
 
-   len = strcspn(name, ".[");
+   if (*c || ret > 0xffffffff)
+      return 0;
 
-   if (name[len] != 0) { /* name contains a . or [, we search a sub var */
-      strncpy(buf, name, len);
-      buf[len] = 0;
-      while(member->member_name && strcmp(member->member_name, buf))
-         member++;
-      if (member->get_value)
-         return(0);
-   } else
-      while(member->member_name && strcmp(member->member_name, name))
-         member++;
-
-   if (!member->member_name)
-      return(0);
-
-   if (member->get_value) {
-      printf("%s: %s\n", member->description,
-             member->get_value(buf, value + member->offset, member->length));
-      return(1);
-   }
-
-   value += member->offset;
-   if (member->length)
-      value = *(void **)value;
-   return member->subvar->dump(member->subvar, value, name + len);
+   *idx = ret;
+   return 1;
 }
 
-static int get_array_index(char *idx_str, const char **name)
+static void *get_lvm_extent(void *value, const char *index)
 {
-   char *current = idx_str;
-   const char *end = *name, *next;
-   if (*end != '[')
-      return(0);
-   do {
-      next = index(end + 1, ']');
-      if (next) {
-         strncpy(current, end + 1, next - end - 1);
-         current += next - end - 1;
-         end = next;
-      } else
-         return(0);
-   } while (*(end - 1) == '\\');
-   *current = 0;
-   *name = end + 1;
-   return(1);
-}
-
-static int get_numeric_index(uint32_t *idx, const char **name)
-{
-   char idx_str[1024], *c;
-   unsigned long long_idx;
-   if (!get_array_index(idx_str, name))
-      return(0);
-   long_idx = strtoul(idx_str, &c, 0);
-   if (*c || (long_idx > (uint32_t)-1))
-      return(0);
-   *idx = long_idx;
-   return(1);
-}
-
-static int lvm_extents_dump(struct var_struct *struct_def, void *value,
-                            const char *name)
-{
-   uint32_t idx;
    vmfs_lvm_t *lvm = (vmfs_lvm_t *)value;
-   if (!get_numeric_index(&idx, &name))
-      return(0);
+   uint32_t idx;
 
-   if (idx >= lvm->lvm_info.num_extents)
-      return(0);
+   if (!index ||
+       !get_numeric_index(&idx, index) ||
+       idx >= lvm->lvm_info.num_extents)
+      return NULL;
 
-   return struct_def->members[0].subvar->dump(struct_def->members[0].subvar,
-                                              lvm->extents[idx], name);
+   return lvm->extents[idx];
 }
 
-struct vmfs_bitmap_item_ref {
-   vmfs_bitmap_entry_t entry;
-   vmfs_bitmap_t *bitmap;
-   uint32_t entry_idx, item_idx;
-};
-
-static int bitmap_entries_dump(struct var_struct *struct_def, void *value,
-                               const char *name)
+static void *get_bitmap_entry(void *value, const char *index)
 {
-   struct vmfs_bitmap_item_ref ref = { { { 0, } } };
-   ref.bitmap = (vmfs_bitmap_t *)value;
-   if (!get_numeric_index(&ref.entry_idx, &name))
-      return(0);
+   struct vmfs_bitmap_item_ref *ref =
+      calloc(1, sizeof(struct vmfs_bitmap_item_ref));
 
-   if (ref.entry_idx >= ref.bitmap->bmh.bmp_entries_per_area *
-                        ref.bitmap->bmh.area_count)
-      return(0);
+   if (!index)
+      return NULL;
 
-   vmfs_bitmap_get_entry(ref.bitmap, ref.entry_idx, 0, &ref.entry);
-   return struct_def->members[0].subvar->dump(struct_def->members[0].subvar,
-                                              &ref, name);
+   ref->bitmap = (vmfs_bitmap_t *)value;
+
+   if (!get_numeric_index(&ref->entry_idx, index))
+      return NULL;
+
+   if (ref->entry_idx >= ref->bitmap->bmh.bmp_entries_per_area *
+                         ref->bitmap->bmh.area_count)
+      return NULL;
+   vmfs_bitmap_get_entry(ref->bitmap, ref->entry_idx, 0, &ref->entry);
+
+   return ref;
 }
 
 static char *get_value_bitmap_item_status(char *buf, void *value, short len)
 {
    struct vmfs_bitmap_item_ref *ref = (struct vmfs_bitmap_item_ref *) value;
-   int used = vmfs_bitmap_get_item_status(&ref->bitmap->bmh, value,
+   int used = vmfs_bitmap_get_item_status(&ref->bitmap->bmh, &ref->entry,
                                           ref->entry_idx, ref->item_idx);
    sprintf(buf, "%s", used ? "used" : "free");
    return buf;
 }
 
-static int bitmap_items_dump(struct var_struct *struct_def, void *value,
-                               const char *name)
+static void *get_bitmap_item(void *value, const char *index)
 {
-   struct vmfs_bitmap_item_ref *ref = (struct vmfs_bitmap_item_ref *) value;
-   if (!get_numeric_index(&ref->item_idx, &name))
-      return(0);
+   struct vmfs_bitmap_item_ref *ref =
+      malloc(sizeof(struct vmfs_bitmap_item_ref));
+   /* This is not nice, but we need to copy the struct for resolve_var to
+    * be happy about it */
+   memcpy(ref, value, sizeof(struct vmfs_bitmap_item_ref));
+
+   if (!index)
+      return NULL;
+
+   if (!get_numeric_index(&ref->item_idx, index))
+      return NULL;
 
    if (ref->item_idx >= ref->bitmap->bmh.items_per_bitmap_entry)
-      return(0);
+      return NULL;
 
-   return struct_def->members[0].subvar->dump(struct_def->members[0].subvar,
-                                              ref, name);
+   return ref;
 }
 
 static const char *bitmaps[] = { "fbb", "sbc", "pbc", "fdc" };
@@ -595,52 +550,50 @@ static char *get_value_blkid_flags(char *buf, void *value, short len)
    return buf;
 }
 
-static int blkid_dump(struct var_struct *struct_def, void *value,
-                      const char *name)
+static void *get_blkid(void *value, const char *index)
 {
-   uint32_t blkid;
-   vmfs_block_info_t info;
-   if (!get_numeric_index(&blkid, &name))
-      return(0);
-   if (vmfs_block_get_info(blkid, &info) == -1)
-      return(0);
-   /* Normalize entry and item for fbb */
-   if (info.type == VMFS_BLK_TYPE_FB) {
-      vmfs_fs_t *fs = (vmfs_fs_t *)value;
-      info.entry = info.item / fs->fbb->bmh.items_per_bitmap_entry;
-      info.item = info.item % fs->fbb->bmh.items_per_bitmap_entry;
+   vmfs_block_info_t *info;
+   uint32_t idx;
+
+   if (!index ||
+       !get_numeric_index(&idx, index))
+      return NULL;
+
+   info = calloc(1, sizeof(vmfs_block_info_t));
+   if (vmfs_block_get_info(idx, info) == -1) {
+      free(info);
+      return NULL;
    }
-   return struct_def->members[0].subvar->dump(struct_def->members[0].subvar,
-                                              &info, name);
+   /* Normalize entry and item for fbb */
+   if (info->type == VMFS_BLK_TYPE_FB) {
+      vmfs_fs_t *fs = (vmfs_fs_t *)value;
+      info->entry = info->item / fs->fbb->bmh.items_per_bitmap_entry;
+      info->item = info->item % fs->fbb->bmh.items_per_bitmap_entry;
+   }
+   return info;
 }
 
 static vmfs_dir_t *current_dir = NULL;
 
-static int dirent_dump(struct var_struct *struct_def, void *value,
-                       const char *name)
+static void *get_dirent(void *value, const char *index)
 {
-   char path[1024];
-   const vmfs_dirent_t *entry;
    vmfs_dir_t *dir;
    char *bname, *dname;
-   int ret;
 
-   if (!get_array_index(path, &name))
-      return(0);
-   bname = m_basename(path);
-   dname = m_dirname(path);
+   if (!index)
+      return NULL;
+
+   bname = m_basename(index);
+   dname = m_dirname(index);
 
    if (!(dir = vmfs_dir_open_at(current_dir,dname)))
-      return(0);
-   if (!(entry = vmfs_dir_lookup(dir,bname)))
-      return(0);
+      return NULL;
+   if (!vmfs_dir_lookup(dir,bname))
+      return NULL;
 
-   ret = struct_def->members[0].subvar->dump(struct_def->members[0].subvar,
-                                             (void *)entry, name);
-   vmfs_dir_close(dir);
    free(bname);
    free(dname);
-   return(ret);
+   return dir;
 }
 
 static char *get_value_mode(char *buf, void *value, short len)
@@ -655,28 +608,49 @@ static char *get_value_mode(char *buf, void *value, short len)
 vmfs_file_t *vmfs_file_open_from_filespec(vmfs_dir_t *base_dir,
                                           const char *filespec);
 
-static int inode_dump(struct var_struct *struct_def, void *value,
-                      const char *name)
+static void *get_inode(void *value, const char *index)
 {
-   char path[1024];
    vmfs_file_t *file;
-   int ret;
+   vmfs_inode_t *inode;
 
-   if (!get_array_index(path, &name))
-      return(0);
+   if (!index)
+      return NULL;
 
-   if (!(file = vmfs_file_open_from_filespec(current_dir,path)))
-      return(0);
+   if (!(file = vmfs_file_open_from_filespec(current_dir,index)))
+      return NULL;
 
-   ret = struct_def->members[0].subvar->dump(struct_def->members[0].subvar,
-                                             (void *)file->inode, name);
+   /* Awkward, need better API */
+   inode = vmfs_inode_acquire(vmfs_dir_get_fs(current_dir), file->inode->id);
    vmfs_file_close(file);
-   return(ret);
+   return inode;
 }
 
 int cmd_show(vmfs_dir_t *base_dir,int argc,char *argv[])
 {
+   char buf[256];
    current_dir = base_dir;
-   return vmfs_fs.dump(&vmfs_fs, (void *)vmfs_dir_get_fs(base_dir),
-                         argv[0]) ? 0 : 1;
+   const struct var_member *var = &root;
+   void *value = resolve_var(&var, argv[0], (void *)vmfs_dir_get_fs(base_dir));
+   int ret = 0;
+
+   if (value && var) {
+      if (var->get_value) {
+         printf("%s: %s\n", var->description, var->get_value(buf, value, var->length));
+      } else if (var->subvar) {
+         char format[16];
+         const struct var_member *v;
+         sprintf(format, "%%%ds: %%s\n", longest_member_desc(var->subvar));
+         for (v = var->subvar; v->member_name; v++)
+            if (v->description && v->get_value) {
+               void *m_value = get_member(v, value, NULL);
+               printf(format, v->description, v->get_value(buf, m_value, v->length));
+               free_member(v, m_value);
+            }
+      } else
+         ret = 1;
+   } else
+      ret = 1;
+   free_member(var, value);
+
+   return ret;
 }
