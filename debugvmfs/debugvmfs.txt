@@ -166,9 +166,9 @@ supported top-level variables are the following:
 
 - *blkid*['blk']
 
-- *dirent*['path']
+- *dirent*["'path'"]
 
-- *inode*['filespec']
+- *inode*["'filespec'"]
 
 The *vol_version*, *version*, *label*, *mode*, *uuid*, *ctime*, *block_size*,
 *subblock_size*, *fdc_header_size*, and *fdc_bitmap_count* properties are
@@ -271,57 +271,57 @@ directory in the shell or / outside the shell) contains information on
 the directory entry corresponding to the given path. The available fields
 are:
 
-- *dirent*['path'].type
+- *dirent*["'path'"].type
 
-- *dirent*['path'].block_id
+- *dirent*["'path'"].block_id
 
-- *dirent*['path'].record_id
+- *dirent*["'path'"].record_id
 
-- *dirent*['path'].name
+- *dirent*["'path'"].name
 
 Each *inode*['filespec'] contains information on the inode corresponding
 to the given filespec. The available fields are:
 
-- *inode*['filespec'].id
+- *inode*["'filespec'"].id
 
-- *inode*['filespec'].id2
+- *inode*["'filespec'"].id2
 
-- *inode*['filespec'].nlink
+- *inode*["'filespec'"].nlink
 
-- *inode*['filespec'].type
+- *inode*["'filespec'"].type
 
-- *inode*['filespec'].flags
+- *inode*["'filespec'"].flags
 
-- *inode*['filespec'].size
+- *inode*["'filespec'"].size
 
-- *inode*['filespec'].blk_size
+- *inode*["'filespec'"].blk_size
 
-- *inode*['filespec'].blk_count
+- *inode*["'filespec'"].blk_count
 
-- *inode*['filespec'].uid
+- *inode*["'filespec'"].uid
 
-- *inode*['filespec'].gid
+- *inode*["'filespec'"].gid
 
-- *inode*['filespec'].mode
+- *inode*["'filespec'"].mode
 
-- *inode*['filespec'].zla
+- *inode*["'filespec'"].zla
 
-- *inode*['filespec'].tbz
+- *inode*["'filespec'"].tbz
 
-- *inode*['filespec'].cow
+- *inode*["'filespec'"].cow
 
-- *inode*['filespec'].atime
+- *inode*["'filespec'"].atime
 
-- *inode*['filespec'].mtime
+- *inode*["'filespec'"].mtime
 
-- *inode*['filespec'].ctime
+- *inode*["'filespec'"].ctime
 
-- *inode*['filespec'].rdm_id
+- *inode*["'filespec'"].rdm_id
 
-- *inode*['filespec'].mdh
+- *inode*["'filespec'"].mdh
 
 Metadata headers are being used in several places, such as
-'bitmap'.*entry*['n'].mdh and *inode*['filespec'].mdh. They mostly contain
+'bitmap'.*entry*['n'].mdh and *inode*["'filespec'"].mdh. They mostly contain
 information about clustered accesses to metadata on the filesystem.
  The available fields are:
 

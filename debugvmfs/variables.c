@@ -253,6 +253,8 @@ static void free_var(const struct var *var, const struct var *up_to)
       free_var(v, up_to);
 }
 
+static int get_numeric_index(uint32_t *idx, const char *index);
+
 static const struct var *resolve_var(const struct var *var, const char *name)
 {
    size_t len;
@@ -276,13 +278,34 @@ static const struct var *resolve_var(const struct var *var, const char *name)
       return NULL;
 
    if (name[len] == '[') {
-      char *end = strchr(name + len + 1, ']');
+      size_t len2 = len + 1;
+      const char *end;
+      int is_str = 0;
+
+      if (name[len2] == '"') {
+         end = strchr(name + len2 + 1, '"');
+         if (end[1] != ']')
+            return NULL;
+         is_str = 1;
+         len++;
+      } else
+         end = strchr(name + len + 1, ']');
+
       if (end) {
-          size_t len2 = end - name - 1;
+          len2 = end - name - 1;
           index = malloc(len2 - len + 1);
           strncpy(index, name + len + 1, len2 - len);
           index[len2 - len] = 0;
           len = len2 + 2;
+          if (is_str) {
+             len++;
+          } else {
+             uint32_t idx;
+             if (!get_numeric_index(&idx, index)) {
+                free(index);
+                return NULL;
+             }
+          }
       } else
           return NULL;
    }
