@@ -30,6 +30,12 @@ struct var_member {
    char *(*get_value)(char *buf, void *value, short len);
 };
 
+struct var {
+   const struct var_member *member;
+   void *value;
+   const struct var *parent;
+};
+
 static void *get_bitmap_item(void *value, const char *index);
 #define free_bitmap_item free
 static void *get_bitmap_entry(void *value, const char *index);
@@ -235,14 +241,28 @@ static void free_member(const struct var_member *member, void *value)
       member->free_member(value);
 }
 
-static void *resolve_var(const struct var_member **member, const char *name, void *value)
+static void free_var(const struct var *var, const struct var *up_to)
+{
+   const struct var *v;
+   if (!var)
+      return;
+   free_member(var->member, var->value);
+   v = var->parent;
+   free((void *)var);
+   if (v && v != up_to)
+      free_var(v, up_to);
+}
+
+static const struct var *resolve_var(const struct var *var, const char *name)
 {
    size_t len;
-   const struct var_member *m = (*member)->subvar;
+   const struct var_member *m;
    char *index = NULL;
+   struct var *res;
 
-   if (!name || !value)
-      return value;
+   if (!name || !var)
+      return var;
+   m = var->member->subvar;
 
    len = strcspn(name, ".[");
 
@@ -267,16 +287,19 @@ static void *resolve_var(const struct var_member **member, const char *name, voi
           return NULL;
    }
 
-   value = get_member(m, value, index);
+   res = malloc(sizeof(struct var));
+   res->value = get_member(m, var->value, index);
    free(index);
-   *member = m;
+   res->member = m;
+   res->parent = var;
    if (name[len]) {
-      void *result = resolve_var(member, name + len + 1, value);
-      free_member(m, value);
-      value = result;
+      const struct var *r = resolve_var(res, name + len + 1);
+      if (!r)
+         free(res);
+      return r;
    }
 
-   return value;
+   return res;
 }
 
 /* Get string corresponding to specified mode */
@@ -630,20 +653,21 @@ int cmd_show(vmfs_dir_t *base_dir,int argc,char *argv[])
 {
    char buf[256];
    current_dir = base_dir;
-   const struct var_member *var = &root;
-   void *value = resolve_var(&var, argv[0], (void *)vmfs_dir_get_fs(base_dir));
+   const struct var root_var = { &root, (void *)vmfs_dir_get_fs(base_dir), NULL };
+   const struct var *var = resolve_var(&root_var, argv[0]);
    int ret = 0;
 
-   if (value && var) {
-      if (var->get_value) {
-         printf("%s: %s\n", var->description, var->get_value(buf, value, var->length));
-      } else if (var->subvar) {
+   if (var) {
+      const struct var_member *m = var->member;
+      if (m->get_value) {
+         printf("%s: %s\n", m->description, m->get_value(buf, var->value, m->length));
+      } else if (m->subvar) {
          char format[16];
          const struct var_member *v;
-         sprintf(format, "%%%ds: %%s\n", longest_member_desc(var->subvar));
-         for (v = var->subvar; v->member_name; v++)
+         sprintf(format, "%%%ds: %%s\n", longest_member_desc(m->subvar));
+         for (v = m->subvar; v->member_name; v++)
             if (v->description && v->get_value) {
-               void *m_value = get_member(v, value, NULL);
+               void *m_value = get_member(v, var->value, NULL);
                printf(format, v->description, v->get_value(buf, m_value, v->length));
                free_member(v, m_value);
             }
@@ -651,7 +675,7 @@ int cmd_show(vmfs_dir_t *base_dir,int argc,char *argv[])
          ret = 1;
    } else
       ret = 1;
-   free_member(var, value);
+   free_var(var, &root_var);
 
    return ret;
 }
