@@ -263,7 +263,8 @@ static void *resolve_var(const struct var_member **member, const char *name, voi
           strncpy(index, name + len + 1, len2 - len);
           index[len2 - len] = 0;
           len = len2 + 2;
-      }
+      } else
+          return NULL;
    }
 
    value = get_member(m, value, index);
