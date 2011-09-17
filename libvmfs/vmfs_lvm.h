@@ -54,4 +54,7 @@ int vmfs_lvm_add_extent(vmfs_lvm_t *lvm, vmfs_volume_t *vol);
 /* Open an LVM */
 int vmfs_lvm_open(vmfs_lvm_t *lvm);
 
+/* Returns whether a given device is a vmfs_lvm */
+bool vmfs_device_is_lvm(vmfs_device_t *dev);
+
 #endif

@@ -48,6 +48,8 @@ static void *get_dirent(void *value, const char *index);
 #define free_dirent (void (*)(void *))vmfs_dir_close
 static void *get_inode(void *value, const char *index);
 #define free_inode (void (*)(void *))vmfs_inode_release
+static void *get_lvm(void *value, const char *index);
+#define free_lvm NULL
 
 static char *get_value_none(char *buf, void *value, short len);
 static char *get_value_uint(char *buf, void *value, short len);
@@ -198,6 +200,7 @@ static const struct var_member inode[] = {
 };
 
 static const struct var_member vmfs_fs[] = {
+   GET_SUBVAR(vmfs_fs_t, lvm, vmfs_lvm, lvm),
    SUBVAR2(vmfs_fs_t, lvm, vmfs_lvm, dev, PTR),
    SUBVAR(vmfs_fs_t, fbb, vmfs_bitmap, PTR),
    SUBVAR(vmfs_fs_t, fdc, vmfs_bitmap, PTR),
@@ -725,6 +728,15 @@ static void *get_inode(void *value, const char *index)
    inode = vmfs_inode_acquire(vmfs_dir_get_fs(current_dir), file->inode->id);
    vmfs_file_close(file);
    return inode;
+}
+
+static void *get_lvm(void *value, const char *index)
+{
+   vmfs_fs_t *fs = (vmfs_fs_t *) value;
+   if (vmfs_device_is_lvm(fs->dev))
+      return fs->dev;
+
+   return NULL;
 }
 
 int cmd_show(vmfs_dir_t *base_dir,int argc,char *argv[])

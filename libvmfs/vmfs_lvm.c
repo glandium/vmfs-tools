@@ -194,3 +194,9 @@ int vmfs_lvm_open(vmfs_lvm_t *lvm)
    lvm->dev.uuid = &lvm->lvm_info.uuid;
    return(0);
 }
+
+/* Returns whether a given device is a vmfs_lvm */
+bool vmfs_device_is_lvm(vmfs_device_t *dev)
+{
+   return (dev->read == vmfs_lvm_read);
+}
