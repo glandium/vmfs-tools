@@ -244,7 +244,7 @@ static void free_member(const struct var_member *member, void *value)
 static void free_var(const struct var *var, const struct var *up_to)
 {
    const struct var *v;
-   if (!var)
+   if (!var || var == up_to)
       return;
    free_member(var->member, var->value);
    v = var->parent;
