@@ -441,32 +441,6 @@ static int cmd_dump_block(vmfs_dir_t *base_dir,int argc,char *argv[])
    return(read_dump_block(base_dir,argc,argv,1));
 }
 
-/* Get block status */
-static int cmd_get_block_status(vmfs_dir_t *base_dir,int argc,char *argv[])
-{
-   const vmfs_fs_t *fs = vmfs_dir_get_fs(base_dir);
-   uint32_t blk_id;
-   int status;
-
-   if (argc == 0) {
-      fprintf(stderr,"Usage: get_block_status blk_id\n");
-      return(-1);
-   }
-
-   blk_id = (uint32_t)strtoul(argv[0],NULL,16);
-   status = vmfs_block_get_status(fs,blk_id);
-
-   if (status == -1) {
-      fprintf(stderr,"Block 0x%8.8x: unable to get status\n",blk_id);
-      return(-1);
-   }
-
-   printf("Block 0x%8.8x status: %s\n",
-          blk_id,(status) ? "allocated" : "free");
-
-   return(0);
-}
-
 /* Allocate a fixed block */
 static int cmd_alloc_block_fixed(vmfs_dir_t *base_dir,int argc,char *argv[])
 {
@@ -615,7 +589,6 @@ struct cmd cmd_array[] = {
    { "show_heartbeats", "Show active heartbeats", cmd_show_heartbeats },
    { "read_block", "Read a block", cmd_read_block },
    { "dump_block", "Dump a block in hex", cmd_dump_block },
-   { "get_block_status", "Get block status", cmd_get_block_status },
    { "alloc_block_fixed", "Allocate block (fixed)", cmd_alloc_block_fixed },
    { "alloc_block", "Find and Allocate a block", cmd_alloc_block },
    { "free_block", "Free block", cmd_free_block },
