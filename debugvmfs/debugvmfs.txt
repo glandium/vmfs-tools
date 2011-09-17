@@ -341,6 +341,10 @@ information about clustered accesses to metadata on the filesystem.
 
 - 'mdh'.mtime
 
+Variable values can also be used in expressions using square brackets to
+use the variable value as an index. For example:
+
+- *blkid*[*inode*["'filespec'"].id]
 
 AUTHORS
 -------

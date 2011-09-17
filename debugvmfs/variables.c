@@ -253,6 +253,23 @@ static void free_var(const struct var *var, const struct var *up_to)
       free_var(v, up_to);
 }
 
+static const char *find_closing_bracket(const char *str)
+{
+   size_t len = strcspn(str, "[]");
+   switch (str[len]) {
+   case '[': {
+      const char *bracket = find_closing_bracket(str + len + 1);
+      if (!bracket)
+         return NULL;
+      return find_closing_bracket(bracket + 1);
+   }
+   case ']':
+      return str + len;
+   default:
+      return NULL;
+   }
+}
+
 static int get_numeric_index(uint32_t *idx, const char *index);
 
 static const struct var *resolve_var(const struct var *var, const char *name)
@@ -289,7 +306,7 @@ static const struct var *resolve_var(const struct var *var, const char *name)
          is_str = 1;
          len++;
       } else
-         end = strchr(name + len + 1, ']');
+         end = find_closing_bracket(name + len + 1);
 
       if (end) {
           len2 = end - name - 1;
@@ -302,8 +319,14 @@ static const struct var *resolve_var(const struct var *var, const char *name)
           } else {
              uint32_t idx;
              if (!get_numeric_index(&idx, index)) {
+                const struct var_member *var = &root;
+                void *idx_value = resolve_var(&var, index, root_obj);
                 free(index);
-                return NULL;
+                if (idx_value && var && var->get_value) {
+                   index = malloc(256);
+                   var->get_value(index, idx_value, var->length);
+                } else
+                   return NULL;
              }
           }
       } else
