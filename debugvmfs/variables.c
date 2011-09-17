@@ -253,27 +253,24 @@ static void free_var(const struct var *var, const struct var *up_to)
       free_var(v, up_to);
 }
 
-static const char *find_closing_bracket(const char *str)
+static const char *find_closing_thing(const char* openclose, const char *str)
 {
-   size_t len = strcspn(str, "[]");
-   switch (str[len]) {
-   case '[': {
-      const char *bracket = find_closing_bracket(str + len + 1);
-      if (!bracket)
+   size_t len = strcspn(str, openclose);
+   if (str[len] == openclose[0]) {
+      const char *thing = find_closing_thing(openclose, str + len + 1);
+      if (!thing)
          return NULL;
-      return find_closing_bracket(bracket + 1);
-   }
-   case ']':
+      return find_closing_thing(openclose, thing + 1);
+   } else if (str[len] == openclose[1])
       return str + len;
-   default:
-      return NULL;
-   }
+   return NULL;
 }
 
 static int get_numeric_index(uint32_t *idx, const char *index);
 
 static const struct var *resolve_var(const struct var *var, const char *name)
 {
+   /* TODO: this function really needs some simplification/splitting */
    size_t len;
    const struct var_member *m;
    char *index = NULL;
@@ -281,12 +278,45 @@ static const struct var *resolve_var(const struct var *var, const char *name)
 
    if (!name || !var)
       return var;
-   m = var->member->subvar;
 
-   len = strcspn(name, ".[");
+   len = strcspn(name, ".[(");
+
+   if (name[len] == '(') {
+      const struct var *idx_var;
+      const char *end;
+      if (len != 0 || var->parent)
+         return NULL;
+      if (!(end = find_closing_thing("()", name + 1)))
+         return NULL;
+      len = end - name - 1;
+      index = malloc(len + 1);
+      strncpy(index, name + 1, len);
+      index[len] = 0;
+      len += 2;
+      idx_var = resolve_var(var, index);
+      free(index);
+      if (idx_var && idx_var->member->get_value) {
+         index = malloc(256);
+         idx_var->member->get_value(index, idx_var->value, idx_var->member->length);
+         free_var(idx_var, var);
+         var = resolve_var(var, index);
+         free(index);
+         index = NULL;
+         name += len;
+         if (*name == '.')
+            name++;
+         len = strcspn(name, ".[");
+      } else
+         return NULL;
+   }
+
+   if (!name[0])
+      return var;
 
    if (len == 0)
       return NULL;
+
+   m = var->member->subvar;
 
    while (m->member_name && !(!strncmp(m->member_name, name, len) && m->member_name[len] == 0))
       m++;
@@ -306,7 +336,7 @@ static const struct var *resolve_var(const struct var *var, const char *name)
          is_str = 1;
          len++;
       } else
-         end = find_closing_bracket(name + len + 1);
+         end = find_closing_thing("[]", name + len + 1);
 
       if (end) {
           len2 = end - name - 1;

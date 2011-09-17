@@ -346,6 +346,12 @@ use the variable value as an index. For example:
 
 - *blkid*[*inode*["'filespec'"].id]
 
+Enclosing a variable name with parentheses will use that variable value as
+a variable name. For example:
+
+- (*blkid*['blk'].item).status
+
+
 AUTHORS
 -------
 include::../AUTHORS[]
