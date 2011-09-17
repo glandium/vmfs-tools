@@ -319,14 +319,16 @@ static const struct var *resolve_var(const struct var *var, const char *name)
           } else {
              uint32_t idx;
              if (!get_numeric_index(&idx, index)) {
-                const struct var_member *var = &root;
-                void *idx_value = resolve_var(&var, index, root_obj);
+                const struct var *root_var, *idx_var;
+                for (root_var = var; root_var->parent; root_var = root_var->parent);
+                idx_var = resolve_var(root_var, index);
                 free(index);
-                if (idx_value && var && var->get_value) {
+                if (idx_var && idx_var->member->get_value) {
                    index = malloc(256);
-                   var->get_value(index, idx_value, var->length);
+                   idx_var->member->get_value(index, idx_var->value, idx_var->member->length);
                 } else
                    return NULL;
+                free_var(idx_var, root_var);
              }
           }
       } else
