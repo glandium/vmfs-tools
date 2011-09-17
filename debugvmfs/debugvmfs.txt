@@ -320,6 +320,8 @@ to the given filespec. The available fields are:
 
 - *inode*["'filespec'"].mdh
 
+- *inode*["'filespec'"].blocks
+
 Metadata headers are being used in several places, such as
 'bitmap'.*entry*['n'].mdh and *inode*["'filespec'"].mdh. They mostly contain
 information about clustered accesses to metadata on the filesystem.

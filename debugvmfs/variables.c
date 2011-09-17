@@ -67,6 +67,7 @@ static char *get_value_vol_size(void *value, short len);
 static char *get_value_blkid_item(void *value, short len);
 static char *get_value_blkid_flags(void *value, short len);
 static char *get_value_mode(void *value, short len);
+static char *get_value_blocks(void *value, short len);
 
 #define PTR(type, name) 0
 #define FIELD(type, name) sizeof(((type *)0)->name)
@@ -196,6 +197,7 @@ static const struct var_member inode[] = {
    MEMBER(vmfs_inode_t, ctime, "Change Time", date),
    MEMBER(vmfs_inode_t, rdm_id, "RDM ID", xint),
    SUBVAR(vmfs_inode_t, mdh, vmfs_metadata_hdr, FIELD),
+   VIRTUAL_MEMBER(vmfs_inode_t, blocks, NULL, blocks),
    { NULL, }
 };
 
@@ -716,6 +718,24 @@ static char *get_value_mode(void *value, short len)
    return buf;
 }
 
+static char *get_value_blocks(void *value, short len)
+{
+   char *buf, *b;
+   int i, num = FIELD(vmfs_inode_t, blocks) / sizeof(uint32_t);
+
+   vmfs_inode_t *inode = (vmfs_inode_t *) value;
+   while (num > 0 && !inode->blocks[num - 1])
+      num--;
+
+   b = buf = malloc(sizeof("0x00000000") * num + 1);
+   for (i = 0; i < num; i++) {
+      sprintf(b, "0x%08x%c", inode->blocks[i], (i + 1) % 4 ? ' ' : '\n');
+      b += sizeof("0x00000000");
+   }
+
+   return buf;
+}
+
 /* Defined in debugvmfs.c */
 vmfs_file_t *vmfs_file_open_from_filespec(vmfs_dir_t *base_dir,
                                           const char *filespec);
@@ -757,7 +777,10 @@ int cmd_show(vmfs_dir_t *base_dir,int argc,char *argv[])
       const struct var_member *m = var->member;
       if (m->get_value) {
          char *str = m->get_value(var->value, m->length);
-         printf("%s: %s\n", m->description, str);
+         if (m->description)
+            printf("%s: %s\n", m->description, str);
+         else
+            printf("%s\n", str);
          free(str);
       } else if (m->subvar) {
          char format[16];
