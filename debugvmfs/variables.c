@@ -27,7 +27,7 @@ struct var_member {
    unsigned short length;
    void *(*get_member)(void *value, const char *index);
    void (*free_member)(void *value);
-   char *(*get_value)(char *buf, void *value, short len);
+   char *(*get_value)(void *value, short len);
 };
 
 struct var {
@@ -51,22 +51,22 @@ static void *get_inode(void *value, const char *index);
 static void *get_lvm(void *value, const char *index);
 #define free_lvm NULL
 
-static char *get_value_none(char *buf, void *value, short len);
-static char *get_value_uint(char *buf, void *value, short len);
-static char *get_value_xint(char *buf, void *value, short len);
-static char *get_value_size(char *buf, void *value, short len);
-static char *get_value_string(char *buf, void *value, short len);
-static char *get_value_uuid(char *buf, void *value, short len);
-static char *get_value_date(char *buf, void *value, short len);
-static char *get_value_fs_mode(char *buf, void *value, short len);
-static char *get_value_hb_lock(char *buf, void *value, short len);
-static char *get_value_bitmap_used(char *buf, void *value, short len);
-static char *get_value_bitmap_free(char *buf, void *value, short len);
-static char *get_value_bitmap_item_status(char *buf, void *value, short len);
-static char *get_value_vol_size(char *buf, void *value, short len);
-static char *get_value_blkid_item(char *buf, void *value, short len);
-static char *get_value_blkid_flags(char *buf, void *value, short len);
-static char *get_value_mode(char *buf, void *value, short len);
+static char *get_value_none(void *value, short len);
+static char *get_value_uint(void *value, short len);
+static char *get_value_xint(void *value, short len);
+static char *get_value_size(void *value, short len);
+static char *get_value_string(void *value, short len);
+static char *get_value_uuid(void *value, short len);
+static char *get_value_date(void *value, short len);
+static char *get_value_fs_mode(void *value, short len);
+static char *get_value_hb_lock(void *value, short len);
+static char *get_value_bitmap_used(void *value, short len);
+static char *get_value_bitmap_free(void *value, short len);
+static char *get_value_bitmap_item_status(void *value, short len);
+static char *get_value_vol_size(void *value, short len);
+static char *get_value_blkid_item(void *value, short len);
+static char *get_value_blkid_flags(void *value, short len);
+static char *get_value_mode(void *value, short len);
 
 #define PTR(type, name) 0
 #define FIELD(type, name) sizeof(((type *)0)->name)
@@ -299,8 +299,7 @@ static const struct var *resolve_var(const struct var *var, const char *name)
       idx_var = resolve_var(var, index);
       free(index);
       if (idx_var && idx_var->member->get_value) {
-         index = malloc(256);
-         idx_var->member->get_value(index, idx_var->value, idx_var->member->length);
+         index = idx_var->member->get_value(idx_var->value, idx_var->member->length);
          free_var(idx_var, var);
          var = resolve_var(var, index);
          free(index);
@@ -357,8 +356,7 @@ static const struct var *resolve_var(const struct var *var, const char *name)
                 idx_var = resolve_var(root_var, index);
                 free(index);
                 if (idx_var && idx_var->member->get_value) {
-                   index = malloc(256);
-                   idx_var->member->get_value(index, idx_var->value, idx_var->member->length);
+                   index = idx_var->member->get_value(idx_var->value, idx_var->member->length);
                 } else
                    return NULL;
                 free_var(idx_var, root_var);
@@ -409,8 +407,9 @@ static const char * const units[] = {
    " TiB",
 };
 
-static char *human_readable_size(char *buf, uint64_t size)
+static char *human_readable_size(uint64_t size)
 {
+   char buf[256];
    int scale = 0;
    for (scale = 0; (size >> scale) >= 1024; scale += 10);
 
@@ -419,69 +418,70 @@ static char *human_readable_size(char *buf, uint64_t size)
    else
       sprintf(buf, "%"PRIu64"%s", size >> scale, units[scale / 10]);
 
-   return buf;
+   return strdup(buf);
 }
 
-static char *get_value_uint(char *buf, void *value, short len)
+static char *get_value_uint(void *value, short len)
 {
+   char buf[32];
    switch (len) {
    case 4:
       sprintf(buf, "%" PRIu32, *((uint32_t *)value));
-      return buf;
+      return strdup(buf);
    case 8:
       sprintf(buf, "%" PRIu64, *((uint64_t *)value));
-      return buf;
+      return strdup(buf);
    }
-   return get_value_none(buf, value, len);
+   return get_value_none(value, len);
 }
 
-static char *get_value_xint(char *buf, void *value, short len)
+static char *get_value_xint(void *value, short len)
 {
+   char buf[32];
    switch (len) {
    case 4:
       sprintf(buf, "0x%" PRIx32, *((uint32_t *)value));
-      return buf;
+      return strdup(buf);
    case 8:
       sprintf(buf, "0x%" PRIx64, *((uint64_t *)value));
-      return buf;
+      return strdup(buf);
    }
-   return get_value_none(buf, value, len);
+   return get_value_none(value, len);
 }
 
-static char *get_value_size(char *buf, void *value, short len)
+static char *get_value_size(void *value, short len)
 {
    switch (len) {
    case 4:
-      return human_readable_size(buf, *((uint32_t *)value));
+      return human_readable_size(*((uint32_t *)value));
    case 8:
-      return human_readable_size(buf, *((uint64_t *)value));
+      return human_readable_size(*((uint64_t *)value));
    }
-   return get_value_none(buf, value, len);
+   return get_value_none(value, len);
 }
 
-static char *get_value_string(char *buf, void *value, short len)
+static char *get_value_string(void *value, short len)
 {
    if (len == sizeof(void *))
-      strcpy(buf, *((char **)value));
-   else
-      strcpy(buf, (char *)value);
-   return buf;
+      return strdup(*((char **)value));
+   return strdup((char *)value);
 }
 
-static char *get_value_uuid(char *buf, void *value, short len)
+static char *get_value_uuid(void *value, short len)
 {
+   char *buf = malloc(36);
    return m_uuid_to_str((u_char *)value,buf);
 }
 
-static char *get_value_date(char *buf, void *value, short len)
+static char *get_value_date(void *value, short len)
 {
-   return m_ctime((time_t *)(uint32_t *)value, buf, 256);
+   char buf[256];
+   return strdup(m_ctime((time_t *)(uint32_t *)value, buf, 256));
 }
 
-static char *get_value_fs_mode(char *buf, void *value, short len)
+static char *get_value_fs_mode(void *value, short len)
 {
-   sprintf(buf, "%s", vmfs_fs_mode_to_str(*((uint32_t *)value)));
-   return buf;
+   return strdup(vmfs_fs_mode_to_str(*((uint32_t *)value)));
 }
 
 const char *hb_lock[] = {
@@ -490,38 +490,41 @@ const char *hb_lock[] = {
    "read lock",
 };
 
-static char *get_value_hb_lock(char *buf, void *value, short len)
+static char *get_value_hb_lock(void *value, short len)
 {
    uint32_t lock = *((uint32_t *)value);
    if ((lock >= 0) && (lock <= 2))
-      sprintf(buf, "%s", hb_lock[lock]);
-   else
+      return strdup(hb_lock[lock]);
+   else {
+      char buf[256];
       sprintf(buf, "0x%x", lock);
-   return buf;
+      return strdup(buf);
+   }
 }
 
-static char *get_value_none(char *buf, void *value, short len)
+static char *get_value_none(void *value, short len)
 {
-   strcpy(buf, "Don't know how to display");
-   return buf;
+   return strdup("Don't know how to display");
 }
 
-static char *get_value_bitmap_used(char *buf, void *value, short len)
+static char *get_value_bitmap_used(void *value, short len)
 {
+   char buf[32];
    sprintf(buf, "%d", vmfs_bitmap_allocated_items((vmfs_bitmap_t *)value));
-   return buf;
+   return strdup(buf);
 }
 
-static char *get_value_bitmap_free(char *buf, void *value, short len)
+static char *get_value_bitmap_free(void *value, short len)
 {
+   char buf[32];
    sprintf(buf, "%d", ((vmfs_bitmap_t *)value)->bmh.total_items -
                       vmfs_bitmap_allocated_items((vmfs_bitmap_t *)value));
-   return buf;
+   return strdup(buf);
 }
 
-static char *get_value_vol_size(char *buf, void *value, short len)
+static char *get_value_vol_size(void *value, short len)
 {
-   return human_readable_size(buf,
+   return human_readable_size(
                    (uint64_t)(((vmfs_volume_t *)value)->vol_info.size) * 256);
 }
 
@@ -589,13 +592,12 @@ static void *get_bitmap_entry(void *value, const char *index)
    return ref;
 }
 
-static char *get_value_bitmap_item_status(char *buf, void *value, short len)
+static char *get_value_bitmap_item_status(void *value, short len)
 {
    struct vmfs_bitmap_item_ref *ref = (struct vmfs_bitmap_item_ref *) value;
    int used = vmfs_bitmap_get_item_status(&ref->bitmap->bmh, &ref->entry,
                                           ref->entry_idx, ref->item_idx);
-   sprintf(buf, "%s", used ? "used" : "free");
-   return buf;
+   return strdup(used ? "used" : "free");
 }
 
 static void *get_bitmap_item(void *value, const char *index)
@@ -620,16 +622,18 @@ static void *get_bitmap_item(void *value, const char *index)
 
 static const char *bitmaps[] = { "fbb", "sbc", "pbc", "fdc" };
 
-static char *get_value_blkid_item(char *buf, void *value, short len)
+static char *get_value_blkid_item(void *value, short len)
 {
+   char buf[256];
    vmfs_block_info_t *info = (vmfs_block_info_t *)value;
    sprintf(buf, "%s.entry[%d].item[%d]", bitmaps[info->type - 1],
                                          info->entry, info->item);
-   return buf;
+   return strdup(buf);
 }
 
-static char *get_value_blkid_flags(char *buf, void *value, short len)
+static char *get_value_blkid_flags(void *value, short len)
 {
+   char buf[256];
    vmfs_block_info_t *info = (vmfs_block_info_t *)value;
    int more_than_one = 0;
 
@@ -652,7 +656,7 @@ static char *get_value_blkid_flags(char *buf, void *value, short len)
 
    strcat(buf, ")");
 
-   return buf;
+   return strdup(buf);
 }
 
 static void *get_blkid(void *value, const char *index)
@@ -701,11 +705,14 @@ static void *get_dirent(void *value, const char *index)
    return dir;
 }
 
-static char *get_value_mode(char *buf, void *value, short len)
+static char *get_value_mode(void *value, short len)
 {
-   char tbuf[64];
+   char *buf = malloc(18);
    uint32_t mode = *((uint32_t *)value);
-   sprintf(buf, "%04o (%s)", mode, m_fmode_to_str(mode, tbuf));
+   sprintf(buf, "%04o (", mode);
+   m_fmode_to_str(mode, buf + 6);
+   buf[16] = ')';
+   buf[17] = 0;
    return buf;
 }
 
@@ -741,7 +748,6 @@ static void *get_lvm(void *value, const char *index)
 
 int cmd_show(vmfs_dir_t *base_dir,int argc,char *argv[])
 {
-   char buf[256];
    current_dir = base_dir;
    const struct var root_var = { &root, (void *)vmfs_dir_get_fs(base_dir), NULL };
    const struct var *var = resolve_var(&root_var, argv[0]);
@@ -750,7 +756,9 @@ int cmd_show(vmfs_dir_t *base_dir,int argc,char *argv[])
    if (var) {
       const struct var_member *m = var->member;
       if (m->get_value) {
-         printf("%s: %s\n", m->description, m->get_value(buf, var->value, m->length));
+         char *str = m->get_value(var->value, m->length);
+         printf("%s: %s\n", m->description, str);
+         free(str);
       } else if (m->subvar) {
          char format[16];
          const struct var_member *v;
@@ -758,7 +766,9 @@ int cmd_show(vmfs_dir_t *base_dir,int argc,char *argv[])
          for (v = m->subvar; v->member_name; v++)
             if (v->description && v->get_value) {
                void *m_value = get_member(v, var->value, NULL);
-               printf(format, v->description, v->get_value(buf, m_value, v->length));
+               char *str = v->get_value(m_value, v->length);
+               printf(format, v->description, str);
+               free(str);
                free_member(v, m_value);
             }
       } else
