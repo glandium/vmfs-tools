@@ -36,6 +36,7 @@ struct var {
    const struct var *parent;
 };
 
+static void *get_pb_bitmap(void *value, const char *index);
 static void *get_bitmap_item(void *value, const char *index);
 #define free_bitmap_item free
 static void *get_bitmap_entry(void *value, const char *index);
@@ -64,6 +65,7 @@ static char *get_value_bitmap_used(void *value, short len);
 static char *get_value_bitmap_free(void *value, short len);
 static char *get_value_bitmap_item_status(void *value, short len);
 static char *get_value_bitmap_item_dump(void *value, short len);
+static char *get_value_bitmap_item_blocks(void *value, short len);
 static char *get_value_vol_size(void *value, short len);
 static char *get_value_blkid_item(void *value, short len);
 static char *get_value_blkid_flags(void *value, short len);
@@ -114,6 +116,7 @@ struct vmfs_bitmap_item_ref {
 static const struct var_member vmfs_bitmap_item[] = {
    VIRTUAL_MEMBER(struct vmfs_bitmap_item_ref, status, "Status", bitmap_item_status),
    VIRTUAL_MEMBER(struct vmfs_bitmap_item_ref, dump, NULL, bitmap_item_dump),
+   { "blocks", NULL, NULL, 0, sizeof(struct vmfs_bitmap_item_ref), get_pb_bitmap, NULL, get_value_bitmap_item_blocks },
    { NULL, }
 };
 
@@ -627,7 +630,6 @@ void dump_line(char *buf, uint32_t offset, u_char *data, size_t len)
    sprintf(buf, " |%s|\n", b);
 }
 
-
 static char *get_value_bitmap_item_dump(void *value, short len)
 {
    struct vmfs_bitmap_item_ref *ref = (struct vmfs_bitmap_item_ref *) value;
@@ -666,6 +668,38 @@ static char *get_value_bitmap_item_dump(void *value, short len)
 
    free(data);
    return dump;
+}
+
+static char *get_value_bitmap_item_blocks(void *value, short len)
+{
+   struct vmfs_bitmap_item_ref *ref = (struct vmfs_bitmap_item_ref *) value;
+   uint32_t size = ref->bitmap->bmh.data_size;
+   u_char *data = iobuffer_alloc(size);
+   uint32_t *blocks = (uint32_t *) data;
+   int i, num = size / sizeof(uint32_t);
+   void *b, *buf;
+
+   vmfs_bitmap_get_item(ref->bitmap, ref->entry_idx, ref->item_idx, data);
+
+   while (num > 0 && !blocks[num - 1])
+      num--;
+
+   b = buf = malloc(sizeof("0x00000000") * num + 1);
+   for (i = 0; i < num; i++) {
+      sprintf(b, "0x%08x%c", read_le32(data, i * sizeof(uint32_t)),
+                             (i + 1) % 4 ? ' ' : '\n');
+      b += sizeof("0x00000000");
+   }
+
+   return buf;
+}
+
+static void *get_pb_bitmap(void *value, const char *index)
+{
+   struct vmfs_bitmap_item_ref *ref = (struct vmfs_bitmap_item_ref *) value;
+   if (ref->bitmap->f->inode->fs->pbc != ref->bitmap)
+      return NULL;
+   return value;
 }
 
 static void *get_bitmap_item(void *value, const char *index)
