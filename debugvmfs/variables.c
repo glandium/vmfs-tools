@@ -317,7 +317,7 @@ static const struct var *resolve_var(const struct var *var, const char *name)
          return NULL;
    }
 
-   if (!name[0])
+   if (!var || !name[0])
       return var;
 
    if (len == 0)
