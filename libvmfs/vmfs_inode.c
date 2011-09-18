@@ -689,35 +689,6 @@ int vmfs_inode_truncate(vmfs_inode_t *inode,off_t new_len)
    return(0);
 }
 
-/* Show block list of an inode */
-void vmfs_inode_show_blocks(const vmfs_inode_t *inode)
-{
-   const vmfs_fs_t *fs = inode->fs;
-   uint64_t blk_size;
-   uint32_t blk_per_pb;
-   u_int blk_count;
-   int i;
-
-   blk_size = inode->blk_size;
-   
-   if (!blk_size)
-      return;
-
-   blk_count = (inode->size + blk_size - 1) / blk_size;
-
-   if (inode->zla == VMFS_BLK_TYPE_PB) {
-      blk_per_pb = fs->pbc->bmh.data_size / sizeof(uint32_t);
-      blk_count = (blk_count + blk_per_pb - 1) / blk_per_pb;
-   }
-
-   for(i=0;i<blk_count;i++) {
-      if (i && !(i % 4)) printf("\n");
-      printf("0x%8.8x ",inode->blocks[i]);
-   }
-
-   printf("\n");
-}
-
 /* Call a function for each allocated block of an inode */
 int vmfs_inode_foreach_block(const vmfs_inode_t *inode,
                              vmfs_inode_foreach_block_cbk_t cbk,

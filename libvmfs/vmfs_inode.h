@@ -142,9 +142,6 @@ int vmfs_inode_get_wrblock(vmfs_inode_t *inode,off_t pos,uint32_t *blk_id);
 /* Truncate file */
 int vmfs_inode_truncate(vmfs_inode_t *inode,off_t new_len);
 
-/* Show block list of an inode */
-void vmfs_inode_show_blocks(const vmfs_inode_t *inode);
-
 /* Call a function for each allocated block of an inode */
 int vmfs_inode_foreach_block(const vmfs_inode_t *inode,
                              vmfs_inode_foreach_block_cbk_t cbk,void *opt_arg);
