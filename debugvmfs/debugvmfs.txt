@@ -53,9 +53,6 @@ Change file permissions to the given mode.
 *df*::
 Outputs information about file system size.
 
-*show_file_blocks* 'filespec'::
-Outputs block_ids for the given file's content blocks.
-
 *get_file_block* 'filespec' 'position'::
 Get file block corresponding to position in the specified file.
 

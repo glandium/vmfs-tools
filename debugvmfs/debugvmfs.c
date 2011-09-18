@@ -278,26 +278,6 @@ static int cmd_df(vmfs_dir_t *base_dir,int argc,char *argv[])
    return(0);
 }
 
-/* Show file blocks */
-static int cmd_show_file_blocks(vmfs_dir_t *base_dir,int argc,char *argv[])
-{
-   vmfs_file_t *f;
-
-   if (argc == 0) {
-      fprintf(stderr,"Usage: show_file_blocks <filespec>\n");
-      return(-1);
-   }
-
-   if (!(f = vmfs_file_open_from_filespec(base_dir, argv[0]))) {
-      fprintf(stderr,"Unable to open file %s\n",argv[0]);
-      return(-1);
-   }
-
-   vmfs_inode_show_blocks(f->inode);
-   vmfs_file_close(f);
-   return(0);
-}
-
 /* Get file block corresponding to specified position */
 static int cmd_get_file_block(vmfs_dir_t *base_dir,int argc,char *argv[])
 {
@@ -519,7 +499,6 @@ struct cmd cmd_array[] = {
    { "chmod", "Change permissions", cmd_chmod },
    { "mkdir", "Create a directory", cmd_mkdir },
    { "df", "Show available free space", cmd_df },
-   { "show_file_blocks", "Show file blocks", cmd_show_file_blocks },
    { "get_file_block", "Get file block", cmd_get_file_block },
    { "check_vol_bitmaps", "Check volume bitmaps", cmd_check_vol_bitmaps },
    { "show_heartbeats", "Show active heartbeats", cmd_show_heartbeats },
