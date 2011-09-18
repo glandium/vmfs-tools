@@ -282,6 +282,7 @@ static const struct var *resolve_var(const struct var *var, const char *name)
    const struct var_member *m;
    char *index = NULL;
    struct var *res;
+   void *value;
 
    if (!name || !var)
       return var;
@@ -370,9 +371,12 @@ static const struct var *resolve_var(const struct var *var, const char *name)
           return NULL;
    }
 
-   res = malloc(sizeof(struct var));
-   res->value = get_member(m, var->value, index);
+   value = get_member(m, var->value, index);
    free(index);
+   if (!value)
+      return NULL;
+   res = malloc(sizeof(struct var));
+   res->value = value;
    res->member = m;
    res->parent = var;
    if (name[len]) {
