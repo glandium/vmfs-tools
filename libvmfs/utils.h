@@ -157,9 +157,6 @@ char *m_ctime(const time_t *ct,char *buf,size_t buf_len);
 /* Convert a file mode to a string */
 char *m_fmode_to_str(u_int mode,char *buf);
 
-/* Dump a structure in hexa and ascii */
-void mem_dump(FILE *f_output,const u_char *pkt,u_int len);
-
 /* Count the number of bits set in a byte */
 int bit_count(u_char val);
 
