@@ -358,8 +358,8 @@ static int cmd_show_heartbeats(vmfs_dir_t *base_dir,int argc,char *argv[])
    return(vmfs_heartbeat_show_active(fs));
 }
 
-/* Read/Dump a block */
-static int read_dump_block(vmfs_dir_t *base_dir,int argc,char *argv[],int action)
+/* Read a block */
+static int cmd_read_block(vmfs_dir_t *base_dir,int argc,char *argv[])
 {    
    const vmfs_fs_t *fs = vmfs_dir_get_fs(base_dir);
    uint32_t blk_id,blk_type;
@@ -416,29 +416,13 @@ static int read_dump_block(vmfs_dir_t *base_dir,int argc,char *argv[],int action
       }
 
       if (len != 0) {
-         if (action == 0) {
-            if (fwrite(buf,1,len,stdout) != len)
-               fprintf(stderr,"Block 0x%8.8x: incomplete write.\n",blk_id);
-         } else {
-            mem_dump(stdout,buf,len);
-         }
+         if (fwrite(buf,1,len,stdout) != len)
+            fprintf(stderr,"Block 0x%8.8x: incomplete write.\n",blk_id);
       }
    }
 
    free(buf);
    return(0);
-}
-
-/* Read a block */
-static int cmd_read_block(vmfs_dir_t *base_dir,int argc,char *argv[])
-{
-   return(read_dump_block(base_dir,argc,argv,0));
-}
-
-/* Dump a block */
-static int cmd_dump_block(vmfs_dir_t *base_dir,int argc,char *argv[])
-{
-   return(read_dump_block(base_dir,argc,argv,1));
 }
 
 /* Allocate a fixed block */
@@ -516,54 +500,6 @@ static int cmd_free_block(vmfs_dir_t *base_dir,int argc,char *argv[])
    return(0);
 }
 
-/* Show a bitmap item */
-static int cmd_show_bitmap_item(vmfs_dir_t *base_dir,int argc,char *argv[])
-{   
-   const vmfs_fs_t *fs = vmfs_dir_get_fs(base_dir);
-   uint32_t blk_id,blk_type;
-   uint32_t entry,item;
-   vmfs_bitmap_t *bmp;
-   u_char *buf;
-   size_t len;
-
-   if (argc == 0) {
-      fprintf(stderr,"Usage: show_bitmap_item blk_id\n");
-      return(-1);
-   }
-
-   blk_id = (uint32_t)strtoul(argv[0],NULL,16);
-   blk_type = VMFS_BLK_TYPE(blk_id);
-
-   switch(blk_type) {
-      case VMFS_BLK_TYPE_PB:
-         bmp   = fs->pbc;
-         entry = VMFS_BLK_PB_ENTRY(blk_id);
-         item  = VMFS_BLK_PB_ITEM(blk_id);
-         break;
-      case VMFS_BLK_TYPE_SB:
-         bmp   = fs->sbc;
-         entry = VMFS_BLK_SB_ENTRY(blk_id);
-         item  = VMFS_BLK_SB_ITEM(blk_id);
-         break;
-      case VMFS_BLK_TYPE_FD:
-         bmp = fs->fdc;
-         entry = VMFS_BLK_FD_ENTRY(blk_id);
-         item  = VMFS_BLK_FD_ITEM(blk_id);
-         break;
-      default:
-         fprintf(stderr,"Unsupported block type 0x%2.2x\n",blk_type);
-         return(-1);
-   }
-
-   len = bmp->bmh.data_size;
-   buf = malloc(len);
-
-   vmfs_bitmap_get_item(bmp,entry,item,buf);
-   mem_dump(stdout,buf,len);
-   free(buf);
-   return(0);
-}
-
 int cmd_show(vmfs_dir_t *base_dir,int argc,char *argv[]);
 
 struct cmd {
@@ -588,11 +524,9 @@ struct cmd cmd_array[] = {
    { "check_vol_bitmaps", "Check volume bitmaps", cmd_check_vol_bitmaps },
    { "show_heartbeats", "Show active heartbeats", cmd_show_heartbeats },
    { "read_block", "Read a block", cmd_read_block },
-   { "dump_block", "Dump a block in hex", cmd_dump_block },
    { "alloc_block_fixed", "Allocate block (fixed)", cmd_alloc_block_fixed },
    { "alloc_block", "Find and Allocate a block", cmd_alloc_block },
    { "free_block", "Free block", cmd_free_block },
-   { "show_bitmap_item", "Show a bitmap item", cmd_show_bitmap_item },
    { "show", "Display value(s) for the given variable", cmd_show },
    { "shell", "Opens a shell", cmd_shell },
    { NULL, NULL },

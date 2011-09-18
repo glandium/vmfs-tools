@@ -68,9 +68,6 @@ Outputs active heartbeats on the file system.
 *read_block* 'block_id' [ ... ]::
 Outputs content within the specified block_id in binary
 
-*dump_block* 'block_id' [ ... ]::
-Outputs content within the specified block_id in hex
-
 *get_block_status* 'block_id'::
 Get status (allocated or free) of the specified block_id.
 
@@ -88,9 +85,6 @@ Free the specified block_id. R/W support must be enabled.
 +
 Warning: can cause damage since no heartbeat is used at this time and a block
 used by a file can be freed.
-
-*show_bitmap_item* 'block_id'::
-Outputs raw content for the bitmap item corresponding to the given block_id.
 
 *show*::
 Display value(s) of the given variable. See the *VARIABLES* section for more
