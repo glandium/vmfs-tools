@@ -63,6 +63,7 @@ static char *get_value_hb_lock(void *value, short len);
 static char *get_value_bitmap_used(void *value, short len);
 static char *get_value_bitmap_free(void *value, short len);
 static char *get_value_bitmap_item_status(void *value, short len);
+static char *get_value_bitmap_item_dump(void *value, short len);
 static char *get_value_vol_size(void *value, short len);
 static char *get_value_blkid_item(void *value, short len);
 static char *get_value_blkid_flags(void *value, short len);
@@ -112,6 +113,7 @@ struct vmfs_bitmap_item_ref {
 
 static const struct var_member vmfs_bitmap_item[] = {
    VIRTUAL_MEMBER(struct vmfs_bitmap_item_ref, status, "Status", bitmap_item_status),
+   VIRTUAL_MEMBER(struct vmfs_bitmap_item_ref, dump, NULL, bitmap_item_dump),
    { NULL, }
 };
 
@@ -602,6 +604,66 @@ static char *get_value_bitmap_item_status(void *value, short len)
    return strdup(used ? "used" : "free");
 }
 
+void dump_line(char *buf, uint32_t offset, u_char *data, size_t len)
+{
+   u_char b[17];
+   size_t i;
+   sprintf(buf, "%08x  ", offset);
+   buf += 10;
+   for (i = 0; i < len; i++) {
+      sprintf(buf, (i == 7) ? "%02x  " : "%02x ", data[i]);
+      buf += (i == 7) ? 4 : 3;
+      b[i] = ((data[i] > 31) && (data[i] < 127)) ? data[i] : '.';
+   }
+   b[i] = 0;
+   for (; i < 16; i++) {
+      sprintf(buf, (i == 7) ? "    " : "   ");
+      buf += (i == 7) ? 4 : 3;
+   }
+   sprintf(buf, " |%s|\n", b);
+}
+
+
+static char *get_value_bitmap_item_dump(void *value, short len)
+{
+   struct vmfs_bitmap_item_ref *ref = (struct vmfs_bitmap_item_ref *) value;
+   uint32_t off = 0, size = ref->bitmap->bmh.data_size;
+   u_char *data;
+   char *dump, *buf;
+   bool is_fbb = false;
+
+   if (size == 0) {
+      /* If bitmap data size is 0, it is very likely the bitmap is fbb.
+         But just in case, we make sure it is */
+      if (ref->bitmap->f->inode->fs->fbb != ref->bitmap)
+         return NULL;
+      size = vmfs_fs_get_blocksize(ref->bitmap->f->inode->fs);
+      is_fbb = true;
+   }
+
+   data = iobuffer_alloc(size);
+   buf = dump = malloc(79 * (size + 15) / 16);
+
+   if (is_fbb)
+      vmfs_fs_read(ref->bitmap->f->inode->fs,
+                   ref->entry_idx * ref->bitmap->bmh.items_per_bitmap_entry + ref->item_idx,
+                   0, data, size);
+   else
+      vmfs_bitmap_get_item(ref->bitmap, ref->entry_idx, ref->item_idx, data);
+
+   while (size >= 16) {
+      dump_line(buf, off, data + off, 16);
+      size -= 16;
+      off += 16;
+      buf += 79;
+   }
+   if (size > 0)
+      dump_line(buf, off, data + off, size);
+
+   free(data);
+   return dump;
+}
+
 static void *get_bitmap_item(void *value, const char *index)
 {
    struct vmfs_bitmap_item_ref *ref =
@@ -777,11 +839,13 @@ int cmd_show(vmfs_dir_t *base_dir,int argc,char *argv[])
       const struct var_member *m = var->member;
       if (m->get_value) {
          char *str = m->get_value(var->value, m->length);
-         if (m->description)
-            printf("%s: %s\n", m->description, str);
-         else
-            printf("%s\n", str);
-         free(str);
+         if (str) {
+            if (m->description)
+               printf("%s: %s\n", m->description, str);
+            else
+               printf("%s\n", str);
+            free(str);
+         }
       } else if (m->subvar) {
          char format[16];
          const struct var_member *v;

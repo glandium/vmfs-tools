@@ -225,6 +225,8 @@ in the given entry. The available fields are:
 
 - 'bitmap'.*entry*['n'].item['m'].used
 
+- 'bitmap'.*entry*['n'].item['m'].dump
+
 The *lvm* variable contains low-level information about the physical and
  logical volumes. The available fields are:
 
