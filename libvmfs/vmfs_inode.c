@@ -772,6 +772,8 @@ int vmfs_inode_stat(const vmfs_inode_t *inode,struct stat *buf)
    buf->st_atime = inode->atime;
    buf->st_mtime = inode->mtime;
    buf->st_ctime = inode->ctime;
+   buf->st_blksize = M_BLK_SIZE;
+   buf->st_blocks  = inode->blk_count * (inode->blk_size / S_BLKSIZE);
    return(0);
 }
 
