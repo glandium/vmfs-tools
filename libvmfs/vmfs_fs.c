@@ -87,6 +87,28 @@ static int vmfs_fsinfo_read(vmfs_fs_t *fs)
    return(0);
 }
 
+static vmfs_bitmap_t *vmfs_open_meta_file(vmfs_dir_t *root_dir, char *name,
+                                          uint32_t max_item, uint32_t max_entry,
+                                          char *desc)
+{
+   vmfs_bitmap_t *bitmap = vmfs_bitmap_open_at(root_dir, name);
+   if (!bitmap) {
+      fprintf(stderr, "Unable to open %s.\n", desc);
+      return NULL;
+   }
+
+   if (bitmap->bmh.items_per_bitmap_entry > max_item) {
+      fprintf(stderr, "Unsupported number of items per entry in %s.\n", desc);
+      return NULL;
+   }
+   if ((bitmap->bmh.total_items + bitmap->bmh.items_per_bitmap_entry - 1) /
+        bitmap->bmh.items_per_bitmap_entry > max_entry) {
+      fprintf(stderr,"Unsupported number of entries in %s.\n", desc);
+      return NULL;
+   }
+   return bitmap;
+}
+
 /* Open all the VMFS meta files */
 static int vmfs_open_all_meta_files(vmfs_fs_t *fs)
 {
@@ -103,21 +125,28 @@ static int vmfs_open_all_meta_files(vmfs_fs_t *fs)
       fprintf(stderr,"Unable to open file-block bitmap (FBB).\n");
       return(-1);
    }
-
-   if (!(fs->fdc = vmfs_bitmap_open_at(root_dir,VMFS_FDC_FILENAME))) {
-      fprintf(stderr,"Unable to open file descriptor bitmap (FDC).\n");
+   if (fs->fbb->bmh.total_items > VMFS_BLK_FB_MAX_ITEM) {
+      fprintf(stderr, "Unsupported number of items in file-block bitmap (FBB).\n");
       return(-1);
    }
 
-   if (!(fs->pbc = vmfs_bitmap_open_at(root_dir,VMFS_PBC_FILENAME))) {
-      fprintf(stderr,"Unable to open pointer block bitmap (PBC).\n");
+   fs->fdc = vmfs_open_meta_file(root_dir, VMFS_FDC_FILENAME,
+                                 VMFS_BLK_FD_MAX_ITEM, VMFS_BLK_FD_MAX_ENTRY,
+                                 "file descriptor bitmap (FDC)");
+   if (!fs->fdc)
       return(-1);
-   }
 
-   if (!(fs->sbc = vmfs_bitmap_open_at(root_dir,VMFS_SBC_FILENAME))) {
-      fprintf(stderr,"Unable to open sub-block bitmap (SBC).\n");
+   fs->pbc = vmfs_open_meta_file(root_dir, VMFS_PBC_FILENAME,
+                                 VMFS_BLK_PB_MAX_ITEM, VMFS_BLK_PB_MAX_ENTRY,
+                                 "pointer block bitmap (PBC)");
+   if (!fs->pbc)
       return(-1);
-   }
+
+   fs->sbc = vmfs_open_meta_file(root_dir, VMFS_SBC_FILENAME,
+                                 VMFS_BLK_SB_MAX_ITEM, VMFS_BLK_SB_MAX_ENTRY,
+                                 "pointer block bitmap (PBC)");
+   if (!fs->sbc)
+      return(-1);
 
    vmfs_bitmap_close(fdc);
    vmfs_dir_close(root_dir);

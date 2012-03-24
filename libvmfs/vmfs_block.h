@@ -30,6 +30,7 @@ enum vmfs_block_type {
 
 #define VMFS_BLK_SHIFT(mask) __builtin_ctz(mask)
 #define VMFS_BLK_VALUE(blk_id, mask) (((blk_id) & (mask)) >> VMFS_BLK_SHIFT(mask))
+#define VMFS_BLK_MAX_VALUE(mask) (((mask) >> VMFS_BLK_SHIFT(mask)) + 1)
 #define VMFS_BLK_FILL(value, mask) (((value) << VMFS_BLK_SHIFT(mask)) & (mask))
 
 #define VMFS_BLK_TYPE_MASK  0x00000007
@@ -55,6 +56,8 @@ enum vmfs_block_type {
 #define VMFS_BLK_FB_ITEM(blk_id) VMFS_BLK_VALUE(blk_id, VMFS_BLK_FB_ITEM_MASK)
 #define VMFS_BLK_FB_FLAGS(blk_id) VMFS_BLK_VALUE(blk_id, VMFS_BLK_FB_FLAGS_MASK)
 
+#define VMFS_BLK_FB_MAX_ITEM VMFS_BLK_MAX_VALUE(VMFS_BLK_FB_ITEM_MASK)
+
 #define VMFS_BLK_FB_TBZ(blk_id) \
    (VMFS_BLK_FB_FLAGS(blk_id) & VMFS_BLK_FB_TBZ_FLAG)
 
@@ -79,6 +82,9 @@ enum vmfs_block_type {
 #define VMFS_BLK_SB_ENTRY(blk_id) VMFS_BLK_VALUE(blk_id, VMFS_BLK_SB_ENTRY_MASK)
 #define VMFS_BLK_SB_FLAGS(blk_id) VMFS_BLK_VALUE(blk_id, VMFS_BLK_SB_FLAGS_MASK)
 
+#define VMFS_BLK_SB_MAX_ITEM VMFS_BLK_MAX_VALUE(VMFS_BLK_SB_ITEM_MASK)
+#define VMFS_BLK_SB_MAX_ENTRY VMFS_BLK_MAX_VALUE(VMFS_BLK_SB_ENTRY_MASK)
+
 #define VMFS_BLK_SB_BUILD(entry, item, flags) \
    (VMFS_BLK_FILL(entry, VMFS_BLK_SB_ENTRY_MASK) | \
     VMFS_BLK_FILL(item, VMFS_BLK_SB_ITEM_MASK) | \
@@ -99,6 +105,9 @@ enum vmfs_block_type {
 #define VMFS_BLK_PB_ENTRY(blk_id) VMFS_BLK_VALUE(blk_id, VMFS_BLK_PB_ENTRY_MASK)
 #define VMFS_BLK_PB_FLAGS(blk_id) VMFS_BLK_VALUE(blk_id, VMFS_BLK_PB_FLAGS_MASK)
 
+#define VMFS_BLK_PB_MAX_ITEM VMFS_BLK_MAX_VALUE(VMFS_BLK_PB_ITEM_MASK)
+#define VMFS_BLK_PB_MAX_ENTRY VMFS_BLK_MAX_VALUE(VMFS_BLK_PB_ENTRY_MASK)
+
 #define VMFS_BLK_PB_BUILD(entry, item, flags) \
    (VMFS_BLK_FILL(entry, VMFS_BLK_PB_ENTRY_MASK) | \
     VMFS_BLK_FILL(item, VMFS_BLK_PB_ITEM_MASK) | \
@@ -118,6 +127,9 @@ enum vmfs_block_type {
 #define VMFS_BLK_FD_ITEM(blk_id) VMFS_BLK_VALUE(blk_id, VMFS_BLK_FD_ITEM_MASK)
 #define VMFS_BLK_FD_ENTRY(blk_id) VMFS_BLK_VALUE(blk_id, VMFS_BLK_FD_ENTRY_MASK)
 #define VMFS_BLK_FD_FLAGS(blk_id) VMFS_BLK_VALUE(blk_id, VMFS_BLK_FD_FLAGS_MASK)
+
+#define VMFS_BLK_FD_MAX_ITEM VMFS_BLK_MAX_VALUE(VMFS_BLK_FD_ITEM_MASK)
+#define VMFS_BLK_FD_MAX_ENTRY VMFS_BLK_MAX_VALUE(VMFS_BLK_FD_ENTRY_MASK)
 
 #define VMFS_BLK_FD_BUILD(entry, item, flags) \
    (VMFS_BLK_FILL(entry, VMFS_BLK_FD_ENTRY_MASK) | \
