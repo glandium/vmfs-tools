@@ -677,7 +677,7 @@ int main(int argc,char *argv[])
       exit(EXIT_FAILURE);
    }
    
-   if (!(root_dir = vmfs_dir_open_from_blkid(fs,VMFS_BLK_FD_BUILD(0,0)))) {
+   if (!(root_dir = vmfs_dir_open_from_blkid(fs,VMFS_BLK_FD_BUILD(0, 0, 0)))) {
       fprintf(stderr,"Unable to open root directory\n");
       exit(EXIT_FAILURE);
    }

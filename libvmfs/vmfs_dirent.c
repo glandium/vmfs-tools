@@ -103,7 +103,7 @@ uint32_t vmfs_dir_resolve_path(vmfs_dir_t *base_dir,const char *path,
    cur_dir = base_dir;
 
    if (*path == '/') {
-      if (!(cur_dir = vmfs_dir_open_from_blkid(fs,VMFS_BLK_FD_BUILD(0,0))))
+      if (!(cur_dir = vmfs_dir_open_from_blkid(fs,VMFS_BLK_FD_BUILD(0, 0, 0))))
          return(0);
       path++;
       close_dir = 1;

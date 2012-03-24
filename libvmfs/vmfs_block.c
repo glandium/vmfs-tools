@@ -40,24 +40,30 @@ int vmfs_block_get_info(uint32_t blk_id, vmfs_block_info_t *info)
       case VMFS_BLK_TYPE_FB:
          info->entry = 0;
          info->item  = VMFS_BLK_FB_ITEM(blk_id);
+         info->flags = VMFS_BLK_FB_FLAGS(blk_id);
          break;
 
       /* Sub-Block */
       case VMFS_BLK_TYPE_SB:
          info->entry = VMFS_BLK_SB_ENTRY(blk_id);
          info->item  = VMFS_BLK_SB_ITEM(blk_id);
+         info->flags = VMFS_BLK_SB_FLAGS(blk_id);
          break;
 
       /* Pointer Block */
       case VMFS_BLK_TYPE_PB:
          info->entry = VMFS_BLK_PB_ENTRY(blk_id);
          info->item  = VMFS_BLK_PB_ITEM(blk_id);
+         info->flags = VMFS_BLK_PB_FLAGS(blk_id);
+         info->flags = 0;
          break;
 
       /* Inode */
       case VMFS_BLK_TYPE_FD:
          info->entry = VMFS_BLK_FD_ENTRY(blk_id);
          info->item  = VMFS_BLK_FD_ITEM(blk_id);
+         info->flags = VMFS_BLK_FD_FLAGS(blk_id);
+         info->flags = 0;
          break;
 
       default:
@@ -65,7 +71,6 @@ int vmfs_block_get_info(uint32_t blk_id, vmfs_block_info_t *info)
    }
 
    info->type = blk_type;
-   info->flags = VMFS_BLK_FLAGS(blk_id);
 
    return(0);
 }
@@ -162,16 +167,16 @@ int vmfs_block_alloc(const vmfs_fs_t *fs,uint32_t blk_type,uint32_t *blk_id)
    switch(blk_type) {
       case VMFS_BLK_TYPE_FB:
          addr = (entry.id * bmp->bmh.items_per_bitmap_entry) + item;
-         *blk_id = VMFS_BLK_FB_BUILD(addr);
+         *blk_id = VMFS_BLK_FB_BUILD(addr, 0);
          break;
       case VMFS_BLK_TYPE_SB:
-         *blk_id = VMFS_BLK_SB_BUILD(entry.id,item);
+         *blk_id = VMFS_BLK_SB_BUILD(entry.id, item, 0);
          break;
       case VMFS_BLK_TYPE_PB:
-         *blk_id = VMFS_BLK_PB_BUILD(entry.id,item);
+         *blk_id = VMFS_BLK_PB_BUILD(entry.id, item, 0);
          break;
       case VMFS_BLK_TYPE_FD:
-         *blk_id = VMFS_BLK_FD_BUILD(entry.id,item);
+         *blk_id = VMFS_BLK_FD_BUILD(entry.id, item, 0);
          break;
    }
 

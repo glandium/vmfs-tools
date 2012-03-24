@@ -94,7 +94,7 @@ static int vmfs_open_all_meta_files(vmfs_fs_t *fs)
    vmfs_dir_t *root_dir;
 
    /* Read the first inode */
-   if (!(root_dir = vmfs_dir_open_from_blkid(fs,VMFS_BLK_FD_BUILD(0,0)))) {
+   if (!(root_dir = vmfs_dir_open_from_blkid(fs,VMFS_BLK_FD_BUILD(0, 0, 0)))) {
       fprintf(stderr,"VMFS: unable to open root directory\n");
       return(-1);
    }
@@ -149,7 +149,7 @@ static int vmfs_read_fdc_base(vmfs_fs_t *fs)
    inode.blk_size = fs->fs_info.block_size;
    inode.blk_count = 1;
    inode.zla = VMFS_BLK_TYPE_FB;
-   inode.blocks[0] = VMFS_BLK_FB_BUILD(fdc_base);
+   inode.blocks[0] = VMFS_BLK_FB_BUILD(fdc_base, 0);
    inode.ref_count = 1;
 
    fs->fdc = vmfs_bitmap_open_from_inode(&inode);

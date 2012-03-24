@@ -58,7 +58,7 @@ static int cmd_remove(vmfs_fs_t *fs,int argc,char *argv[])
    for (i = extent->vol_info.first_segment * blocks_per_segment;
         i < extent->vol_info.last_segment * blocks_per_segment;
         i++)
-      if (vmfs_block_get_status(fs, VMFS_BLK_FB_BUILD(i))) {
+      if (vmfs_block_get_status(fs, VMFS_BLK_FB_BUILD(i, 0))) {
          fprintf(stderr, "There is data on the last extent ; can't remove it\n");
          return(1);
       }

@@ -113,7 +113,7 @@ vmfs_dir_map_t *vmfs_dir_map_alloc_root(void)
    vmfs_dir_map_t *map;
    uint32_t root_blk_id;
 
-   root_blk_id = VMFS_BLK_FD_BUILD(0,0);
+   root_blk_id = VMFS_BLK_FD_BUILD(0, 0, 0);
 
    if (!(map = vmfs_dir_map_alloc("/",root_blk_id)))
       return NULL;
@@ -285,7 +285,7 @@ int vmfs_fsck_get_all_block_mappings(const vmfs_fs_t *fs,
       item  = i % fdc_bmp->items_per_bitmap_entry;
 
       /* Skip undefined/deleted inodes */
-      if ((vmfs_inode_get(fs,VMFS_BLK_FD_BUILD(entry,item),&inode) == -1) ||
+      if ((vmfs_inode_get(fs, VMFS_BLK_FD_BUILD(entry, item, 0), &inode) == -1) ||
           !inode.nlink)
          continue;
 
@@ -419,7 +419,7 @@ void vmfs_fsck_check_fb_lost(vmfs_bitmap_t *b,uint32_t addr,void *opt)
    vmfs_fsck_info_t *fi = opt;
    uint32_t blk_id;
 
-   blk_id = VMFS_BLK_FB_BUILD(addr);
+   blk_id = VMFS_BLK_FB_BUILD(addr, 0);
 
    if (!vmfs_block_map_find(fi->blk_map,blk_id)) {
       printf("File Block 0x%8.8x is lost.\n",blk_id);
@@ -437,7 +437,7 @@ void vmfs_fsck_check_sb_lost(vmfs_bitmap_t *b,uint32_t addr,void *opt)
    entry = addr / b->bmh.items_per_bitmap_entry;
    item  = addr % b->bmh.items_per_bitmap_entry;
 
-   blk_id = VMFS_BLK_SB_BUILD(entry,item);
+   blk_id = VMFS_BLK_SB_BUILD(entry, item, 0);
 
    if (!vmfs_block_map_find(fi->blk_map,blk_id)) {
       printf("Sub-Block 0x%8.8x is lost.\n",blk_id);
@@ -455,7 +455,7 @@ void vmfs_fsck_check_pb_lost(vmfs_bitmap_t *b,uint32_t addr,void *opt)
    entry = addr / b->bmh.items_per_bitmap_entry;
    item  = addr % b->bmh.items_per_bitmap_entry;
 
-   blk_id = VMFS_BLK_PB_BUILD(entry,item);
+   blk_id = VMFS_BLK_PB_BUILD(entry, item, 0);
 
    if (!vmfs_block_map_find(fi->blk_map,blk_id)) {
       printf("Pointer Block 0x%8.8x is lost.\n",blk_id);
@@ -548,7 +548,7 @@ int main(int argc,char *argv[])
    vmfs_fsck_init(&fsck_info);
    vmfs_fsck_get_all_block_mappings(fs,&fsck_info);
 
-   if (!(root_dir = vmfs_dir_open_from_blkid(fs,VMFS_BLK_FD_BUILD(0,0)))) {
+   if (!(root_dir = vmfs_dir_open_from_blkid(fs, VMFS_BLK_FD_BUILD(0, 0, 0)))) {
       fprintf(stderr,"Unable to open root directory\n");
       exit(EXIT_FAILURE);
    }

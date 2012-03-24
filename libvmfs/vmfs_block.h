@@ -28,79 +28,102 @@ enum vmfs_block_type {
    VMFS_BLK_TYPE_MAX,
 };
 
+#define VMFS_BLK_SHIFT(mask) __builtin_ctz(mask)
+#define VMFS_BLK_VALUE(blk_id, mask) (((blk_id) & (mask)) >> VMFS_BLK_SHIFT(mask))
+#define VMFS_BLK_FILL(value, mask) (((value) << VMFS_BLK_SHIFT(mask)) & (mask))
+
+#define VMFS_BLK_TYPE_MASK  0x00000007
+
 /* Extract block type from a block ID */
-#define VMFS_BLK_TYPE(blk_id)  ((blk_id) & 0x07)
+#define VMFS_BLK_TYPE(blk_id) VMFS_BLK_VALUE(blk_id, VMFS_BLK_TYPE_MASK)
 
-/* Extract block flags from a block ID */
-/* There is probably really no more than one flag, but so far, nothing
-   indicates what can be stored between the significant bits for the block
-   type and the TBZ flag, so we'll consider they are flags of some sort,
-   and will display them as such. */
-#define VMFS_BLK_FLAGS(blk_id)  ((blk_id >> 3) & 0x07)
+/* File-Block
+ * { unsigned int item:26;
+ *   unsigned int flags:3;
+ *   unsigned int type:3; }
+ * There is probably really no more than one flag, but so far, nothing
+ * indicates what can be stored between the significant bits for the block
+ * type and the TBZ flag, so we'll consider they are flags of some sort,
+ * and will display them as such.
+ */
+#define VMFS_BLK_FB_ITEM_MASK  0xffffffc0
+#define VMFS_BLK_FB_FLAGS_MASK 0x00000038
 
-/* File-Block - TBZ flag specifies if the block must be zeroed. */
-#define VMFS_BLK_FB_ITEM_SHIFT  6
+/* TBZ flag specifies if the block must be zeroed. */
 #define VMFS_BLK_FB_TBZ_FLAG    4
 
-#define VMFS_BLK_FB_ITEM(blk_id)   ((blk_id) >> VMFS_BLK_FB_ITEM_SHIFT)
+#define VMFS_BLK_FB_ITEM(blk_id) VMFS_BLK_VALUE(blk_id, VMFS_BLK_FB_ITEM_MASK)
+#define VMFS_BLK_FB_FLAGS(blk_id) VMFS_BLK_VALUE(blk_id, VMFS_BLK_FB_FLAGS_MASK)
+
 #define VMFS_BLK_FB_TBZ(blk_id) \
-   (VMFS_BLK_FLAGS(blk_id) & VMFS_BLK_FB_TBZ_FLAG)
+   (VMFS_BLK_FB_FLAGS(blk_id) & VMFS_BLK_FB_TBZ_FLAG)
 
 #define VMFS_BLK_FB_TBZ_CLEAR(blk_id) ((blk_id) & ~(VMFS_BLK_FB_TBZ_FLAG << 3))
 
-#define VMFS_BLK_FB_BUILD(item) \
-   (((item) << VMFS_BLK_FB_ITEM_SHIFT) | VMFS_BLK_TYPE_FB)
+#define VMFS_BLK_FB_BUILD(item, flags) \
+   (VMFS_BLK_FILL(item, VMFS_BLK_FB_ITEM_MASK) | \
+    VMFS_BLK_FILL(flags, VMFS_BLK_FB_FLAGS_MASK) | \
+    VMFS_BLK_TYPE_FB)
 
-/* Sub-Block */
-#define VMFS_BLK_SB_ITEM_SHIFT   28
-#define VMFS_BLK_SB_ITEM_MASK    0x0f
-#define VMFS_BLK_SB_ENTRY_SHIFT  6
-#define VMFS_BLK_SB_ENTRY_MASK   0x3fffff
+/* Sub-Block
+ * { unsigned int item:4;
+ *   unsigned int entry:22;
+ *   unsigned int flags:3;
+ *   unsigned int type:3; }
+ */
+#define VMFS_BLK_SB_ITEM_MASK  0xf0000000
+#define VMFS_BLK_SB_ENTRY_MASK 0x0fffffc0
+#define VMFS_BLK_SB_FLAGS_MASK 0x00000038
 
-#define VMFS_BLK_SB_ITEM(blk_id) \
-   (((blk_id) >> VMFS_BLK_SB_ITEM_SHIFT) & VMFS_BLK_SB_ITEM_MASK)
+#define VMFS_BLK_SB_ITEM(blk_id) VMFS_BLK_VALUE(blk_id, VMFS_BLK_SB_ITEM_MASK)
+#define VMFS_BLK_SB_ENTRY(blk_id) VMFS_BLK_VALUE(blk_id, VMFS_BLK_SB_ENTRY_MASK)
+#define VMFS_BLK_SB_FLAGS(blk_id) VMFS_BLK_VALUE(blk_id, VMFS_BLK_SB_FLAGS_MASK)
 
-#define VMFS_BLK_SB_ENTRY(blk_id) \
-   (((blk_id) >> VMFS_BLK_SB_ENTRY_SHIFT) & VMFS_BLK_SB_ENTRY_MASK)
+#define VMFS_BLK_SB_BUILD(entry, item, flags) \
+   (VMFS_BLK_FILL(entry, VMFS_BLK_SB_ENTRY_MASK) | \
+    VMFS_BLK_FILL(item, VMFS_BLK_SB_ITEM_MASK) | \
+    VMFS_BLK_FILL(flags, VMFS_BLK_SB_FLAGS_MASK) | \
+    VMFS_BLK_TYPE_SB)
 
-#define VMFS_BLK_SB_BUILD(entry,item) \
-   ( ((entry) << VMFS_BLK_SB_ENTRY_SHIFT) | \
-     ((item) << VMFS_BLK_SB_ITEM_SHIFT) | \
-     VMFS_BLK_TYPE_SB )
+/* Pointer-Block
+ * { unsigned int item:4;
+ *   unsigned int entry:22;
+ *   unsigned int flags:3;
+ *   unsigned int type:3; }
+ */
+#define VMFS_BLK_PB_ITEM_MASK  0xf0000000
+#define VMFS_BLK_PB_ENTRY_MASK 0x0fffffc0
+#define VMFS_BLK_PB_FLAGS_MASK 0x00000038
 
-/* Pointer-Block */
-#define VMFS_BLK_PB_ITEM_SHIFT   28
-#define VMFS_BLK_PB_ITEM_MASK    0x0f
-#define VMFS_BLK_PB_ENTRY_SHIFT  6
-#define VMFS_BLK_PB_ENTRY_MASK   0x3fffff
+#define VMFS_BLK_PB_ITEM(blk_id) VMFS_BLK_VALUE(blk_id, VMFS_BLK_PB_ITEM_MASK)
+#define VMFS_BLK_PB_ENTRY(blk_id) VMFS_BLK_VALUE(blk_id, VMFS_BLK_PB_ENTRY_MASK)
+#define VMFS_BLK_PB_FLAGS(blk_id) VMFS_BLK_VALUE(blk_id, VMFS_BLK_PB_FLAGS_MASK)
 
-#define VMFS_BLK_PB_ITEM(blk_id) \
-   (((blk_id) >> VMFS_BLK_PB_ITEM_SHIFT) & VMFS_BLK_PB_ITEM_MASK)
+#define VMFS_BLK_PB_BUILD(entry, item, flags) \
+   (VMFS_BLK_FILL(entry, VMFS_BLK_PB_ENTRY_MASK) | \
+    VMFS_BLK_FILL(item, VMFS_BLK_PB_ITEM_MASK) | \
+    VMFS_BLK_FILL(flags, VMFS_BLK_PB_FLAGS_MASK) | \
+    VMFS_BLK_TYPE_PB)
 
-#define VMFS_BLK_PB_ENTRY(blk_id) \
-   (((blk_id) >> VMFS_BLK_PB_ENTRY_SHIFT) & VMFS_BLK_PB_ENTRY_MASK)
+/* File Descriptor
+ * { unsigned int item:10;
+ *   unsigned int entry:16;
+ *   unsigned int flags:3;
+ *   unsigned int type:3; }
+ */
+#define VMFS_BLK_FD_ITEM_MASK  0xffc00000
+#define VMFS_BLK_FD_ENTRY_MASK 0x003fffc0
+#define VMFS_BLK_FD_FLAGS_MASK 0x00000038
 
-#define VMFS_BLK_PB_BUILD(entry,item) \
-   ( ((entry) << VMFS_BLK_PB_ENTRY_SHIFT) | \
-     ((item) << VMFS_BLK_PB_ITEM_SHIFT) | \
-     VMFS_BLK_TYPE_PB )
+#define VMFS_BLK_FD_ITEM(blk_id) VMFS_BLK_VALUE(blk_id, VMFS_BLK_FD_ITEM_MASK)
+#define VMFS_BLK_FD_ENTRY(blk_id) VMFS_BLK_VALUE(blk_id, VMFS_BLK_FD_ENTRY_MASK)
+#define VMFS_BLK_FD_FLAGS(blk_id) VMFS_BLK_VALUE(blk_id, VMFS_BLK_FD_FLAGS_MASK)
 
-/* File Descriptor */
-#define VMFS_BLK_FD_ITEM_SHIFT   22
-#define VMFS_BLK_FD_ITEM_MASK    0x3ff
-#define VMFS_BLK_FD_ENTRY_SHIFT  6
-#define VMFS_BLK_FD_ENTRY_MASK   0x7fff
-
-#define VMFS_BLK_FD_ITEM(blk_id) \
-   (((blk_id) >> VMFS_BLK_FD_ITEM_SHIFT) & VMFS_BLK_FD_ITEM_MASK)
-
-#define VMFS_BLK_FD_ENTRY(blk_id) \
-   (((blk_id) >> VMFS_BLK_FD_ENTRY_SHIFT) & VMFS_BLK_FD_ENTRY_MASK)
-
-#define VMFS_BLK_FD_BUILD(entry,item) \
-   ( ((entry) << VMFS_BLK_FD_ENTRY_SHIFT) | \
-     ((item) << VMFS_BLK_FD_ITEM_SHIFT) | \
-     VMFS_BLK_TYPE_FD )
+#define VMFS_BLK_FD_BUILD(entry, item, flags) \
+   (VMFS_BLK_FILL(entry, VMFS_BLK_FD_ENTRY_MASK) | \
+    VMFS_BLK_FILL(item, VMFS_BLK_FD_ITEM_MASK) | \
+    VMFS_BLK_FILL(flags, VMFS_BLK_FD_FLAGS_MASK) | \
+    VMFS_BLK_TYPE_FD)
 
 struct vmfs_block_info {
    uint32_t entry, item, flags;
