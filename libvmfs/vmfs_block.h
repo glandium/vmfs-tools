@@ -69,25 +69,35 @@ enum vmfs_block_type {
     VMFS_BLK_TYPE_FB)
 
 /* Sub-Block
- * { unsigned int item:4;
+ * { unsigned int item_lsb:4;
  *   unsigned int entry:22;
- *   unsigned int flags:3;
+ *   unsigned int flags:1; // Not sure it even exists
+ *   unsigned int item_msb: 2;
  *   unsigned int type:3; }
  */
-#define VMFS_BLK_SB_ITEM_MASK  0xf0000000
-#define VMFS_BLK_SB_ENTRY_MASK 0x0fffffc0
-#define VMFS_BLK_SB_FLAGS_MASK 0x00000038
+#define VMFS_BLK_SB_ITEM_LSB_MASK 0xf0000000
+#define VMFS_BLK_SB_ENTRY_MASK    0x0fffffc0
+#define VMFS_BLK_SB_FLAGS_MASK    0x00000020
+#define VMFS_BLK_SB_ITEM_MSB_MASK 0x00000018
 
-#define VMFS_BLK_SB_ITEM(blk_id) VMFS_BLK_VALUE(blk_id, VMFS_BLK_SB_ITEM_MASK)
+#define VMFS_BLK_SB_ITEM_VALUE_LSB_MASK 0x0000000f
+#define VMFS_BLK_SB_ITEM_VALUE_MSB_MASK 0x00000030
+
+#define VMFS_BLK_SB_ITEM(blk_id) \
+   (VMFS_BLK_FILL(VMFS_BLK_VALUE(blk_id, VMFS_BLK_SB_ITEM_LSB_MASK), VMFS_BLK_SB_ITEM_VALUE_LSB_MASK) | \
+    VMFS_BLK_FILL(VMFS_BLK_VALUE(blk_id, VMFS_BLK_SB_ITEM_MSB_MASK), VMFS_BLK_SB_ITEM_VALUE_MSB_MASK))
 #define VMFS_BLK_SB_ENTRY(blk_id) VMFS_BLK_VALUE(blk_id, VMFS_BLK_SB_ENTRY_MASK)
 #define VMFS_BLK_SB_FLAGS(blk_id) VMFS_BLK_VALUE(blk_id, VMFS_BLK_SB_FLAGS_MASK)
 
-#define VMFS_BLK_SB_MAX_ITEM VMFS_BLK_MAX_VALUE(VMFS_BLK_SB_ITEM_MASK)
+#define VMFS_BLK_SB_MAX_ITEM VMFS_BLK_MAX_VALUE(VMFS_BLK_SB_ITEM_VALUE_LSB_MASK | VMFS_BLK_SB_ITEM_VALUE_MSB_MASK)
 #define VMFS_BLK_SB_MAX_ENTRY VMFS_BLK_MAX_VALUE(VMFS_BLK_SB_ENTRY_MASK)
 
 #define VMFS_BLK_SB_BUILD(entry, item, flags) \
    (VMFS_BLK_FILL(entry, VMFS_BLK_SB_ENTRY_MASK) | \
-    VMFS_BLK_FILL(item, VMFS_BLK_SB_ITEM_MASK) | \
+    VMFS_BLK_FILL(VMFS_BLK_VALUE(item, VMFS_BLK_SB_ITEM_VALUE_LSB_MASK), \
+                  VMFS_BLK_SB_ITEM_LSB_MASK) | \
+    VMFS_BLK_FILL(VMFS_BLK_VALUE(item, VMFS_BLK_SB_ITEM_VALUE_MSB_MASK), \
+                  VMFS_BLK_SB_ITEM_MSB_MASK) | \
     VMFS_BLK_FILL(flags, VMFS_BLK_SB_FLAGS_MASK) | \
     VMFS_BLK_TYPE_SB)
 
