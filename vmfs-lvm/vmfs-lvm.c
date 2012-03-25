@@ -1,6 +1,6 @@
 /*
  * vmfs-tools - Tools to access VMFS filesystems
- * Copyright (C) 2009 Mike Hommey <mh@glandium.org>
+ * Copyright (C) 2009,2011,2012 Mike Hommey <mh@glandium.org>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
