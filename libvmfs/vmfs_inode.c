@@ -700,9 +700,8 @@ int vmfs_inode_foreach_block(const vmfs_inode_t *inode,
    uint32_t blk_id;
    u_int blk_total;
    u_int blk_count;
-   int i,j,err_count;
+   int i,j;
 
-   err_count = 0;
    blk_total = 0;
    blk_per_pb = 0;
 

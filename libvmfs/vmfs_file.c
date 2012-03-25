@@ -215,7 +215,6 @@ ssize_t vmfs_file_pwrite(vmfs_file_t *f,u_char *buf,size_t len,off_t pos)
 {   
    const vmfs_fs_t *fs = vmfs_file_get_fs(f);
    uint32_t blk_id,blk_type;
-   uint64_t blk_size;
    ssize_t res=0,wlen = 0;
    int err;
 
@@ -225,8 +224,6 @@ ssize_t vmfs_file_pwrite(vmfs_file_t *f,u_char *buf,size_t len,off_t pos)
    /* We don't handle RDM files */
    if (f->inode->type == VMFS_FILE_TYPE_RDM)
       return(-EIO);
-
-   blk_size = vmfs_fs_get_blocksize(fs);
 
    while(len > 0) {
       if ((err = vmfs_inode_get_wrblock(f->inode,pos,&blk_id)) < 0)
