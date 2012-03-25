@@ -61,7 +61,7 @@ enum vmfs_block_type {
 #define VMFS_BLK_FB_TBZ(blk_id) \
    (VMFS_BLK_FB_FLAGS(blk_id) & VMFS_BLK_FB_TBZ_FLAG)
 
-#define VMFS_BLK_FB_TBZ_CLEAR(blk_id) ((blk_id) & ~(VMFS_BLK_FB_TBZ_FLAG << 3))
+#define VMFS_BLK_FB_TBZ_CLEAR(blk_id) ((blk_id) & ~(VMFS_BLK_FILL(VMFS_BLK_FB_TBZ_FLAG, VMFS_BLK_FB_FLAGS_MASK)))
 
 #define VMFS_BLK_FB_BUILD(item, flags) \
    (VMFS_BLK_FILL(item, VMFS_BLK_FB_ITEM_MASK) | \
