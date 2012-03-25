@@ -40,7 +40,7 @@ static int cmd_remove(vmfs_fs_t *fs,int argc,char *argv[])
       char a = answer[0];
       char null = answer[1];
       free(answer);
-      if ((a == 0) || (tolower(a) == 'n') && (null == 0))
+      if ((a == 0) || ((tolower(a) == 'n') && (null == 0)))
          return(2);
       if ((tolower(a) == 'y') && (null == 0))
          break;
