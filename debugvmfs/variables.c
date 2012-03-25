@@ -742,15 +742,17 @@ static char *get_value_blkid_flags(void *value, short len)
    if (sprintf(buf, "0x%x (", info->flags) <= 0)
       return NULL;
 
-   if (info->flags & VMFS_BLK_FB_TBZ_FLAG) {
-      strcat(buf, "tbz");
-      more_than_one = 1;
-   }
+   if (info->type == VMFS_BLK_TYPE_FB) {
+      if (info->flags & VMFS_BLK_FB_TBZ_FLAG) {
+         strcat(buf, "tbz");
+         more_than_one = 1;
+      }
 
-   if (info->flags & ~VMFS_BLK_FB_TBZ_FLAG) {
-      if (more_than_one)
-         strcat(buf, ", ");
-      strcat(buf, "unknown");
+      if (info->flags & ~VMFS_BLK_FB_TBZ_FLAG) {
+         if (more_than_one)
+            strcat(buf, ", ");
+         strcat(buf, "unknown");
+      }
    }
 
    if (!info->flags)
