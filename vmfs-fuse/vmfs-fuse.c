@@ -364,7 +364,7 @@ static void vmfs_fuse_read(fuse_req_t req, fuse_ino_t ino, size_t size,
                            off_t off, struct fuse_file_info *fi)
 {
    char buf[size];
-   size_t sz;
+   ssize_t sz;
 
    if (!fi->fh) {
       fuse_reply_err(req, EBADF);
