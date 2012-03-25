@@ -504,7 +504,7 @@ const char *hb_lock[] = {
 static char *get_value_hb_lock(void *value, short len)
 {
    uint32_t lock = *((uint32_t *)value);
-   if ((lock >= 0) && (lock <= 2))
+   if (lock <= 2)
       return strdup(hb_lock[lock]);
    else {
       char buf[256];
