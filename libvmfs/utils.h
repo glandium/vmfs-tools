@@ -189,6 +189,7 @@ static inline char *strndup(const char *s, size_t n) {
       return NULL;
    memcpy(result, s, n);
    result[n + 1] = 0;
+   return result;
 }
 #endif
 
