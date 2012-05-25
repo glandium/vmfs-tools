@@ -194,20 +194,26 @@ vmfs_volume_t *vmfs_vol_open(const char *filename,vmfs_flags_t flags)
    vol->vmfs_base = VMFS_VOLINFO_BASE;
 
    /* Read volume information */
-   if (vmfs_volinfo_read(vol) == -1) {
+   do {
       DECL_ALIGNED_BUFFER(buf,512);
       uint16_t magic;
-      fprintf(stderr,"VMFS: Unable to read volume information\n");
-      fprintf(stderr,"Trying to find partitions\n");
+      /* Look for the MBR magic number */
       m_pread(vol->fd,buf,buf_len,0);
       magic = read_le16(buf, 510);
-      if ((magic == 0xaa55) && (buf[450] == 0xfb)) {
-         vol->vmfs_base += read_le32(buf, 454) * 512;
-         if (vmfs_volinfo_read(vol) == -1)
-            goto err_open;
-      } else
-         goto err_open;
-   }
+      if (magic == 0xaa55) {
+         /* Scan partition table */
+         int off;
+         for (off = 446; off < 510; off += 16) {
+            if (buf[off + 4] == 0xfb) {
+                vol->vmfs_base += (off_t) read_le32(buf, off + 8) * 512;
+                break;
+            }
+         }
+      }
+   } while(0);
+
+   if (vmfs_volinfo_read(vol) == -1)
+      goto err_open;
 
    /* We support only VMFS3 and VMFS5*/
    if ((vol->vol_info.version != 3) && (vol->vol_info.version != 5)) {
