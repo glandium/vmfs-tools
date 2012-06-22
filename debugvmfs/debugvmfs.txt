@@ -9,6 +9,7 @@ debugvmfs - VMFS file system debugger
 SYNOPSIS
 --------
 *debugvmfs* 'VOLUME'... 'COMMAND' [ 'OPTIONS' ]
+*debugvmfs* *-b* 'BITMAP' show [ 'VARIABLE' ]
 
 
 DESCRIPTION
@@ -20,6 +21,10 @@ The 'VOLUME' to be opened can be either a block device or an image file.
 When the VMFS spreads accross several extents, all extents must be given.
 
 Please note that most commands are still likely to change in future versions.
+
+When given the *-b* option, a 'BITMAP' file may directly be opened from
+the host file system. In this mode, only the *show* command is supported, and
+the variables available are only a subset.
 
 SPECIFYING FILES
 ----------------
@@ -349,6 +354,31 @@ Enclosing a variable name with parentheses will use that variable value as
 a variable name. For example:
 
 - (*blkid*['blk'].item).status
+
+When invoked with the *-b* option, the top-level variables are those normally
+under 'bitmap':
+
+- *items_per_bitmap_entry*
+
+- *bmp_entries_per_area*
+
+- *hdr_size*
+
+- *data_size*
+
+- *area_size*
+
+- *area_count*
+
+- *total_items*
+
+- *used_items*
+
+- *free_items*
+
+- *entry*['n']
+
+The sub-variables for each entry are also available.
 
 
 AUTHORS

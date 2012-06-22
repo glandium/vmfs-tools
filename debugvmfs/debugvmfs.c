@@ -482,6 +482,8 @@ static int cmd_free_block(vmfs_dir_t *base_dir,int argc,char *argv[])
 
 int cmd_show(vmfs_dir_t *base_dir,int argc,char *argv[]);
 
+int cmd_show_bitmap(const char *path,int argc,char *argv[]);
+
 struct cmd {
    char *name;
    char *description;
@@ -518,6 +520,7 @@ static void show_usage(char *prog_name)
 
    fprintf(stderr,"%s " VERSION "\n",name);
    fprintf(stderr,"Syntax: %s <device_name...> <command> <args...>\n\n",name);
+   fprintf(stderr,"        %s -b <file_name> show <args...>\n\n",name);
    fprintf(stderr,"Available commands:\n");
 
    for(i=0;cmd_array[i].name;i++)
@@ -652,6 +655,14 @@ int main(int argc,char *argv[])
       return(0);
    }
    
+   if (strcmp(argv[1], "-b") == 0) {
+      if (strcmp(argv[3], "show")) {
+         fprintf(stderr, "Only the 'show' command is supported with '-b'\n");
+         return(1);
+      }
+      return cmd_show_bitmap(argv[2],argc-4,&argv[4]);
+   }
+
    /* Scan arguments for a command */
    for (arg = 1; arg < argc; arg++) {
       if ((cmd = cmd_find(argv[arg])))

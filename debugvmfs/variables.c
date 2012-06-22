@@ -233,6 +233,10 @@ static const struct var_member root = {
    NULL, NULL, vmfs_fs, 0, sizeof(vmfs_fs_t), NULL, NULL, NULL
 };
 
+static const struct var_member root_bitmap = {
+   NULL, NULL, vmfs_bitmap, 0, sizeof(vmfs_bitmap_t), NULL, NULL, NULL
+};
+
 static void *get_member(const struct var_member *member, void *value, const char *index)
 {
    void *result = &((char *) value)[member->offset];
@@ -868,13 +872,10 @@ static void *get_lvm(void *value, const char *index)
    return NULL;
 }
 
-int cmd_show(vmfs_dir_t *base_dir,int argc,char *argv[])
+int show_var(const struct var *root_var, const char *arg)
 {
-   current_dir = base_dir;
-   const struct var root_var = { &root, (void *)vmfs_dir_get_fs(base_dir), NULL };
-   const struct var *var = resolve_var(&root_var, argv[0]);
    int ret = 0;
-
+   const struct var *var = resolve_var(root_var, arg);
    if (var) {
       const struct var_member *m = var->member;
       if (m->get_value) {
@@ -902,7 +903,27 @@ int cmd_show(vmfs_dir_t *base_dir,int argc,char *argv[])
          ret = 1;
    } else
       ret = 1;
-   free_var(var, &root_var);
-
+   free_var(var, root_var);
    return ret;
+ }
+
+int cmd_show_bitmap(const char *path,int argc,char *argv[])
+{
+   vmfs_bitmap_t *bitmap = vmfs_bitmap_open_from_host(path);
+   const struct var root_var = { &root_bitmap, (void *)bitmap, NULL };
+   int ret;
+   if (!bitmap) {
+      fprintf(stderr, "Couldn't open '%s'\n", path);
+      return 1;
+   }
+   ret = show_var(&root_var, argv[0]);
+   vmfs_bitmap_close(bitmap);
+   return ret;
+}
+
+int cmd_show(vmfs_dir_t *base_dir,int argc,char *argv[])
+{
+   current_dir = base_dir;
+   const struct var root_var = { &root, (void *)vmfs_dir_get_fs(base_dir), NULL };
+   return show_var(&root_var, argv[0]);
 }
