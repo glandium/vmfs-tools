@@ -23,7 +23,25 @@
 #include <string.h>
 #include <errno.h>
 #include <sys/stat.h>
+#include <unistd.h>
+#include <fcntl.h>
 #include "vmfs.h"
+
+/* Open a file from host file system */
+vmfs_file_t *vmfs_file_open_from_host(const char *path)
+{
+   vmfs_file_t *f;
+   int fd = open(path, O_RDONLY);
+   if (fd < 0)
+      return NULL;
+
+   if (!(f = calloc(1,sizeof(*f))))
+      return NULL;
+
+   f->flags = VMFS_FILE_FLAG_FD;
+   f->fd = fd;
+   return f;
+}
 
 /* Open a file based on an inode buffer */
 vmfs_file_t *vmfs_file_open_from_inode(const vmfs_inode_t *inode)
@@ -119,7 +137,11 @@ int vmfs_file_close(vmfs_file_t *f)
    if (f == NULL)
       return(-1);
 
-   vmfs_inode_release(f->inode);
+   if (f->flags & VMFS_FILE_FLAG_FD)
+       close(f->fd);
+   else
+       vmfs_inode_release(f->inode);
+
    free(f);
    return(0);
 }
@@ -134,6 +156,9 @@ ssize_t vmfs_file_pread(vmfs_file_t *f,u_char *buf,size_t len,off_t pos)
    ssize_t res=0,rlen = 0;
    size_t exp_len;
    int err;
+
+   if (f->flags & VMFS_FILE_FLAG_FD)
+      return pread(f->fd, buf, len, pos);
 
    /* We don't handle RDM files */
    if (f->inode->type == VMFS_FILE_TYPE_RDM)
@@ -218,6 +243,9 @@ ssize_t vmfs_file_pwrite(vmfs_file_t *f,u_char *buf,size_t len,off_t pos)
    ssize_t res=0,wlen = 0;
    int err;
 
+   if (f->flags & VMFS_FILE_FLAG_FD)
+      return(-EIO);
+
    if (!vmfs_fs_readwrite(fs))
       return(-EROFS);
 
@@ -281,6 +309,9 @@ int vmfs_file_dump(vmfs_file_t *f,off_t pos,uint64_t len,FILE *fd_out)
    ssize_t res;
    size_t clen,buf_len;
 
+   if (f->flags & VMFS_FILE_FLAG_FD)
+      return(-EIO);
+
    if (!len)
       len = vmfs_file_get_size(f);
 
@@ -314,6 +345,9 @@ int vmfs_file_dump(vmfs_file_t *f,off_t pos,uint64_t len,FILE *fd_out)
 /* Get file status */
 int vmfs_file_fstat(const vmfs_file_t *f,struct stat *buf)
 {
+   if (f->flags & VMFS_FILE_FLAG_FD)
+      return(-EIO);
+
    return(vmfs_inode_stat(f->inode,buf));
 }
 
@@ -358,6 +392,9 @@ int vmfs_file_lstat_at(vmfs_dir_t *dir,const char *path,struct stat *buf)
 /* Truncate a file (using a file descriptor) */
 int vmfs_file_truncate(vmfs_file_t *f,off_t length)
 {
+   if (f->flags & VMFS_FILE_FLAG_FD)
+      return(-EIO);
+
    return(vmfs_inode_truncate(f->inode,length));
 }
 
@@ -379,6 +416,9 @@ int vmfs_file_truncate_at(vmfs_dir_t *dir,const char *path,off_t length)
 /* Change permissions of a file */
 int vmfs_file_chmod(vmfs_file_t *f,mode_t mode)
 {
+   if (f->flags & VMFS_FILE_FLAG_FD)
+      return(-EIO);
+
    return(vmfs_inode_chmod(f->inode,mode));
 }
 

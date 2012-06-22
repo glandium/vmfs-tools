@@ -29,16 +29,20 @@
 
 /* File flags */
 #define VMFS_FILE_FLAG_RW  0x01
+#define VMFS_FILE_FLAG_FD  0x02
 
 /* === VMFS file abstraction === */
 struct vmfs_file {
-   vmfs_inode_t *inode;
+   union {
+       vmfs_inode_t *inode;
+       int fd;
+   };
    u_int flags;
 };
 
 static inline const vmfs_fs_t *vmfs_file_get_fs(vmfs_file_t *f)
 {
-   if (f && f->inode)
+   if (f && !(f->flags & VMFS_FILE_FLAG_FD) && f->inode)
       return(f->inode->fs);
 
    return NULL;
@@ -58,8 +62,14 @@ static inline mode_t vmfs_file_type2mode(uint32_t type) {
 /* Get file size */
 static inline uint64_t vmfs_file_get_size(const vmfs_file_t *f)
 {
-   return(f->inode->size);
+   if (f && !(f->flags & VMFS_FILE_FLAG_FD) && f->inode)
+       return(f->inode->size);
+
+   return 0;
 }
+
+/* Open a file from host file system */
+vmfs_file_t *vmfs_file_open_from_host(const char *path);
 
 /* Open a file based on an inode buffer */
 vmfs_file_t *vmfs_file_open_from_inode(const vmfs_inode_t *inode);
