@@ -134,7 +134,7 @@ INSTALLED_MANPAGES := $(patsubst %.txt,$(DESTDIR)$(mandir)/man8/%.8,$(notdir $(f
 $(foreach man,$(foreach subdir,$(SUBDIRS),$($(subdir)/MANSRC:%.txt=%.8)), $(eval $(DESTDIR)$(mandir)/man8/$(notdir $(man)): $(man)))
 
 $(INSTALLED_MANPAGES): %: $(DESTDIR)$(mandir)/man8
-	install -m 0755 $(filter-out $<,$^) $(dir $@)
+	install -m 0644 $(filter-out $<,$^) $(dir $@)
 
 install: $(INSTALLED_PROGRAMS) $(INSTALLED_MANPAGES)
 
