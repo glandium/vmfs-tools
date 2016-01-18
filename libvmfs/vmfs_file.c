@@ -205,6 +205,11 @@ ssize_t vmfs_file_pread(vmfs_file_t *f,u_char *buf,size_t len,off_t pos)
             break;
          }
 
+         /* Pointer-Block, if we get here we failed to resolve pointer */
+         case VMFS_BLK_TYPE_PB:
+            fprintf(stderr, "VMFS: Pointer block at id 0x%8.8x\n", blk_id);
+            return(-EINVAL);
+
          /* Inline in the inode */
          case VMFS_BLK_TYPE_FD:
             if (blk_id == f->inode->id) {

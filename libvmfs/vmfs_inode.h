@@ -26,6 +26,9 @@
 
 #define VMFS_INODE_MAGIC  0x10c00001
 
+#define VMFS_DP_BLOCK_SZ 0x100000
+#define VMFS_SP_MAX_SZ 0x4000000000
+
 struct vmfs_inode_raw {
    struct vmfs_metadata_hdr_raw mdh;
    uint32_t id;
@@ -135,6 +138,12 @@ int vmfs_inode_alloc(vmfs_fs_t *fs,u_int type,mode_t mode,vmfs_inode_t **inode);
  * resolution is transparently done here.
  */
 int vmfs_inode_get_block(const vmfs_inode_t *inode,off_t pos,uint32_t *blk_id);
+
+/* Get block id from pointer block */
+int vmfs_sp_get_block(const vmfs_fs_t *fs, const vmfs_inode_t *inode, off_t pos, uint32_t *blk_id);
+
+/* Get block id from double indirect pointer block */
+int vmfs_dp_get_block(const vmfs_fs_t *fs, const vmfs_inode_t *inode, off_t pos, uint32_t *blk_id);
 
 /* Get a block for writing corresponding to the specified position */
 int vmfs_inode_get_wrblock(vmfs_inode_t *inode,off_t pos,uint32_t *blk_id);

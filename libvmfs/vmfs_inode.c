@@ -311,36 +311,20 @@ int vmfs_inode_get_block(const vmfs_inode_t *inode,off_t pos,uint32_t *blk_id)
 
       case VMFS_BLK_TYPE_PB:
       {
-         DECL_ALIGNED_BUFFER_WOL(buf,fs->pbc->bmh.data_size);
-         uint32_t pb_blk_id;
-         uint32_t blk_per_pb;
-         u_int pb_index;
-         u_int sub_index;
-
-         blk_per_pb = fs->pbc->bmh.data_size / sizeof(uint32_t);
-         blk_index = pos / inode->blk_size;
-
-         pb_index  = blk_index / blk_per_pb;
-         sub_index = blk_index % blk_per_pb;
-
-         if (pb_index >= VMFS_INODE_BLK_COUNT)
-            return(-EINVAL);
-
-         pb_blk_id = inode->blocks[pb_index];
-
-         if (!pb_blk_id)
-            break;
-
-         if (!vmfs_bitmap_get_item(fs->pbc,
-                                   VMFS_BLK_PB_ENTRY(pb_blk_id),
-                                   VMFS_BLK_PB_ITEM(pb_blk_id),
-                                   buf))
-            return(-EIO);
-
-         *blk_id = read_le32(buf,sub_index*sizeof(uint32_t));
+         int pointer_result = -EINVAL;
+         if (inode->blk_size == VMFS_DP_BLOCK_SZ &&
+                              inode->size > VMFS_SP_MAX_SZ) {
+            pointer_result = vmfs_dp_get_block(fs, inode, pos, blk_id);
+         } else {
+            pointer_result = vmfs_sp_get_block(fs, inode, pos, blk_id);
+         }
+         if (pointer_result) {
+            fprintf(stderr, "Error in resolving pointer block: %d\n",
+                              pointer_result);
+            return(pointer_result);
+         }
          break;
       }
-
       case VMFS_BLK_TYPE_FD:
          if (vmfs5_extension) {
             *blk_id = inode->id;
@@ -351,6 +335,84 @@ int vmfs_inode_get_block(const vmfs_inode_t *inode,off_t pos,uint32_t *blk_id)
          return(-EIO);
    }
 
+   return(0);
+}
+
+/* read pointer to get block id */
+int vmfs_sp_get_block(const vmfs_fs_t *fs, const vmfs_inode_t *inode, off_t pos,
+                              uint32_t *blk_id) {
+   DECL_ALIGNED_BUFFER_WOL(buf,fs->pbc->bmh.data_size);
+   uint32_t pb_blk_id;
+   uint32_t blk_per_pb;
+   u_int pb_index;
+   u_int sub_index;
+   u_int blk_index;
+
+   blk_per_pb = fs->pbc->bmh.data_size / sizeof(uint32_t);
+   blk_index = pos / inode->blk_size;
+
+   pb_index  = blk_index / blk_per_pb;
+   sub_index = blk_index % blk_per_pb;
+
+   if (pb_index >= VMFS_INODE_BLK_COUNT)
+      return(-EINVAL);
+
+   pb_blk_id = inode->blocks[pb_index];
+
+   if (!pb_blk_id) {
+      return(0);
+   }
+
+   if (!vmfs_bitmap_get_item(fs->pbc,
+                              VMFS_BLK_PB_ENTRY(pb_blk_id),
+                              VMFS_BLK_PB_ITEM(pb_blk_id),
+                              buf)) {
+      return(-EIO);
+   }
+
+   *blk_id = read_le32(buf,sub_index*sizeof(uint32_t));
+
+   return(0);
+}
+
+/* read double pointer to get block */
+int vmfs_dp_get_block(const vmfs_fs_t *fs, const vmfs_inode_t *inode, off_t pos,
+                              uint32_t *blk_id) {
+   DECL_ALIGNED_BUFFER_WOL(buf,fs->pbc->bmh.data_size);
+   uint32_t pb_blk_id;
+   uint32_t di_blk_id;
+   uint32_t blk_per_pb;
+   u_int pb_index;
+   u_int sub_index;
+   u_int blk_index;
+   u_int di_pb_index;
+
+   blk_per_pb = fs->pbc->bmh.data_size / sizeof(uint32_t);
+   blk_index = pos / inode->blk_size;
+   pb_index = blk_index / (blk_per_pb * blk_per_pb);
+   di_pb_index = (blk_index / blk_per_pb) % blk_per_pb;
+   sub_index = blk_index % blk_per_pb;
+   pb_blk_id = inode->blocks[pb_index];
+
+   if (!pb_blk_id) {
+      return(0);
+   }
+   // read first pointer block
+   if (!vmfs_bitmap_get_item(fs->pbc,
+                              VMFS_BLK_PB_ENTRY(pb_blk_id),
+                              VMFS_BLK_PB_ITEM(pb_blk_id),
+                              buf)) {
+      return(-EIO);
+   }
+   di_blk_id = read_le32(buf,di_pb_index*sizeof(uint32_t));
+   // read second pointer block
+   if (!vmfs_bitmap_get_item(fs->pbc,
+                              VMFS_BLK_PB_ENTRY(di_blk_id),
+                              VMFS_BLK_PB_ITEM(di_blk_id),
+                              buf)) {
+      return(-EIO);
+   }
+   *blk_id = read_le32(buf, sub_index*sizeof(uint32_t));
    return(0);
 }
 
