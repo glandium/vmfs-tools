@@ -1,1 +1,1 @@
-REQUIRES := libvmfs fuse
+REQUIRES := libvmfs fuse3

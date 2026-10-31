@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#define FUSE_USE_VERSION 26
+#define FUSE_USE_VERSION 31
 
 #include <fuse_lowlevel.h>
 #include <stdlib.h>
@@ -476,7 +476,7 @@ int main(int argc, char *argv[])
 {
    struct fuse_args args = FUSE_ARGS_INIT(argc, argv);
    struct vmfs_fuse_opts opts = { 0, };
-   struct fuse_chan *chan;
+   struct fuse_session *session;
    vmfs_flags_t flags;
    int err = -1;
 
@@ -500,21 +500,22 @@ int main(int argc, char *argv[])
       goto cleanup;
    }
 
-   if ((chan = fuse_mount(opts.mountpoint, &args)) != NULL) {
-   struct fuse_session *session;
-      session = fuse_lowlevel_new(&args, &vmfs_oper,
-                                  sizeof(vmfs_oper), fs);
-      if (session != NULL) {
-         fuse_daemonize(opts.foreground);
-         if (fuse_set_signal_handlers(session) != -1) {
-            fuse_session_add_chan(session, chan);
+   if (!opts.mountpoint) {
+      fprintf(stderr,"No mountpoint given\n");
+      goto cleanup;
+   }
+
+   session = fuse_session_new(&args, &vmfs_oper, sizeof(vmfs_oper), fs);
+   if (session != NULL) {
+      if (fuse_set_signal_handlers(session) != -1) {
+         if (fuse_session_mount(session, opts.mountpoint) == 0) {
+            fuse_daemonize(opts.foreground);
             err = fuse_session_loop(session);
-            fuse_remove_signal_handlers(session);
-            fuse_session_remove_chan(chan);
+            fuse_session_unmount(session);
          }
-         fuse_session_destroy(session);
+         fuse_remove_signal_handlers(session);
       }
-      fuse_unmount(opts.mountpoint, chan);
+      fuse_session_destroy(session);
    }
 
 cleanup:

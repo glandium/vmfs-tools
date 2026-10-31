@@ -9,7 +9,7 @@ PACKAGE := vmfs-tools
 all:
 
 SUBDIRS := $(subst /,,$(dir $(wildcard */manifest.mk)))
-ifeq (,$(fuse/LDFLAGS))
+ifeq (,$(fuse3/LDFLAGS))
 ifeq (,$(filter clean distclean,$(MAKECMDGOALS)))
 SUBDIRS := $(filter-out vmfs-fuse,$(SUBDIRS))
 endif
