@@ -323,13 +323,40 @@ int vmfs_inode_get_block(const vmfs_inode_t *inode,off_t pos,uint32_t *blk_id)
          pb_index  = blk_index / blk_per_pb;
          sub_index = blk_index % blk_per_pb;
 
-         if (pb_index >= VMFS_INODE_BLK_COUNT)
-            return(-EINVAL);
+         /* Files larger than VMFS_INODE_BLK_COUNT pointer blocks can address
+          * (256 GiB with 1 MiB blocks) use double indirection: the inode
+          * points to pointer blocks holding the ids of pointer blocks. */
+         if (vmfs5_extension) {
+            u_int pb2_index = pb_index % blk_per_pb;
 
-         pb_blk_id = inode->blocks[pb_index];
+            pb_index /= blk_per_pb;
+            if (pb_index >= VMFS_INODE_BLK_COUNT)
+               return(-EINVAL);
 
-         if (!pb_blk_id)
-            break;
+            pb_blk_id = inode->blocks[pb_index];
+
+            /* A zero pointer at either level is a hole in a thin file */
+            if (!pb_blk_id)
+               break;
+
+            if (!vmfs_bitmap_get_item(fs->pbc,
+                                      VMFS_BLK_PB_ENTRY(pb_blk_id),
+                                      VMFS_BLK_PB_ITEM(pb_blk_id),
+                                      buf))
+               return(-EIO);
+
+            pb_blk_id = read_le32(buf,pb2_index*sizeof(uint32_t));
+            if (!pb_blk_id)
+               break;
+         } else {
+            if (pb_index >= VMFS_INODE_BLK_COUNT)
+               return(-EINVAL);
+
+            pb_blk_id = inode->blocks[pb_index];
+
+            if (!pb_blk_id)
+               break;
+         }
 
          if (!vmfs_bitmap_get_item(fs->pbc,
                                    VMFS_BLK_PB_ENTRY(pb_blk_id),
