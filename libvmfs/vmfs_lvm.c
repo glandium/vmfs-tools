@@ -69,11 +69,61 @@ static inline ssize_t vmfs_lvm_io(const vmfs_lvm_t *lvm,off_t pos,u_char *buf,
    return(func(&extent->dev,pos,buf,len));
 }
 
+/* Read or write through the LVM mapping tables of the extents */
+static ssize_t vmfs_lvm_map_io(const vmfs_lvm_t *lvm,off_t pos,u_char *buf,
+                               size_t len,int write)
+{
+   int i, j;
+
+   for (i = 0; i < lvm->loaded_extents; i++) {
+      const vmfs_volume_t *ext = lvm->extents[i];
+
+      for (j = 0; j < ext->lvm_map_count; j++) {
+         const vmfs_lvm_map_t *m = &ext->lvm_map[j];
+         off_t dev_pos;
+         ssize_t res, rest;
+         size_t n;
+
+         if (((uint64_t)pos < m->logical) ||
+             ((uint64_t)pos >= m->logical + m->length))
+            continue;
+
+         n = m_min(len,m->logical + m->length - pos);
+         dev_pos = ext->vmfs_base + m->physical + (pos - m->logical);
+         res = write ? m_pwrite(ext->fd,buf,n,dev_pos) :
+                       m_pread(ext->fd,buf,n,dev_pos);
+         if ((res != (ssize_t)n) || (n == len))
+            return(res);
+
+         /* the I/O continues in the next mapped range */
+         rest = vmfs_lvm_map_io(lvm,pos + n,buf + n,len - n,write);
+         return((rest < 0) ? rest : (ssize_t)n + rest);
+      }
+   }
+
+   fprintf(stderr,"VMFS: position 0x%llx is not in the LVM mapping table\n",
+           (unsigned long long)pos);
+   return(-1);
+}
+
+/* Whether the extents carry LVM mapping tables */
+static int vmfs_lvm_has_map(const vmfs_lvm_t *lvm)
+{
+   int i;
+
+   for (i = 0; i < lvm->loaded_extents; i++)
+      if (lvm->extents[i]->lvm_map_count)
+         return(1);
+   return(0);
+}
+
 /* Read a raw block of data on logical volume */
 static ssize_t vmfs_lvm_read(const vmfs_device_t *dev,off_t pos,
                              u_char *buf,size_t len)
 {
    vmfs_lvm_t *lvm = (vmfs_lvm_t *)dev;
+   if (vmfs_lvm_has_map(lvm))
+      return(vmfs_lvm_map_io(lvm,pos,buf,len,0));
    return(vmfs_lvm_io(lvm,pos,buf,len,vmfs_device_read));
 }
 
@@ -82,6 +132,8 @@ static ssize_t vmfs_lvm_write(const vmfs_device_t *dev,off_t pos,
                               const u_char *buf,size_t len)
 {
    vmfs_lvm_t *lvm = (vmfs_lvm_t *)dev;
+   if (vmfs_lvm_has_map(lvm))
+      return(vmfs_lvm_map_io(lvm,pos,(u_char *)buf,len,1));
    return(vmfs_lvm_io(lvm,pos,(u_char *)buf,len,(vmfs_vol_io_func)vmfs_device_write));
 }
 

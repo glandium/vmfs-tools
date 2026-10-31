@@ -145,6 +145,84 @@ static int vmfs_volinfo_read(vmfs_volume_t *volume)
    return(0);
 }
 
+/* Read the LVM mapping table of the LVM header at @area */
+static void vmfs_vol_read_lvm_map_area(vmfs_volume_t *vol,off_t area)
+{
+   u_char *buf;
+   off_t off;
+   size_t i;
+
+   if (!(buf = iobuffer_alloc(VMFS_LVM_MAP_CHUNK)))
+      return;
+
+   for (off = VMFS_LVM_MAP_OFFSET; off < VMFS_LVM_MAP_END;
+        off += VMFS_LVM_MAP_CHUNK)
+   {
+      int found = 0;
+
+      if (m_pread(vol->fd,buf,VMFS_LVM_MAP_CHUNK,area + off) !=
+          VMFS_LVM_MAP_CHUNK)
+         break;
+
+      for (i = 0; i < VMFS_LVM_MAP_CHUNK; i += 0x80) {
+         vmfs_lvm_map_t *m;
+         uint32_t length = read_le32(buf,i + 28);
+
+         if (((read_le32(buf,i) & 0xff) != 1) ||
+             (read_le32(buf,i + 8) != 0x10000000) ||
+             (read_le32(buf,i + 32) != 0x100) || !length)
+            continue;
+
+         m = realloc(vol->lvm_map,(vol->lvm_map_count + 1) * sizeof(*m));
+         if (!m)
+            break;
+         vol->lvm_map = m;
+         m += vol->lvm_map_count++;
+         m->physical = read_le32(buf,i + 12) * VMFS_LVM_MAP_UNIT;
+         m->logical  = read_le32(buf,i + 20) * VMFS_LVM_MAP_UNIT;
+         m->length   = length * VMFS_LVM_MAP_UNIT;
+         found++;
+
+         if (vol->flags.debug_level > 0)
+            printf("VMFS: LVM map: logical 0x%llx-0x%llx -> 0x%llx\n",
+                   (unsigned long long)m->logical,
+                   (unsigned long long)(m->logical + m->length),
+                   (unsigned long long)(vol->vmfs_base + m->physical));
+      }
+
+      /* the entries are contiguous: stop at the first chunk without any */
+      if (!found)
+         break;
+   }
+
+   iobuffer_free(buf);
+}
+
+/* Read the LVM mapping tables (see vmfs_volume.h) */
+static void vmfs_vol_read_lvm_map(vmfs_volume_t *vol)
+{
+   off_t area = vol->vmfs_base;
+   int n, i;
+
+   for (n = 0; n < VMFS_LVM_MAP_MAX_AREAS; n++) {
+      DECL_ALIGNED_BUFFER(hdr,512);
+      uint64_t end = 0;
+
+      vmfs_vol_read_lvm_map_area(vol,area);
+
+      /* the next LVM header follows the data mapped so far */
+      for (i = 0; i < vol->lvm_map_count; i++)
+         if (vol->lvm_map[i].physical + vol->lvm_map[i].length > end)
+            end = vol->lvm_map[i].physical + vol->lvm_map[i].length;
+      if (vol->vmfs_base + (off_t)end <= area)
+         break;
+      area = vol->vmfs_base + end;
+      if ((m_pread(vol->fd,hdr,hdr_len,area) != hdr_len) ||
+          (read_le32(hdr,0) != VMFS_VOLINFO_MAGIC))
+         break;
+   }
+}
+
 /* Close a VMFS volume */
 static void vmfs_vol_close(vmfs_device_t *dev)
 {
@@ -154,6 +232,7 @@ static void vmfs_vol_close(vmfs_device_t *dev)
    close(vol->fd);
    free(vol->device);
    free(vol->vol_info.name);
+   free(vol->lvm_map);
    free(vol);
 }
 
@@ -230,6 +309,7 @@ vmfs_volume_t *vmfs_vol_open(const char *filename,vmfs_flags_t flags)
       fprintf(stderr,"VMFS: Warning: Lun ID mismatch on %s\n", vol->device);
 
    vmfs_vol_check_reservation(vol);
+   vmfs_vol_read_lvm_map(vol);
 
    if (vol->flags.debug_level > 0) {
       printf("VMFS: volume opened successfully\n");

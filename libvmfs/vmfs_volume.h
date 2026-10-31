@@ -115,6 +115,32 @@ struct vmfs_volinfo {
            num_extents;
 };
 
+/*
+ * LVM mapping table: entries of 0x80 bytes from vmfs_base + 0x80000 on,
+ * each mapping a range of the logical volume onto this device, in units of
+ * 16 MiB.  Volumes over 16 TiB are not linear (ESXi leaves a 16 MiB gap at
+ * 16 TiB), so when the table is present it is used instead of first_segment.
+ *
+ * Entry (32-bit fields): 0: (index << 8) | 1, 8: 0x10000000,
+ * 12: physical start, 20: logical start, 28: length, 32: 0x100
+ *
+ * Devices over 16 TiB carry another LVM header with its own table every
+ * 16 TiB, right after the data mapped by the previous tables (VMFS5 keeps
+ * one entry per 256 MiB segment there, VMFS6 puts all entries in the first
+ * table).  Physical starts are always relative to the first header.
+ */
+#define VMFS_LVM_MAP_MAX_AREAS 8
+#define VMFS_LVM_MAP_OFFSET  0x80000
+#define VMFS_LVM_MAP_END     0x1000000
+#define VMFS_LVM_MAP_CHUNK   0x80000
+#define VMFS_LVM_MAP_UNIT    (16ULL * 1024 * 1024)
+
+typedef struct vmfs_lvm_map {
+   uint64_t logical;    /* start in the logical volume (bytes) */
+   uint64_t physical;   /* start on this device, relative to vmfs_base */
+   uint64_t length;     /* bytes */
+} vmfs_lvm_map_t;
+
 /* === VMFS mounted-volume === */
 struct vmfs_volume {
    vmfs_device_t dev;
@@ -129,6 +155,10 @@ struct vmfs_volume {
 
    /* Volume and FS information */
    vmfs_volinfo_t vol_info;
+
+   /* LVM mapping table, empty if the volume has none */
+   vmfs_lvm_map_t *lvm_map;
+   int lvm_map_count;
 };
 
 /* Open a VMFS volume */
