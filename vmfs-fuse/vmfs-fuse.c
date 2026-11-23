@@ -446,6 +446,7 @@ static const struct fuse_opt vmfs_fuse_args[] = {
   { "-d", offsetof(struct vmfs_fuse_opts, foreground), 1 },
   { "-f", offsetof(struct vmfs_fuse_opts, foreground), 1 },
   FUSE_OPT_KEY("-d", FUSE_OPT_KEY_KEEP),
+  FUSE_OPT_END
 };
 
 static int vmfs_fuse_opts_func(void *data, const char *arg, int key,
